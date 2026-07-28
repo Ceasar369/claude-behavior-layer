@@ -1,0 +1,38 @@
+#!/bin/bash
+# worktree-setup.sh.example — copy to worktree-setup.sh, make it executable, edit.
+#
+#   cp .claude/lib/worktree-setup.sh.example .claude/lib/worktree-setup.sh
+#   chmod +x .claude/lib/worktree-setup.sh
+#
+# CONTRACT
+#   Called by .claude/skills/1-build/worktree.sh immediately after a worktree is
+#   created or attached — never on reuse.
+#   $1 is the absolute path of the new worktree. That is the only argument.
+#   A non-zero exit is reported and ignored: the worktree still exists, and
+#   /1-build still finalizes the lock. Setup failing must never lose the branch.
+#
+#   Absent or not executable, nothing happens. This file is optional.
+#
+# WHY IT EXISTS
+#   A fresh worktree has no dependencies installed. The commands are yours, not
+#   the layer's — the layer has no idea what your stack is.
+
+set -uo pipefail
+WT="${1:?worktree-setup.sh: a worktree path is required}"
+[ -d "$WT" ] || { echo "worktree-setup.sh: no such worktree: $WT" >&2; exit 1; }
+
+# --- Examples. Delete what does not apply. -------------------------------
+
+# Node — install from the lockfile already in the worktree.
+# [ -f "$WT/package.json" ] && (cd "$WT" && npm ci >/dev/null 2>&1)
+
+# Python — share the primary checkout's virtualenv rather than building a
+# second one. Most tooling is location-agnostic.
+# source "$(dirname "${BASH_SOURCE[0]}")/paths.sh"
+# [ -d "$CODE/.venv" ] && printf 'VIRTUAL_ENV=%s\n' "$CODE/.venv" > "$WT/.env.worktree"
+
+# Untracked local config the worktree needs but git does not carry.
+# source "$(dirname "${BASH_SOURCE[0]}")/paths.sh"
+# [ -f "$CODE/.env.local" ] && cp "$CODE/.env.local" "$WT/.env.local"
+
+exit 0

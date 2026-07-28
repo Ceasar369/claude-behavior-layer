@@ -1,0 +1,18 @@
+# launcher.conf.example — copy to launcher.conf and edit. Git-ignored.
+#
+#   cp launcher.conf.example launcher.conf
+#
+# Sourced by launcher.applescript and by build-app.sh. Plain shell assignments,
+# nothing else — it is sourced, so a command here runs.
+
+# The port the status engine listens on. Change it to run two engines side by
+# side, one per repository.
+PORT=8787
+
+# The iTerm2 browser profile that renders the status page. Only used if iTerm2
+# is installed and a profile with this name exists; otherwise the launcher opens
+# your default browser instead, which needs no setup.
+PROFILE=Bus
+
+# The name of the built app bundle. build-app.sh reads this.
+APP_NAME=Bus

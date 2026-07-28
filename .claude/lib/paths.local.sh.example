@@ -1,0 +1,35 @@
+#!/bin/bash
+# paths.local.sh.example — copy to paths.local.sh and edit. Git-ignored.
+#
+# paths.sh sources this file BEFORE applying its own defaults, so anything set
+# here wins. Set only what you are changing; every unset variable keeps its
+# default. Do not copy paths.sh itself — this file holds overrides, nothing else.
+#
+#   cp .claude/lib/paths.local.sh.example .claude/lib/paths.local.sh
+#
+# ROOT is already set when this file is sourced. Use it.
+
+# --- The one most adopters change ---------------------------------------
+# Your real code checkout. It stays pristine on MAIN_BRANCH and nothing writes
+# to it; guard-infra.sh enforces that. Defaults to $ROOT/code.
+#
+# CODE="$HOME/src/my-service"
+#
+# No separate checkout? Switch the guard off entirely:
+# CODE=""
+
+# --- The integration branch ---------------------------------------------
+# Defaults to main.
+# MAIN_BRANCH="master"
+
+# --- Everything else ----------------------------------------------------
+# Defaults shown. Uncomment only to move one.
+# SESSIONS="$ROOT/sessions"       # one folder per live session
+# LOCKFILE="$SESSIONS/ACTIVE.md"  # the live index
+# ARCHIVE="$ROOT/archive"         # one file per day
+# DOCS="$ROOT/docs"               # the documentation tree
+# PROMPTS="$ROOT/prompts"         # session prompts
+# WORKTREES="$ROOT/.worktrees"    # branch worktrees, cut by /1-build
+
+# STATE is not overridable. It must sit inside .claude/, because the SessionEnd
+# hook and bus.py both resolve it the same way.

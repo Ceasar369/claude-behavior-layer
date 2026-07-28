@@ -1,0 +1,32 @@
+#!/bin/bash
+# open-workspace.sh.example — copy to open-workspace.sh, make it executable, edit.
+#
+#   cp open-workspace.sh.example open-workspace.sh
+#   chmod +x open-workspace.sh
+#
+# CONTRACT
+#   Called by the boot button as step 2, with no arguments.
+#   Open whatever you want open when a session starts. Use `open`, which focuses
+#   an already-open window instead of adding a second one — the button ensures a
+#   state, it does not replay a sequence.
+#   A non-zero exit is ignored. Absent or not executable, the step is skipped.
+#
+# WHY IT EXISTS
+#   Which editor you use, and which file or folder you open, is yours. The layer
+#   has no opinion and no way to guess.
+
+set -uo pipefail
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+
+# --- Examples. Keep one, delete the rest. --------------------------------
+
+# A VS Code or Cursor workspace file.
+# /usr/bin/open "$REPO/my-project.code-workspace"
+
+# The repo folder, in whichever editor owns that folder type.
+# /usr/bin/open -a "Visual Studio Code" "$REPO"
+
+# A specific app, plus the repo.
+# /usr/bin/open -a "Cursor" "$REPO"
+
+exit 0

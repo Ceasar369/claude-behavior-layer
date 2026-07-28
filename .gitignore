@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.DS_Store
+.claude/settings.local.json
+.claude/lib/paths.local.sh
+.claude/lib/worktree-setup.sh
+.claude/state/*
+!.claude/state/.gitkeep
+.worktrees/
+
+# bus-viewer build artifacts and local settings.
+# icon.png IS committed — make-icon.py reproduces it byte for byte.
+.claude/tools/bus-viewer/*.app/
+.claude/tools/bus-viewer/icon.icns
+.claude/tools/bus-viewer/launcher.conf
+.claude/tools/bus-viewer/open-workspace.sh
