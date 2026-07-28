@@ -6,6 +6,66 @@ broken, and hardened, then lifted out of the project it grew in.
 
 Clone it, point three variables at your repo, and it runs.
 
+Two things in here you probably haven't seen elsewhere. They come first.
+
+## 1. Ten skills, ten digits
+
+A keyboard has exactly ten digits. This layer spends all ten.
+
+The ten skills reached most often carry one, `0` through `9`, so each costs a
+single keystroke. `/0` boots a session. `/9` closes it — alpha and omega, the two
+run more than any other.
+
+```
+0  start      1  build                                  8  ship    9  stop
+      2  ask   3  answer   4  inbox
+      5  repeat   6  clarify   7  provide-prompt
+```
+
+`0`, `1`, `8`, `9` are the spine — once each, in that order. `2` through `7` are
+the middle, reached repeatedly, in whatever order the work needs.
+
+The digit is a position, never a ranking. The other eight skills hold no position
+in that sequence, so they keep plain names. There is no eleventh digit, which is
+the point: a new skill earns one only by displacing an existing one on frequency.
+
+## 2. A file-based bus for questions across windows
+
+A session gets blocked on a decision. You're in another window. Normally it stalls.
+
+Here it writes the question into its own folder and stops. Any other window
+answers it. The blocked session pulls the answer and carries on.
+
+```
+sessions/0041-refactor-auth/
+  90-0003-token-expiry-ask.md
+  90-0003-token-expiry-answer.md        ← unread
+  90-0002-schema-choice-answer.read.md  ← already pulled
+```
+
+**There is no state anywhere else.** No pairing table, no counter, no daemon.
+Three writers touch three disjoint filenames — the asker writes the ask, the
+answerer writes the answer, the asker renames it once read. Nothing can clobber
+anything, and an interrupt cannot strand a session in a wrong state, because the
+state *is* which files exist.
+
+`/2-ask` writes and stops. `/3-answer` replies from anywhere. `/4-inbox` pulls it
+back. One question open at a time, and that is structural rather than a rule —
+asking ends the turn, and a stopped session cannot ask twice.
+
+A local page shows the whole board:
+
+```bash
+python3 .claude/tools/bus-viewer/server.py    # http://127.0.0.1:8787
+```
+
+Orange, a session is waiting on you. Green, it owes itself an `/4-inbox`. The page
+imports the same `bus.py` the skills call, so it derives every state at read time
+and can never disagree with them. One dependency: `python3`.
+
+On macOS, `./build-app.sh` makes it a double-clickable boot button — engine up,
+workspace open, page on screen. The icon is drawn from code, not checked in as art.
+
 ## The three ideas
 
 **A session is an object on disk, not a chat window.** It has a number, a folder, a
@@ -29,18 +89,7 @@ Change the fence and you have changed the agent.
 
 ### Skills
 
-Ten carry a digit, `0` through `9`. A keyboard has exactly ten digits, and these
-are the ten skills reached most often — so each costs one keystroke. `0` boots a
-session and `9` closes it: alpha and omega, the two run more than any other.
-
-The digit is a position in a sequence, never a ranking. The other eight hold no
-position in that sequence, so they keep a plain name.
-
-```
-0  start      1  build                                  8  ship    9  stop
-      2  ask   3  answer   4  inbox
-      5  repeat   6  clarify   7  provide-prompt
-```
+All eighteen, by what they are for.
 
 | | |
 |---|---|
@@ -62,9 +111,6 @@ A few worth naming:
   notifications are tagged so they can never be mistaken for the user.
 - **`challenge`** — spawns agents with deliberately opposed assigned stances, and
   never tells any of them what the session already believes.
-- **`2-ask` / `3-answer` / `4-inbox`** — a question written by a blocked session into
-  its own folder. Any other window answers it. Three writers, three disjoint
-  filenames, no shared state, no pairing table. State is derived from which files exist.
 
 ### Agents
 
@@ -90,23 +136,11 @@ A few worth naming:
 
 ### The status page
 
-`.claude/tools/bus-viewer/` is a local page showing which session has a question
-out and which has an answer waiting. Orange means someone owes it an answer;
-green means it owes itself an `/4-inbox`. It derives every state at read time from
-which files exist, by importing `bus.py` — so the page and the skills can never
-disagree.
+Covered above. `.claude/tools/bus-viewer/` — one command, any OS, any browser.
 
-```bash
-python3 .claude/tools/bus-viewer/server.py    # then open http://127.0.0.1:8787
-```
-
-One dependency: `python3`. Any OS, any browser.
-
-On macOS, `./build-app.sh` turns it into a double-clickable boot button that
-starts the engine, opens your workspace, and puts the page on screen — with an
-icon drawn from code rather than checked in as art. If you have iTerm2 and its
-Browser Plugin, you get a dedicated window with a terminal on the left and the
-page live on the right. Without them it opens your browser, which needs no setup.
+If you have iTerm2 and its Browser Plugin, the macOS boot button gives you a
+dedicated window with a terminal on the left and the page live on the right.
+Without them it opens your browser, which needs no setup.
 
 ## The session convention
 
