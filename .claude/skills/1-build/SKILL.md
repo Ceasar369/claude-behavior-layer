@@ -1,6 +1,5 @@
 ---
 name: 1-build
-disable-model-invocation: true
 description: Opens the code lane. Checks the requested paths against every lock, gates the claim, then one script reuses or cuts the branch worktree and finalizes the lock. Run before the first code write.
 allowed-tools: Read, Edit, Bash, AskUserQuestion
 argument-hint: "[the code paths this work owns] — e.g. src/api/billing/"
@@ -99,6 +98,8 @@ Naming the shape is all this skill does. It runs none of them.
 - Never dismiss a `CLOSED?` collision without reading its body.
 - Never let an executor commit, PR, merge, or ship.
 - Never write the lock by hand. `worktree.sh` owns `Branch:` and `Paths:`.
+- Never add `disable-model-invocation` — a session runs this itself, before
+  its first code write. The claim gate is the control, not the flag.
 
 ## Output
 
