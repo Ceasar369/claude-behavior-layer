@@ -14,6 +14,9 @@ State is derived from which files exist, every read, never stored:
 Open beats answered. The scan itself lives in ../bus.py, which this file imports,
 so the page and the skills can never disagree about a session's state.
 
+Numbers are contiguous per session, so how many exist is how deep the thread ran.
+A card shows that count once it passes one, and warms at four.
+
 Read-only. It never writes.
 
     python3 server.py              then open http://127.0.0.1:8787
@@ -41,7 +44,7 @@ _spec.loader.exec_module(bus)
 REPO = os.path.basename(os.path.dirname(os.path.dirname(_HERE)))
 
 ACTION = {
-    "open": "Answer it — from any window",
+    "open": "Answer it",
     "answered": "Run /4-inbox there",
     "idle": "Idle",
 }
@@ -76,12 +79,15 @@ def collect():
         if state == "idle" and not live:
             continue  # closed, and everything it asked was answered and pulled
         ts = mtime_of(d, number) if number else None
+        # How deep the thread ran.
+        rounds = len(set(asks) | set(answers) | set(reads))
         rows.append({
             "session": name,
             "state": state,
             "number": f"{number:04d}" if number else "",
             "subject": bus.subject(d, number) if number else "",
             "count": count,
+            "rounds": rounds,
             "live": live,
             "action": ACTION[state],
             "elapsed": (datetime.now().timestamp() - ts) if ts else None,
@@ -134,6 +140,9 @@ PAGE = """<!doctype html>
   .answered { --c: #46c46a; }
   .idle     { --c: #7b8090; }
   .name { font-weight: 650; word-break: break-all; }
+  .rounds { color: var(--dim); font-size: 11px; font-weight: 600; margin-left: 6px;
+            white-space: nowrap; }
+  .rounds.hot { color: #ef7f37; }
   .turn { color: var(--c); font-weight: 700; margin-top: 3px; }
   .subject { opacity: .8; margin-top: 2px; word-break: break-word; }
   .meta { color: var(--dim); margin-top: 3px; font-size: 12px; }
@@ -166,8 +175,12 @@ async function tick(){
       const subj = s.subject ? `<div class="subject">${esc(s.number)} · ${esc(s.subject)}</div>` : "";
       const many = s.count > 1 ? `<span class="badge">${esc(s.count)} open</span>` : "";
       const meta = s.clock ? `<div class="meta">${ago(s.elapsed)} ago · ${esc(s.clock)}</div>` : "";
+      // One question is the norm and needs no marker. Four or more is the cost
+      // the ask doctrine warns about, so it goes warm.
+      const rounds = s.rounds > 1
+        ? `<span class="rounds${s.rounds >= 4 ? " hot" : ""}">${esc(s.rounds)} rounds</span>` : "";
       return `<div class="card ${esc(s.state)}">
-        <div class="name">${esc(s.session)}</div>
+        <div class="name">${esc(s.session)}${rounds}</div>
         <div class="turn">${esc(s.action)}${many}</div>
         ${subj}${meta}
       </div>`;

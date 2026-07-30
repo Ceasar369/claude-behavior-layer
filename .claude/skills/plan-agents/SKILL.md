@@ -67,14 +67,14 @@ Order by dependency: schema before the code that reads it, the API before its cl
 
 **Split test** per proposed agent: verifiable in isolation? would one failure cascade? Disjoint → parallel; coupled and sequential → keep together, phase if large. The signal is "single concern, verifiable in isolation" — never a file count.
 
-Verification is a separate control (Step 5). Right-sizing the build never removes the verifier.
+Verification is its own agent in the DAG, never a builder's self-check. Right-sizing the build never removes it.
 
 **Set each executor's model tier** — the model rides the spawn, never the agent file. An agent without a tier is not yet assigned.
 - `sonnet` — the default. Known pattern, bounded change, an existing shape to follow.
 - `opus` — the unit touches auth, permissions, data integrity, or anything irreversible. Or the design is novel with no pattern to follow.
 - **Unsure → `opus`.**
 - Researchers are never tiered here — their agent file fixes their model.
-- Treat this tier as the opening bid. The Step 5 gate sets the verdict.
+- Treat this tier as the opening bid. The spawn gate sets the verdict.
 
 ## Step 4 — Per-agent prompt
 
@@ -84,7 +84,7 @@ Each agent gets five parts plus two blocks:
 - **Read first** — the exact paths the agent reads before acting. Name the docs that govern this change, not the whole tree. Point at an index and let the agent follow it; never restate an index inline.
 - **Target paths** — the exact absolute path prefixes the agent may write.
 - **Steps / Things to do / Things NOT to do.**
-- **Update after** — for an executor: write its work summary into the session folder and flag doc-sync; never sync the docs inline.
+- **Update after** — for an executor: name its exact work-summary filename, unique per spawn. It writes that file into the session folder and flags doc-sync; it never syncs the docs inline.
 - **Verification** — the SPECIFIC tests for its changed files. Not "run the suite." Full suite only for broad, shared, migration, or security changes. "No tests needed" only when no behavior changed — never on auth, permissions, or data integrity.
 
 ## Step 5 — Render, or own execution
@@ -100,6 +100,8 @@ Unsure → render only. Presenting costs a turn. Spawning writes code.
 **Render only** → present the staffed DAG and stop. No gate — a gate offering `Spawn now` contradicts the mode. Say plainly that nothing will spawn.
 
 **You own execution** → present the DAG, gate it, then follow `own-execution.md` beside this file.
+
+**The DAG's last node is a `researcher` that verifies.** It runs after every build phase, checks correctness and doc-versus-code, and verifies security on the merits for auth, permissions, or data integrity. Render mode shows it too — a rendered DAG handed over without it is malformed.
 
 Present the DAG in full before any spawn: each agent, its job, its **model tier** with a one-line reason, which run **parallel** vs **sequential** with a one-line reason, the order, the branch, and each agent's scoped tests. An executor shown without a tier is a malformed DAG — fix it before gating. Never skip this display, even when the build was already approved.
 

@@ -2,7 +2,9 @@
 # boot.sh — create the session folder, the live marker, and the lock. Print the digest.
 #
 # Usage:
-#   boot.sh --slug <kebab> --intent "<one line>" --mode <mode> [--number NNNN]
+#   boot.sh --slug <kebab> --intent "<one line>" [--number NNNN]
+#
+# The mode is not recorded here. /0-start gates it after the boot returns.
 #
 # Prints, for the model to read:
 #   NNNN= FOLDER= LOCK_WRITTEN= RENAME= then a live-lock digest between DIGEST markers.
@@ -14,18 +16,17 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/paths.sh"
 require_paths
 
-SLUG="" INTENT="" MODE="" NUMBER=""
+SLUG="" INTENT="" NUMBER=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --slug)   SLUG="${2:-}";   shift 2 ;;
     --intent) INTENT="${2:-}"; shift 2 ;;
-    --mode)   MODE="${2:-}";   shift 2 ;;
     --number) NUMBER="${2:-}"; shift 2 ;;
     *) echo "boot.sh: unknown argument '$1'" >&2; exit 2 ;;
   esac
 done
 
-for pair in "slug:$SLUG" "intent:$INTENT" "mode:$MODE"; do
+for pair in "slug:$SLUG" "intent:$INTENT"; do
   [ -n "${pair#*:}" ] || { echo "boot.sh: --${pair%%:*} is required" >&2; exit 2; }
 done
 
@@ -68,7 +69,6 @@ mkdir -p "$FOLDER"
 {
   printf '# Session %s — %s\n\n' "$NNNN" "$SLUG"
   printf 'Intent: %s\n' "$INTENT"
-  printf 'Mode: %s\n' "$MODE"
   printf 'Started: %s\n\n' "$TODAY"
   printf '## Decision log\n\n'
   printf -- '- %s — %s\n' "$TODAY" "$INTENT"

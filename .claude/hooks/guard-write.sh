@@ -1,30 +1,36 @@
 #!/bin/bash
 # guard-write.sh — the write-scope fence for executor subagents.
-# Declared in the frontmatter of backend-executor and frontend-executor on
-# PreToolUse(Write|Edit|MultiEdit). Confines each to its lane.
+# Declared in the frontmatter of executor on PreToolUse(Write|Edit|MultiEdit).
+# Confines it to its tree.
 #
 # IDENTITY: the agent name comes from $1, passed in the agent's own hook
 # declaration. It is NEVER read from stdin agent fields — those are unreliable
 # in PreToolUse hooks.
 #
 # FLOOR per agent — the only writable places:
-#   backend-executor  → .worktrees/<branch>/ EXCEPT frontend/  + sessions/
-#   frontend-executor → .worktrees/<branch>/ EXCEPT backend/   + sessions/
+#   executor          → .worktrees/<branch>/ + sessions/
 #   unknown           → block
 #
 # The primary code checkout is blocked here by default-deny, and blocked again
 # session-wide by guard-infra.sh. Two independent controls, deliberately.
 #
 # The sessions/ allowance is the executor's own work summary, and nothing else.
-# Canon is not an executor's to write: a researcher analyses the deltas and the
-# session writes them, which is what both executor files already say.
-# The LANE FENCE is the invariant that never relaxes: an executor never writes
-# the other lane's directory. Worktree-root files (lint config, formatter config,
-# compose files, CI workflows) are shared ground — they serialise through
-# plan-agents sequencing: one executor owns a given root file per phase step.
+# Documentation is not an executor's to write: a researcher analyses the deltas
+# and the session writes them, which is what the executor file already says.
 #
-# Adding a lane: add a case below, add the agent's own hook declaration, and add
-# its row to .claude/agents/README.md. The table and the code must agree.
+# There is NO lane fence, and that is deliberate. An earlier version split
+# backend/ from frontend/ inside ONE tree, while two same-lane spawns always
+# passed the identical check — so the common collision was never covered.
+# What separates two live executors is the spawn contract: explicit target
+# paths, and an executor that STOPS without them. Worktree-root files (lint
+# config, formatter config, compose files, CI workflows) are shared ground —
+# they serialise through plan-agents sequencing, one owner per phase step.
+#
+# ADDING A LANE: if your repo genuinely needs one executor fenced out of a
+# subtree, three things change together — a case branch below that sets
+# OTHER_LANE, a new agent file carrying its own `guard-write.sh <name>` hook
+# declaration, and a row in .claude/agents/README.md. A table row with no case
+# branch has no fence at all.
 #
 # Exit 0 = allow. Exit 2 = block.
 
@@ -69,17 +75,15 @@ fi
 
 floor_pass=0
 case "$AGENT" in
-  backend-executor)  OTHER_LANE="frontend" ;;
-  frontend-executor) OTHER_LANE="backend"  ;;
+  executor) ;;
   *)
     echo "guard-write: unknown agent '${AGENT}' — block." >&2
     exit 2
     ;;
 esac
 
-# Allow: the worktree MINUS the other executor's lane, and its own work summary.
-if [[ "$normalized" == "${WORKTREES}/"* ]] \
-&& [[ "$normalized" != "${WORKTREES}/"*"/${OTHER_LANE}/"* ]]; then
+# Allow: the worktree, and its own work summary in the session folder.
+if [[ "$normalized" == "${WORKTREES}/"* ]]; then
   floor_pass=1
 elif [[ "$normalized" == "${SESSIONS}/"* ]]; then
   floor_pass=1

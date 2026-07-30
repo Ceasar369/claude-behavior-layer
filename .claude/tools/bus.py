@@ -179,8 +179,14 @@ def cmd_ask(a):
     path = os.path.join(d, name)
     write_atomic(path, f"<!-- ask {n:04d} | from {me} | {now()} -->", a.bodyfile)
 
+    # The path the answer will take. Printed so nothing derives it by hand —
+    # the waiter watches this exact string, and a hand-edited one fails silently
+    # for the whole eight-hour bound. Same shape cmd_answer writes below.
+    answer_name = f"{PREFIX}{n:04d}-{a.slug}-answer.md"
+
     still_open = [x for x in asks if x not in answers and x not in reads]
     print(f"ASKED={path}")
+    print(f"ANSWER={os.path.join(d, answer_name)}")
     print(f"NUMBER={n:04d}")
     print(f"SESSION={me}")
     if still_open:

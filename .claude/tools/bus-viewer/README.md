@@ -72,7 +72,8 @@ return: System Settings → Privacy & Security → Automation.
 | `open-workspace.sh.example` | Optional: what step 2 opens. |
 
 `Bus.app` and `icon.icns` are build artifacts and are git-ignored. `icon.png` is
-committed because it is deterministic — `make-icon.py` reproduces it byte for byte.
+committed and authoritative — supply your own to replace it. `make-icon.py` only
+fills a gap when no `icon.png` exists.
 
 ## Settings
 
@@ -121,6 +122,15 @@ of this page. A closed session whose questions were all answered and pulled drop
 off too.
 
 Idle is not "done". It means nobody owes anybody a move right now.
+
+## The round marker
+
+Numbers run contiguously per session, so how many exist is how deep the thread ran.
+
+A card shows that count beside the session name once it passes one. At four or
+more it turns orange.
+
+One question is the norm and shows no marker.
 
 A session can only have one question open at a time: asking ends its turn, so a
 stopped session cannot ask again. If a second ever appears, the card shows an

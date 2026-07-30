@@ -42,6 +42,12 @@ Answering never changes this session's own work. Answer, then go back to what yo
 
    **The user's steer wins.** Whatever they added to the `/3-answer` line shapes the answer. That line is theirs, and it is trusted.
 
+   **Rule every numbered decision it asked.** The ask ends with a section naming
+   what a complete answer must contain. Answer every line in it. A skipped line
+   is the second round nobody wanted.
+
+   Cannot rule one? Say which, and say why. Never leave it silent.
+
 4. **Write it.** Compose the answer into a temp file, then:
    ```bash
    python3 .claude/tools/bus.py answer <session-folder> "$MSG_FILE"

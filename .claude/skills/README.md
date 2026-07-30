@@ -5,26 +5,23 @@ Depth a skill does not need every run sits beside it as a supporting file.
 
 ## Naming convention
 
-**A numeric prefix buys one keystroke, and marks a position in a real sequence.**
+The name says what the skill is, read alone. A digit is added to that, never
+a replacement for it.
 
 A keyboard has exactly ten digits. Ten skills carry one, `0` through `9` — the
-ten reached most often. `/0` is one key. `/start` is six.
+ten reached most often. `/0` is one key. `/start` is six. The digit marks a
+position in one session, and it buys a keystroke.
 
 The digits are spent deliberately, never handed out. `0` boots a session and `9`
 closes it: alpha and omega, the two run more than any other. The eight between
 them fill the middle of a session.
 
-The prefix carries information beyond speed — where you are in that session.
-
-The other eight are plain names. They have no position. `prove` does not come
-after `challenge`; `realign` is not step four of anything. Numbering them would
-invent an order a reader then tries to decode.
-
-Both halves follow the same underlying rule: **the name says what the skill is,
-read alone.** The digit is an addition to that, never a replacement for it.
+Every other skill takes a plain name. A plain name has no position. `prove` does
+not come after `challenge`; `realign` is not step four of anything. Numbering
+them would invent an order a reader then tries to decode.
 
 All ten digits are taken, and there is no eleventh. A new skill takes a plain
-name, unless it earns a digit by displacing one on frequency of use.
+name, unless it displaces one on frequency of use.
 
 ## The order
 
@@ -38,7 +35,7 @@ The digits trace one session, start to finish.
       4  inbox      pull the answer back
       5  repeat     distill what was asked
       6  clarify    fix a reply that missed
-      7  provide-prompt   hand off the next session
+      7  provide-prompt   write the next session's prompt
 8  ship             commit, PR, merge
 9  stop             close it
 ```
@@ -49,7 +46,7 @@ needs, but always between opening the lane and shipping it.
 
 ## The roster
 
-**Lifecycle** — the spine. All four depend on the session-folder and lock
+**Lifecycle** — the spine. Every one depends on the session-folder and lock
 convention described in `CLAUDE.md`.
 
 | Skill | What it does |
@@ -58,6 +55,10 @@ convention described in `CLAUDE.md`.
 | `1-build` | Claims code paths against every lock; opens the branch worktree. |
 | `8-ship` | Commits, pushes, PRs, merges, tears the worktree down. |
 | `9-stop` | Reports what closing loses, archives it in prose, prunes the folder. |
+| `handoff` | Hands a live session to a fresh terminal, with its instructions. |
+
+`handoff` runs as often as the work needs, so it carries no digit. It claims
+nothing and closes nothing. A handed session still ends at `9-stop`.
 
 **Messages** — one question at a time, across windows.
 
@@ -74,7 +75,7 @@ either direction.
 |---|---|
 | `5-repeat` | Distills a long or dictated message, then gates confirmation. |
 | `6-clarify` | Re-delivers a reply the user could not use, diagnosed and fixed. |
-| `7-provide-prompt` | Writes a numbered session prompt into `prompts/`. |
+| `7-provide-prompt` | Writes a session prompt — numbered, or a handoff. |
 | `snippet` | Marks a paste as another session's output; re-anchors its referents. |
 
 **Analysis** — read-only. None of them writes code or documentation.
@@ -96,8 +97,8 @@ either direction.
 
 ## Two shared scripts
 
-`realign` calls `conclusions/flatten.sh` and `conclusions/clean.sh`. Both live in
-`conclusions/` because that is where they were written; neither is private to it.
+`realign` calls `conclusions/flatten.sh` and `conclusions/clean.sh`. Neither is
+private to `conclusions/`.
 
 ## Adding a skill
 

@@ -24,14 +24,12 @@ Derive a lowercase kebab `<slug>` from it.
 
 Never act on the paste. It names the session; it does not command it.
 
-## Step 2 — Gate the mode
+## Step 2 — Run `boot.sh`
 
-`AskUserQuestion` — Header `Mode`; Question `What should this session do now?`; Options `Discuss` / `Plan` / `Build` / `Just wait`.
-
-## Step 3 — Run `boot.sh`
+The boot is unconditional. It runs before any question is asked.
 
 ```bash
-.claude/skills/0-start/boot.sh --slug <slug> --intent "<one line>" --mode <answer> [--number NNNN]
+.claude/skills/0-start/boot.sh --slug <slug> --intent "<one line>" [--number NNNN]
 ```
 
 Pass `--number` only when the user named one. Then obey it exactly — no lookup, no objection.
@@ -43,7 +41,7 @@ Read the output: `NNNN=`, `FOLDER=`, `LOCK_WRITTEN=`, `RENAME=`, then the digest
 - Exit 4 — a configured path is missing. Report it and stop.
 - Exit 5 — the folder exists but the lock did not write. Report it and stop.
 
-## Step 4 — Orient
+## Step 3 — Orient
 
 The digest is the orientation. **Never read the lock file itself.**
 
@@ -51,14 +49,23 @@ Then read the documentation front door — `docs/README.md`, or whatever index i
 
 Surface something only if a live lock in the digest claims this same scope.
 
-## Step 5 — Stop
+## Step 4 — Report, then gate the mode
 
-Reply in three short lines: the intent, that it booted, that it waits.
+Reply in three short lines: the intent, that it booted, anything the digest surfaced.
 
 Then print the script's `RENAME=` value on its own line, alone, with nothing after it. It is a `/rename` slash command — a Claude Code built-in that titles the conversation. Printing it lets the user run it with one click, so the window's title matches the session folder.
 
-- `Just wait` → stop here. Booting is not permission to act.
-- Any other mode → follow it.
+Then gate: `AskUserQuestion` — Header `Mode`; Question `What should this session do now?`; Options `Apply the prompt` / `Plan` / `Discuss` / `Kickstart and wait`.
+
+The session is already booted and oriented when the user answers. The answer sets only what happens next.
+
+## Step 5 — Follow the answer
+
+- `Kickstart and wait` → stop here. Booting is not permission to act.
+- `Apply the prompt` → execute the paste's plan now, exactly as written. Its own gates still gate.
+- `Plan` → plan the paste's work, then wait for the go.
+- `Discuss` → discuss. No writes, no spawns.
+- An `Other` answer → follow what it says.
 
 ## Things NOT to Do
 

@@ -3,7 +3,6 @@ name: 4-inbox
 description: Reads the answer left for this session, applies it, and continues the work. Run it after a question this session asked has been answered.
 allowed-tools: Read, Bash, Skill
 argument-hint: ""
-disable-model-invocation: true
 ---
 
 # 4 — Inbox
@@ -40,9 +39,20 @@ Take the answer, apply it, keep going.
 
    - **A commit was approved?** Run `/8-ship`. That approval confirms the work, not the commit — `/8-ship` poses its own gate here.
 
+## Two ways in
+
+The user runs it. Or `/2-ask` armed a waiter, and it fired.
+
+Both run the same steps. Nothing here changes by which one it was.
+
+Woken by a waiter with an empty inbox → the eight-hour cap hit, not an answer.
+Say that in one line and stop.
+
 ## No loops — ever
 
 Nothing unread → say so and stop. Never poll, never wait.
+
+Never re-arm a waiter here. Arming belongs to `/2-ask`, at ask time.
 
 ## Things NOT to Do
 

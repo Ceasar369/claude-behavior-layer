@@ -1,6 +1,6 @@
 # A behavior layer for Claude Code
 
-A working `.claude/` — 18 skills, 4 agents, 8 hooks, and a session convention that
+A working `.claude/` — 19 skills, 3 agents, 8 hooks, and a session convention that
 ties them together. Not a starter template. This is a layer that has been run,
 broken, and hardened, then lifted out of the project it grew in.
 
@@ -53,6 +53,14 @@ state *is* which files exist.
 back. One question open at a time, and that is structural rather than a rule —
 asking ends the turn, and a stopped session cannot ask twice.
 
+**The blocked session can wake itself.** `/2-ask` optionally leaves one detached
+shell process watching for its own answer file — bounded at eight hours, spending
+zero model turns while it waits. The answer lands, the process exits, and the
+session resumes into `/4-inbox` on its own. That waiter is the only piece of state
+outside the files, and it is deliberately worthless: it reads nothing and moves
+nothing. Lose it and the answer file still stands, because pulling by hand is
+always the fallback.
+
 A local page shows the whole board:
 
 ```bash
@@ -79,27 +87,41 @@ shell, writes to the pristine checkout, an executor leaving its lane, built-in
 subagent types, and memory writes. They fire for the main session and for every
 subagent, and they are all probeable from a terminal.
 
-**An agent is defined by its write fence, not its topic.** `backend-executor` is not
-"the agent that knows the server" — it is the agent that can write
-`.worktrees/<branch>/` except `frontend/`. The fence is a directory check in
-`guard-write.sh`, keyed off the name the agent passes in its own hook declaration.
-Change the fence and you have changed the agent.
+**An agent is defined by its write fence, not its topic.** `executor` is not "the
+agent that writes code" — it is the agent that can write `.worktrees/<branch>/`
+and its own session folder, and nothing else on disk. The fence is a directory
+check in `guard-write.sh`, keyed off the name the agent passes in its own hook
+declaration. Change the fence and you have changed the agent. Pass a name the
+`case` does not know and every write is blocked, which is how a retired agent
+fails closed.
+
+One fence, not one per topic. Parallel executors are separated by their assigned
+target paths instead — an executor spawned without them stops rather than guessing
+its scope. If you want a hard fence between two subtrees, adding one is three edits
+that must land together: a `case` branch in `guard-write.sh`, an agent file carrying
+its own `guard-write.sh <name>` declaration, and a row in `.claude/agents/README.md`.
+A table row with no `case` branch has no fence at all.
 
 ## What's in the box
 
 ### Skills
 
-All eighteen, by what they are for.
+All nineteen, by what they are for.
 
 | | |
 |---|---|
-| **Lifecycle** | `0-start` `1-build` `8-ship` `9-stop` |
+| **Lifecycle** | `0-start` `1-build` `8-ship` `9-stop` `handoff` |
 | **Messages** | `2-ask` `3-answer` `4-inbox` |
 | **Input and delivery** | `5-repeat` `6-clarify` `7-provide-prompt` `snippet` |
 | **Analysis** | `conclusions` `realign` `prove` `challenge` `doc-check` |
 | **Authoring** | `plan-agents` `skill-creator` |
 
 A few worth naming:
+
+- **`handoff`** — moves a live session to a fresh terminal without closing it.
+  The number, the folder, the lock and the branch all stay; only the pane changes.
+  It updates the session's own folder first, then writes a prompt whose first line
+  re-attaches the new terminal to the same session identity.
 
 - **`prove`** — someone claims the docs say X. It splits the claim, fans out cold
   collectors that are forbidden from concluding anything, hands every quote to a
@@ -116,8 +138,7 @@ A few worth naming:
 
 | Agent | Writes | Fence |
 |---|---|---|
-| `backend-executor` | `.worktrees/<branch>/` minus `frontend/`, plus `sessions/` | `guard-write.sh backend-executor` |
-| `frontend-executor` | `.worktrees/<branch>/` minus `backend/`, plus `sessions/` | `guard-write.sh frontend-executor` |
+| `executor` | `.worktrees/<branch>/`, plus `sessions/` | `guard-write.sh executor` |
 | `researcher` | nothing | `Read, Glob, Grep` only |
 | `web-researcher` | nothing | tools only |
 
@@ -144,7 +165,7 @@ Without them it opens your browser, which needs no setup.
 
 ## The session convention
 
-Eight of the eighteen skills depend on this. It is the one thing to understand
+Nine of the nineteen skills depend on this. It is the one thing to understand
 before adopting.
 
 ```
@@ -209,10 +230,12 @@ printf '{"tool_input":{"command":"rm -rf build/"}}' | .claude/hooks/guard-destru
    defaults to `./code`. Set `CODE=""` to switch `guard-infra.sh` off entirely if your
    repo has no separate checkout. Set `MAIN_BRANCH` if yours is not `main`.
 
-2. **The two executor lanes.** `backend/` and `frontend/` are *directory names inside
-   the worktree*, not stack names. If your repo splits differently, change the `case`
-   branch in `guard-write.sh`, the agent file, and the table in `.claude/agents/README.md`
-   — all three together. A lane in the table with no `case` branch has no fence.
+2. **Nothing, if one executor suits you.** `executor` writes the whole worktree, and
+   parallel spawns are separated by their assigned target paths rather than by a hook.
+   Want a hard fence between two subtrees anyway? Add it in three places at once — a
+   `case` branch in `guard-write.sh`, an agent file with its own `guard-write.sh <name>`
+   declaration, and a row in `.claude/agents/README.md`. A row with no `case` branch
+   has no fence.
 
 3. **`docs/`** — replace the placeholder with your real documentation, and give it a
    front door. `prove`, `doc-check`, and `researcher` all start there and navigate by
@@ -260,8 +283,15 @@ That is the intended failure mode, not an oversight.
 `.claude/agents/README.md` is the equivalent standard for agents, including the rule
 that a write-capable agent without a declared `guard-write.sh` hook has no fence at all.
 
-All ten digits are taken, so a new skill takes a plain name. A digit marks a
-position in a sequence; a skill with no position never gets one.
+`.claude/playbook/` holds the layer's own method documents — how to pace a prompt,
+how a slice differs from a pillar, how consequential work gets audited cold, how a
+change is traced through its dependents. They ship inside `.claude/` rather than in
+`docs/` on purpose: `DOCS` is yours to repoint anywhere, and a skill that referenced
+"the Writing a Prompt document" would dangle the moment you did. Every one of them is
+opinionated and every one is yours to cut.
+
+All ten digits are taken, so a new skill takes a plain name — `handoff` is the most
+recent. A digit marks a position in a sequence; a skill with no position never gets one.
 
 ## Seed data
 

@@ -66,8 +66,9 @@ remove_file() {
   return 0
 }
 
-# ---- 1. The icon, drawn from code ---------------------------------------
-python3 "$HERE/make-icon.py" "$HERE/icon.png" >/dev/null || { echo "build-app.sh: make-icon.py failed" >&2; exit 4; }
+# ---- 1. The icon ---------------------------------------------------------
+# icon.png is authoritative when present. make-icon.py only fills a gap.
+[ -f "$HERE/icon.png" ] || python3 "$HERE/make-icon.py" "$HERE/icon.png" >/dev/null || { echo "build-app.sh: make-icon.py failed" >&2; exit 4; }
 
 ICONSET="$(mktemp -d)/icon.iconset"
 mkdir -p "$ICONSET"

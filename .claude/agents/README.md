@@ -14,8 +14,7 @@ Nobody writes the primary code checkout. `guard-infra.sh` blocks it session-wide
 
 | Agent | Writes | Fence |
 |---|---|---|
-| `backend-executor` | `.worktrees/<branch>/` minus `frontend/`, plus `sessions/` | `guard-write.sh backend-executor` |
-| `frontend-executor` | `.worktrees/<branch>/` minus `backend/`, plus `sessions/` | `guard-write.sh frontend-executor` |
+| `executor` | `.worktrees/<branch>/`, plus `sessions/` | `guard-write.sh executor` |
 | `researcher` | nothing | `Read, Glob, Grep` only |
 | `web-researcher` | nothing | tools only |
 
@@ -25,17 +24,29 @@ the session writes them.
 
 Shipping is not an agent. `/8-ship` runs git in the session the user is watching.
 
-## Adding or renaming a lane
+## What separates two live executors
 
-The two executor lanes are `backend/` and `frontend/` — directory names inside the
-worktree, not stack names. To rename them, or to add a third:
+Not a hook. Both parallel spawns pass the same `guard-write.sh executor` check.
 
-1. Add or rename the `case` branch in `.claude/hooks/guard-write.sh`.
-2. Add or rename the agent file, including its own `guard-write.sh <name>` hook.
-3. Update the table above.
+The separator is the spawn: explicit target paths, and an executor that stops
+without them. `plan-agents` owns the disjoint-scope test that produces them.
 
-All three change together. A lane in the table with no `case` branch has no fence;
-a `case` branch with no table row is invisible to whoever staffs the work.
+An earlier version of this layer split `backend/` from `frontend/` inside one
+worktree. It cost 70% duplicated agent text and covered only the rarer collision —
+two same-lane spawns always passed the identical fence. The spawn contract covers
+both, so the lane fence went.
+
+## Adding a lane
+
+If your repo genuinely needs one executor fenced out of a subtree, three things
+change together:
+
+1. Add the `case` branch in `.claude/hooks/guard-write.sh`, setting `OTHER_LANE`.
+2. Add the agent file, including its own `guard-write.sh <name>` hook declaration.
+3. Add its row to the table above.
+
+A lane in the table with no `case` branch has no fence; a `case` branch with no
+table row is invisible to whoever staffs the work.
 
 ## The Agent Standard
 
@@ -96,6 +107,8 @@ repository.
 3. **Read first** — the exact paths to read before acting. Point at an index and let
    the agent follow it; never restate an index inline.
 4. **How you work** — single-shot: read everything, act, return. Sentences ≤10 words.
+   Ten, not the eight the root `CLAUDE.md` sets. An agent returns findings to a
+   session, never chat to the user. The tighter rule governs what reaches them.
    Verify before claiming done. Evidence over assertion — return the command and its
    output, never "it passed." Never ask mid-task; make the reasonable call and continue.
 5. **Truth over agreement** — an agent that reviews or returns findings judges on the

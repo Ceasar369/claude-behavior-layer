@@ -72,6 +72,24 @@ It prints `ACTION=reuse|attach|create`, `WORKTREE=`, `LOCK_UPDATED=`, then `git 
 
 Append one line to the session's `00-session.md` decision log: the paths, the branch, and the `ACTION`.
 
+## Step 7 — Name the build shape
+
+The claim is open. Say which shape this work is, in one line.
+
+- **Standard** — a fix, a chore, a feature. Plan, then build.
+- **Slice** — delivery against a designed plan. No new machinery.
+- **Pillar** — a genuinely undesigned subsystem. Seven steps.
+
+Pillar only when nothing designs this subsystem yet. It is rare.
+Feature delivery is a slice. Default away from pillar.
+
+Slice → run the six steps in `.claude/playbook/slice-delivery.md`.
+
+Pillar → run the pipeline in `.claude/playbook/pillar-design.md`. Its documents
+go in their own subfolder, per that document. Never flat in the session folder.
+
+Naming the shape is all this skill does. It runs none of them.
+
 ## Things NOT to Do
 
 - Never cut a second worktree for a branch that has one. `ACTION=reuse` means attach.
@@ -84,7 +102,7 @@ Append one line to the session's `00-session.md` decision log: the paths, the br
 
 ## Output
 
-The worktree at `.worktrees/<branch>`, `Branch:` and `Paths:` written into the lock, and one decision-log line.
+The worktree at `.worktrees/<branch>`, `Branch:` and `Paths:` written into the lock, one decision-log line, and the named build shape.
 
 ## Files
 

@@ -5,7 +5,7 @@
 #
 # Prints:
 #   FOLDER= EXISTS= MARKER= LOCK_SLUG= BRANCH= WORKTREE= WT_DIRTY= WT_UNPUSHED=
-#   REPO_DIRTY= OPEN_ASK= UNREAD_ANSWER= ARCHIVE_FILE=
+#   REPO_DIRTY= DOCS_DIRTY= OPEN_ASK= UNREAD_ANSWER= ARCHIVE_FILE=
 #
 # BRANCH empty means this session never ran /1-build — so there is nothing to
 # verify and nothing to ship.
@@ -62,11 +62,29 @@ else
   echo "WT_UNPUSHED=0"
 fi
 
-# Docs and behavior-layer changes live in this repo, not in the worktree.
-echo "REPO_DIRTY=$(git -C "$ROOT" status --porcelain -- docs .claude CLAUDE.md 2>/dev/null | wc -l | tr -d ' ')"
+# Behavior-layer changes live in this repo, not in the worktree.
+echo "REPO_DIRTY=$(git -C "$ROOT" status --porcelain -- .claude CLAUDE.md 2>/dev/null | wc -l | tr -d ' ')"
+
+# The docs tree may be its own repo. Probe whichever git owns it — a nested
+# checkout reports nothing to the outer repo's status.
+if [ "$(git -C "$DOCS" rev-parse --show-toplevel 2>/dev/null)" = "$DOCS" ]; then
+  echo "DOCS_DIRTY=$(git -C "$DOCS" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
+else
+  echo "DOCS_DIRTY=$(git -C "$ROOT" status --porcelain -- "$DOCS" 2>/dev/null | wc -l | tr -d ' ')"
+fi
 
 # An unanswered question left behind. It dies with the folder, so name it first.
-echo "OPEN_ASK=$(ls -1 "$D" 2>/dev/null | grep -c -- '-ask\.md$' || true)"
+#
+# Open means asked with NO answer beside it — the same definition bus.py uses.
+# Counting every -ask.md would count resolved threads forever, and a session
+# that ever used the bus could never take the clean-close path.
+open_ask=0
+for a in "$D"/*-ask.md; do
+  [ -f "$a" ] || continue
+  base="${a%-ask.md}"
+  [ -f "$base-answer.md" ] || [ -f "$base-answer.read.md" ] || open_ask=$((open_ask + 1))
+done
+echo "OPEN_ASK=$open_ask"
 echo "UNREAD_ANSWER=$(ls -1 "$D" 2>/dev/null | grep -c -- '\-answer\.md$' || true)"
 echo "ARCHIVE_FILE=$ARCHIVE/$(date +%F).md"
 echo "--- files in the session folder ---"

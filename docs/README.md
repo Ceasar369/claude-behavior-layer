@@ -25,3 +25,7 @@ Two rules the layer does assume:
 
 Point `DOCS` somewhere else in `.claude/lib/paths.local.sh` if your docs live
 outside this repo.
+
+This tree is yours alone. The layer's own method documents — how to pace a prompt,
+how work gets audited before it ships — live in `.claude/playbook/` instead, so they
+still resolve when you repoint `DOCS`.

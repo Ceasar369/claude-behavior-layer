@@ -20,8 +20,18 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-echo "=== DOCS + BEHAVIOR LAYER — uncommitted in this repo ==="
-git -C "$ROOT" status --short -- docs .claude CLAUDE.md 2>/dev/null | head -100 || true
+# The docs tree may be its own repo. Probe whichever git owns it, the same way
+# probe.sh does — a nested checkout reports nothing to the outer repo's status.
+echo "=== DOCS — uncommitted ==="
+if [ "$(git -C "$DOCS" rev-parse --show-toplevel 2>/dev/null)" = "$DOCS" ]; then
+  git -C "$DOCS" status --short 2>/dev/null | head -100 || true
+else
+  git -C "$ROOT" status --short -- "$DOCS" 2>/dev/null | head -100 || true
+fi
+echo
+
+echo "=== BEHAVIOR LAYER — uncommitted in this repo ==="
+git -C "$ROOT" status --short -- .claude CLAUDE.md 2>/dev/null | head -100 || true
 echo
 
 echo "=== CODE — every worktree, committed against $MAIN_BRANCH and uncommitted ==="
