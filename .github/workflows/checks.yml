@@ -1,18 +1,20 @@
 name: Source checks
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
   isolated-tests:
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     strategy:
       matrix:
         python-version: ['3.12', '3.14']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Parse source and run isolated tests
