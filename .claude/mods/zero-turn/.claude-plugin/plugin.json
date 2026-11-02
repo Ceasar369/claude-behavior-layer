@@ -1,0 +1,9 @@
+{
+  "name": "zero-turn",
+  "version": "0.1.0",
+  "description": "Shows a session's own call to a hook-run skill as the result it is, never a hook error.",
+  "author": {
+    "name": "Ceasar Haddad"
+  },
+  "license": "MIT"
+}

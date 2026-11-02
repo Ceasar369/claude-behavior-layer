@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "exec npx -y @playwright/mcp@0.0.82 --isolated --headless --browser chromium --caps vision,pdf,devtools,network,storage,testing --output-dir \"$CLAUDE_PROJECT_DIR/.claude/state/playwright-mcp/$CLAUDE_CODE_SESSION_ID\""
+      ]
+    }
+  }
+}

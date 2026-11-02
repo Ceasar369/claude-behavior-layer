@@ -1,79 +1,303 @@
 {
-  "autoMemoryEnabled": false,
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "CLAUDE_CODE_SHELL": "/bin/bash",
+    "CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP": "1",
+    "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "6"
+  },
   "permissions": {
-    "deny": [
-      "Agent(general-purpose)",
-      "Agent(claude)",
-      "Agent(Explore)",
-      "Agent(Plan)",
-      "Agent(statusline-setup)",
-      "Agent(output-style-setup)"
+    "allow": [
+      "mcp__playwright__browser_annotate",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_cookie_clear",
+      "mcp__playwright__browser_cookie_delete",
+      "mcp__playwright__browser_cookie_get",
+      "mcp__playwright__browser_cookie_list",
+      "mcp__playwright__browser_cookie_set",
+      "mcp__playwright__browser_drag",
+      "mcp__playwright__browser_drop",
+      "mcp__playwright__browser_emulate_media",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_file_upload",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_find",
+      "mcp__playwright__browser_generate_locator",
+      "mcp__playwright__browser_handle_dialog",
+      "mcp__playwright__browser_hide_highlight",
+      "mcp__playwright__browser_highlight",
+      "mcp__playwright__browser_hover",
+      "mcp__playwright__browser_localstorage_clear",
+      "mcp__playwright__browser_localstorage_delete",
+      "mcp__playwright__browser_localstorage_get",
+      "mcp__playwright__browser_localstorage_list",
+      "mcp__playwright__browser_localstorage_set",
+      "mcp__playwright__browser_mouse_click_xy",
+      "mcp__playwright__browser_mouse_down",
+      "mcp__playwright__browser_mouse_drag_xy",
+      "mcp__playwright__browser_mouse_move_xy",
+      "mcp__playwright__browser_mouse_up",
+      "mcp__playwright__browser_mouse_wheel",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_navigate_back",
+      "mcp__playwright__browser_network_request",
+      "mcp__playwright__browser_network_requests",
+      "mcp__playwright__browser_network_state_set",
+      "mcp__playwright__browser_pdf_save",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_resume",
+      "mcp__playwright__browser_route",
+      "mcp__playwright__browser_route_list",
+      "mcp__playwright__browser_select_option",
+      "mcp__playwright__browser_sessionstorage_clear",
+      "mcp__playwright__browser_sessionstorage_delete",
+      "mcp__playwright__browser_sessionstorage_get",
+      "mcp__playwright__browser_sessionstorage_list",
+      "mcp__playwright__browser_sessionstorage_set",
+      "mcp__playwright__browser_set_storage_state",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_start_recording",
+      "mcp__playwright__browser_start_tracing",
+      "mcp__playwright__browser_start_video",
+      "mcp__playwright__browser_stop_recording",
+      "mcp__playwright__browser_stop_tracing",
+      "mcp__playwright__browser_stop_video",
+      "mcp__playwright__browser_storage_state",
+      "mcp__playwright__browser_tabs",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_unroute",
+      "mcp__playwright__browser_verify_element_visible",
+      "mcp__playwright__browser_verify_list_visible",
+      "mcp__playwright__browser_verify_text_visible",
+      "mcp__playwright__browser_verify_value",
+      "mcp__playwright__browser_video_chapter",
+      "mcp__playwright__browser_video_hide_actions",
+      "mcp__playwright__browser_video_show_actions",
+      "mcp__playwright__browser_wait_for"
     ]
   },
+  "enabledMcpjsonServers": [
+    "playwright"
+  ],
+  "disableClaudeAiConnectors": true,
   "hooks": {
-    "PreToolUse": [
+    "SessionStart": [
       {
-        "matcher": "Task|Agent",
+        "matcher": "clear",
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-spawn.sh"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/cleared.py\""
           }
         ]
-      },
+      }
+    ],
+    "UserPromptSubmit": [
       {
-        "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-memory.sh"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/0-session-start.py\""
           },
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-infra.sh"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/00-sessions-dashboard.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/8-ship.py\"",
+            "timeout": 660
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/9-session-stop.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/handover-prepare.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/handover-resume.py\"",
+            "timeout": 240
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/prototype-remove.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/prototype-save.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/prototype-continue.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/prototype-route.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/wave-open.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/reaper.py\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/0-session-start.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/00-sessions-dashboard.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/8-ship.py\"",
+            "timeout": 660
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/9-session-stop.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/handover-prepare.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/handover-resume.py\"",
+            "timeout": 240
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/prototype-remove.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/prototype-save.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/prototype-continue.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/reaper.py\""
           }
         ]
       },
       {
-        "matcher": "Bash",
+        "matcher": "SendMessage",
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-destructive.sh"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/mailbox.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Monitor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__playwright__browser_evaluate|mcp__playwright__browser_run_code_unsafe",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/walker-scripts.py\""
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/notify-bus.sh"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/prototype-hold.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/words-added.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/wrap-up.py\""
           }
         ]
       }
     ],
-    "SessionStart": [
+    "PreCompact": [
       {
+        "matcher": "auto",
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/archive-init.sh"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/early-compaction.py\""
           }
         ]
       }
     ],
-    "SessionEnd": [
+    "PostToolUseFailure": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/wrap-up.py\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-markers.sh"
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/shown.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/unwatched.py\""
           }
         ]
       }
     ]
-  }
+  },
+  "disableWorkflows": true,
+  "enableArtifact": false,
+  "statusLine": {
+    "type": "command",
+    "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/tools/statusline.py\""
+  },
+  "enabledPlugins": {
+    "zero-turn@layer-mods": true
+  },
+  "awaySummaryEnabled": false,
+  "autoMemoryEnabled": false,
+  "autoCompactEnabled": false
 }

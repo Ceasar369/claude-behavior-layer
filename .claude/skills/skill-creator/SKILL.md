@@ -1,162 +1,111 @@
 ---
 name: skill-creator
-description: Creates a new Claude Code skill to the authoring standard. Use when asked to create a skill or codify a repeatable workflow. Creates only — never reviews or edits an existing one.
-allowed-tools: Read, Write, Glob, Grep, AskUserQuestion
+description: Writes a new skill to this layer's standard.
+allowed-tools: Read, Write, Edit, Glob, Grep
+argument-hint: "[the behaviour to repeat]"
 ---
 
 # Skill Creator
 
-## Anchor
+A skill is a behaviour I want repeated. This writes one.
 
-Follow the root `CLAUDE.md`.
+## Step 1 — Read the standard
 
-## Purpose
+Read
+`knowledge/0010-playbook/0013-thinking/thinking-protocols/behaviour-protocols/the-behaviour-axioms.md`.
 
-Produce a `SKILL.md` that Claude discovers, triggers, and executes reliably.
+It is the floor. Follow it, never restate it.
 
-## Target
+## Step 2 — Say the behaviour in one sentence
 
-All skills live in `.claude/skills/<name>/`. Infer the name from context; ask only if genuinely unclear.
+Write what happens, when I run it, in one sentence.
 
-Every skill anchors to the root `CLAUDE.md`. A skill written for an executor also names the docs that govern that lane — point at an index, never restate one.
+Unclear → ask one question, in prose.
 
-## Frontmatter
+Two sentences → it is two skills. Say so and stop.
 
-Verify every limit and value set at `https://code.claude.com/docs/en/skills.md` before stating it.
+## Step 3 — Choose the kind
 
-**Required:**
-- `name` — lowercase, numbers, hyphens. Defaults to the directory name.
-- `description` — third person. States WHAT the skill does AND WHEN to use it.
+**Deterministic** — the same input always gives the same result, and no
+judgment is needed. It is a hook. It costs nothing.
 
-**Optional:**
-- `allowed-tools` — grants the listed tools without a permission prompt, for the invoking turn only. Does not restrict the toolset.
-- `disallowed-tools` — removes tools from the pool while the skill is active. Use this to take a tool away.
-- `argument-hint` — short hint shown beside the slash command.
-- `arguments` — named positional arguments, substituted as `$name` in the body.
-- `when_to_use` — extra trigger context. Appended to `description`; shares its character budget.
-- `model` — the same values `/model` accepts. Omit to inherit.
-- `effort` — low / medium / high / xhigh / max. Omit to inherit.
-- `user-invocable` — `false` hides the skill from the `/` menu. Menu visibility only: the description stays in context, and the `Skill` tool still reaches it.
-- `disable-model-invocation` — `true` so only the user's `/command` invokes it. Claude cannot invoke it, and its description stays out of context entirely. Check who calls the skill first; never set it on a skill another skill invokes. Whether it also blocks this skill's own outward `Skill` calls is undocumented — never rely on either reading. Protect an irreversible action with an `AskUserQuestion` gate, not this flag.
-- `context` — `fork` runs the skill in a forked subagent.
-- `background` — `false` waits for the forked subagent's result in the invoking turn.
-- `agent` — delegate to a named custom agent.
-- `hooks` — hooks scoped to this skill's lifecycle.
-- `paths` — glob list; the skill loads only for matching files.
-- `shell` — `bash` (default) or `powershell`, for `!` command blocks.
+**Judgment** — it reads, decides, or writes prose. It is a model skill.
+Its `SKILL.md` body carries the instructions.
 
-## The description
+Say which, and why in one line, before writing anything.
 
-Ceiling: 1,536 characters, `description` and `when_to_use` combined.
-It loads into every session — unless the skill carries `disable-model-invocation: true`, which keeps it out of context entirely.
+## Step 4 — Choose the name
 
-Write one or two sentences, under 40 words. Third person. Lead with the use case.
-Pack WHAT and WHEN. Add an anti-case only when a sibling skill could be confused for this one.
+The name says what the skill does, in words I already say.
 
-✅ `Extracts text from PDFs and fills forms. Use when working with PDF files.`
-❌ `Helps with documents.`
-❌ A paragraph of conditions, lifecycle notes, and caveats.
+A leading digit is for a skill I type all day. A rare one takes none.
 
-## Naming
+Ask me for the digit. Never assign one.
 
-The name says what the skill is, read alone. Never vague — no `helper`, no `utils`.
+Run `ls .claude/skills/` first. A name already taken is refused.
 
-**A numeric prefix is reserved for a genuine sequence.** Ten skills carry one,
-`0` through `9`, because they run in a fixed order: `0-start`, `1-build`,
-`2-ask`, `3-answer`, `4-inbox`, `5-repeat`, `6-clarify`, `7-provide-prompt`,
-`8-ship`, `9-stop`. The digit is the position, and it buys a one-keystroke reach
-in the `/` menu.
+Every name Claude Code owns is a word. A leading digit clears them all.
 
-Every other skill is a plain name — `prove`, `challenge`, `realign`. A skill with
-no position in a sequence never takes a digit, because a number that means
-nothing is a number a reader tries to decode.
+A plain name is cleared in a fresh pane, by typing `/` and reading the
+menu. A built-in answering to it refuses the name.
 
-All ten digits are taken. Writing a new skill means a plain name, unless the user
-explicitly renumbers the sequence to make room.
+## Step 5 — Write the files
 
-## Supporting files
-
-Put depth the body does not need every run into a file beside `SKILL.md` — templates, examples, scripts, reference data. Reference it by relative path.
+A hook skill takes three:
 
 ```
-.claude/skills/<name>/
-├── SKILL.md          ← required
-├── template.md       ← optional supporting file
-└── example.sh        ← optional supporting file
+.claude/hooks/<name>.py        all of the work
+.claude/skills/<name>/SKILL.md so the command resolves
+.claude/settings.json          two entries: UserPromptSubmit, and PreToolUse on Skill
 ```
 
-## Body template
+A model skill takes one:
 
 ```
----
-name: <slug>
-description: <third-person what + when, under 40 words>
-allowed-tools: <tools the body actually exercises>
----
-
-# <Title>
-
-## Anchor
-<Which CLAUDE.md applies.>
-
-## Purpose
-<One imperative sentence.>
-
-## Steps
-1. <First action.>
-2. <Second action.>
-
-## Things NOT to Do
-- <Constraints and anti-patterns.>
-
-## Output
-<What gets written, where, in what shape.>
+.claude/skills/<name>/SKILL.md
 ```
 
-`Anchor`, `Purpose`, `Steps`, `Things NOT to Do`, and `Output` are required. Rename `Steps`
-to fit the skill's shape and add sections freely. Never drop a required one. `Things to Do`
-is optional — add it only when the required actions do not already live in `Steps`.
+Work that outlives the prompt goes in `.claude/tools/<name>.py`.
 
-## Rules
+State goes in `.claude/state/<name>/`.
 
-Every one holds on the draft before it is written. Read them with the conventions above.
+The description is one line of menu text.
 
-- Cap the description at 40 words.
-- Cap every skill at 200 lines total.
-- Instruct, never explain. No rationale, no justification, no background.
-- Use imperative voice throughout.
-- Use timeless language — no dates, no "currently", no "planned".
-- Pick one default approach. Never present multiple equivalent options.
-- Use forward slashes in all paths.
-- `allowed-tools` names the tools the body actually exercises.
-- Every path the skill names must actually exist.
-- Any skill that verifies must require the runnable check's actual output, never a claim of success.
+It says what the skill does. A quoted phrase joins once I use one. Never a list.
 
-## Question gates
+A second phrase enters only after a real misfire.
 
-Find the skill's decision points. When a decision is a small set of known options (2–4) asked in the main session, design it as an `AskUserQuestion` gate — header, question, options with a recommended first — and add `AskUserQuestion` to `allowed-tools`. When the answer needs prose, ask in chat. Gates cannot fire inside a subagent — keep those paths self-deciding.
+Never a word another description already claims.
 
-## Steps
+One word of mine covering two acts → I pick a new word for one.
 
-1. Infer target, purpose, trigger, argument, and output from context. Ask only what is genuinely unclear — one question, never an interview, via `AskUserQuestion`.
-2. Identify decision points; design known-option ones as `AskUserQuestion` gates.
-3. Draft `SKILL.md` using the body template with the correct anchor.
-4. Move depth the body does not need every run into a supporting file.
-5. Glob or grep every path the draft names. A path that does not resolve is a defect.
-6. Confirm every rule in `## Rules` holds. Count the description's words.
-7. Write to `.claude/skills/<name>/SKILL.md`.
+`argument-hint` names every word the skill takes, and what leaving it out does.
 
-## Things NOT to Do
+A hook calls `hook.words(TRIGGER)` first, and `hook.done()` last.
+`.claude/lib/hook.py` rules both.
 
-- Never explain why a rule exists — state the rule.
-- Never name a path without verifying it resolves.
-- Never write a description longer than 40 words.
-- Never present multiple equivalent options.
-- Never omit the description's anti-case when a sibling skill could be confused for this one.
-- Never grant a tool the body never exercises.
-- Never review, audit, or edit an existing skill here. This skill creates.
-- Never write an agent. Agents follow their own standard, in `.claude/agents/README.md`.
+## Step 6 — Write the body
 
-## Output
+Imperative. Numbered steps. One instruction a line.
 
-The new `SKILL.md` at `.claude/skills/<name>/SKILL.md`, plus any supporting files in that directory. Reply with the absolute path.
+State the rule. Never the reason, the history, or the source.
+
+Every path is repo-relative and whole.
+
+A rule never carries a real value: a default, a place, a name a tool prints. It names the file holding the value. An example may carry one.
+
+A shell comment may hold one.
+
+## Step 7 — Prove it
+
+Open a fresh pane.
+
+Run it. Paste the output back to me, verbatim.
+
+Untested → say "unproven", in that word.
+
+## Step 8 — Report
+
+Name every file written. Name what it costs per run.
+
+Then stop.

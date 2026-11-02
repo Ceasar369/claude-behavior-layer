@@ -1,0 +1,8 @@
+{
+  "name": "layer-mods",
+  "description": "The behaviour layer's own mods, for every session in this project.",
+  "owner": { "name": "layer-mods" },
+  "plugins": [
+    { "name": "zero-turn", "source": "./zero-turn" }
+  ]
+}

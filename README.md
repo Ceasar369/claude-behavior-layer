@@ -1,306 +1,184 @@
-# A behavior layer for Claude Code
+# Claude Behavior Layer
 
-A working `.claude/` — 19 skills, 3 agents, 8 hooks, and a session convention that
-ties them together. Not a starter template. This is a layer that has been run,
-broken, and hardened, then lifted out of the project it grew in.
+**My working environment for building with Claude Code.**
 
-Clone it, point three variables at your repo, and it runs.
+[Explore the interface](https://ceasar369.github.io/claude-behavior-layer/) · [Try it locally](#try-it-locally)
 
-Two things in here you probably haven't seen elsewhere. They come first.
+I built this around how I want to work.
+I describe the outcome, examine proposals, and make decisions.
+The layer coordinates the sessions doing the work.
 
-## 1. Ten skills, ten digits
+It combines communication rules, reusable workflows, and local tools.
+A browser dashboard brings decisions and progress together.
+Python hooks handle selected session actions without another model turn.
 
-A keyboard has exactly ten digits. This layer spends all ten.
+![Current Claude Behavior Layer Skills interface, filtered for assistant](docs/images/current-layer.jpg)
 
-The ten skills reached most often carry one, `0` through `9`, so each costs a
-single keystroke. `/0` boots a session. `/9` closes it — alpha and omega, the two
-run more than any other.
+*Current Skills interface, filtered for assistant, with empty sample state.*
+*The screenshot contains no live session data.*
 
-```
-0  start      1  build                                  8  ship    9  stop
-      2  ask   3  answer   4  inbox
-      5  repeat   6  clarify   7  provide-prompt
-```
+## Why it exists
 
-`0`, `1`, `8`, `9` are the spine — once each, in that order. `2` through `7` are
-the middle, reached repeatedly, in whatever order the work needs.
+A good conversation should lead to software I actually want.
+That needs more than a long opening prompt.
 
-The digit is a position, never a ranking. The other eight skills hold no position
-in that sequence, so they keep plain names. There is no eleventh digit, which is
-the point: a new skill earns one only by displacing an existing one on frequency.
+I want sessions to preserve context and explain decisions clearly.
+I want parallel work organized into explicit missions.
+I want to inspect prototypes before committing to their direction.
+I want handovers that preserve the work already done.
 
-## 2. A file-based bus for questions across windows
+This repository contains the working system behind that approach.
 
-A session gets blocked on a decision. You're in another window. Normally it stalls.
+## What it does
 
-Here it writes the question into its own folder and stops. Any other window
-answers it. The blocked session pulls the answer and carries on.
-
-```
-sessions/0041-refactor-auth/
-  90-0003-token-expiry-ask.md
-  90-0003-token-expiry-answer.md        ← unread
-  90-0002-schema-choice-answer.read.md  ← already pulled
-```
-
-**There is no state anywhere else.** No pairing table, no counter, no daemon.
-Three writers touch three disjoint filenames — the asker writes the ask, the
-answerer writes the answer, the asker renames it once read. Nothing can clobber
-anything, and an interrupt cannot strand a session in a wrong state, because the
-state *is* which files exist.
-
-`/2-ask` writes and stops. `/3-answer` replies from anywhere. `/4-inbox` pulls it
-back. One question open at a time, and that is structural rather than a rule —
-asking ends the turn, and a stopped session cannot ask twice.
-
-**The blocked session can wake itself.** `/2-ask` optionally leaves one detached
-shell process watching for its own answer file — bounded at eight hours, spending
-zero model turns while it waits. The answer lands, the process exits, and the
-session resumes into `/4-inbox` on its own. That waiter is the only piece of state
-outside the files, and it is deliberately worthless: it reads nothing and moves
-nothing. Lose it and the answer file still stands, because pulling by hand is
-always the fallback.
-
-A local page shows the whole board:
-
-```bash
-python3 .claude/tools/bus-viewer/server.py    # http://127.0.0.1:8787
-```
-
-Orange, a session is waiting on you. Green, it owes itself an `/4-inbox`. The page
-imports the same `bus.py` the skills call, so it derives every state at read time
-and can never disagree with them. One dependency: `python3`.
-
-On macOS, `./build-app.sh` makes it a double-clickable boot button — engine up,
-workspace open, page on screen. The icon is drawn from code, not checked in as art.
-
-## The three ideas
-
-**A session is an object on disk, not a chat window.** It has a number, a folder, a
-lock block, and a live marker. `/0-start` creates all four; `/9-stop` distils the session
-into one prose paragraph in a dated archive file and removes them. What survives is
-what was written down on purpose. Nothing survives by accident.
-
-**A rule a model can drift past is not a control.** Every rule that must hold is a
-hook with an exit code, not a sentence in `CLAUDE.md`. Five guards block destructive
-shell, writes to the pristine checkout, an executor leaving its lane, built-in
-subagent types, and memory writes. They fire for the main session and for every
-subagent, and they are all probeable from a terminal.
-
-**An agent is defined by its write fence, not its topic.** `executor` is not "the
-agent that writes code" — it is the agent that can write `.worktrees/<branch>/`
-and its own session folder, and nothing else on disk. The fence is a directory
-check in `guard-write.sh`, keyed off the name the agent passes in its own hook
-declaration. Change the fence and you have changed the agent. Pass a name the
-`case` does not know and every write is blocked, which is how a retired agent
-fails closed.
-
-One fence, not one per topic. Parallel executors are separated by their assigned
-target paths instead — an executor spawned without them stops rather than guessing
-its scope. If you want a hard fence between two subtrees, adding one is three edits
-that must land together: a `case` branch in `guard-write.sh`, an agent file carrying
-its own `guard-write.sh <name>` declaration, and a row in `.claude/agents/README.md`.
-A table row with no `case` branch has no fence at all.
-
-## What's in the box
-
-### Skills
-
-All nineteen, by what they are for.
-
-| | |
+| Part | What I use it for |
 |---|---|
-| **Lifecycle** | `0-start` `1-build` `8-ship` `9-stop` `handoff` |
-| **Messages** | `2-ask` `3-answer` `4-inbox` |
-| **Input and delivery** | `5-repeat` `6-clarify` `7-provide-prompt` `snippet` |
-| **Analysis** | `conclusions` `realign` `prove` `challenge` `doc-check` |
-| **Authoring** | `plan-agents` `skill-creator` |
+| Communication rules | Short answers, concrete explanations, and clear next decisions |
+| Thinking workflows | Explore a subject before choosing what to build |
+| Coding workflows | Plan implementation and check its consequences |
+| Assistant sessions | Divide work into missions and coordinate their completion |
+| Decision pages | Review a session's proposals and send my rulings |
+| Prototypes and walkthroughs | Inspect interfaces and examine how they behave |
+| Handovers | Continue work in a fresh session with written context |
+| Local dashboard | See sessions, decisions, plans, and tools together |
 
-A few worth naming:
+## One working result
 
-- **`handoff`** — moves a live session to a fresh terminal without closing it.
-  The number, the folder, the lock and the branch all stay; only the pane changes.
-  It updates the session's own folder first, then writes a prompt whose first line
-  re-attaches the new terminal to the same session identity.
+**[Blindfold Chess](https://github.com/Ceasar369/blindfold-chess)** is a personal board-visualization trainer.
+It organizes practice into six chapters.
+Those cover coordinates, movement, notation, memory, updates, and blind play.
 
-- **`prove`** — someone claims the docs say X. It splits the claim, fans out cold
-  collectors that are forbidden from concluding anything, hands every quote to a
-  separate judge, then greps each returned quote to confirm the line number. A claim
-  that cannot be quoted is reported as invented.
-- **`conclusions` / `realign`** — both read the session's own on-disk transcript
-  rather than its context. They flatten it into a gate-aware file where a formal
-  `AskUserQuestion` answer is marked as the highest-authority evidence, and harness
-  notifications are tagged so they can never be mistaken for the user.
-- **`challenge`** — spawns agents with deliberately opposed assigned stances, and
-  never tells any of them what the session already believes.
+I built its behavior around how I wanted to practice.
+Its project-specific layer uses this same approach.
+The trainer makes the workflow's output concrete and inspectable.
 
-### Agents
+## Follow one decision
 
-| Agent | Writes | Fence |
-|---|---|---|
-| `executor` | `.worktrees/<branch>/`, plus `sessions/` | `guard-write.sh executor` |
-| `researcher` | nothing | `Read, Glob, Grep` only |
-| `web-researcher` | nothing | tools only |
+A session prepares two decisions for a welcome note.
+Its page shows each decision separately.
+I agree with one and change the other.
+Pressing Send returns my rulings to the session.
+The session then writes the note with that direction.
 
-### Hooks
+The clarify tools implement this decision flow.
+The approach keeps my decisions visible throughout the work.
 
-| Hook | Event | Effect |
-|---|---|---|
-| `guard-destructive.sh` | PreToolUse(Bash) | Blocks every directly-typed `rm`, `git clean`, `sudo`, force-push. |
-| `guard-infra.sh` | PreToolUse(Write) | Blocks any write to the primary code checkout. |
-| `guard-write.sh` | PreToolUse(Write) | Confines an executor to its lane. Fails closed. |
-| `guard-spawn.sh` | PreToolUse(Task) | Blocks built-in subagent types. |
-| `guard-memory.sh` | PreToolUse(Write) | Blocks every write to a Claude memory store. |
-| `archive-init.sh` | SessionStart | Creates today's archive file. |
-| `session-markers.sh` | SessionEnd | Clears the session's identity file, sweeps stale ones. |
-| `notify-bus.sh` | PostToolUse(Bash) | Desktop notification when a question is asked or answered. |
+## Built for my setup
 
-### The status page
+The full environment targets **macOS, iTerm2, and Claude Code**.
+Python powers its dashboard and session tools.
+Several integrations depend on terminal and browser configuration.
 
-Covered above. `.claude/tools/bus-viewer/` — one command, any OS, any browser.
+The rules and playbook are easier to adapt independently.
+The whole environment needs its own setup and permissions.
+It is a personal working system with documented assumptions.
 
-If you have iTerm2 and its Browser Plugin, the macOS boot button gives you a
-dedicated window with a terminal on the left and the page live on the right.
-Without them it opens your browser, which needs no setup.
+## Repository shape
 
-## The session convention
+| Path | Contents |
+|---|---|
+| `CLAUDE.md` | Project entry point and working conventions |
+| `.claude/rules/` | Communication and reasoning rules |
+| `.claude/skills/` | Named workflows, grouped into families |
+| `.claude/hooks/` | Event-driven session checks and actions |
+| `.claude/lib/` and `.claude/tools/` | Python implementation and local pages |
+| `knowledge/0010-playbook/` | The working method behind those workflows |
 
-Nine of the nineteen skills depend on this. It is the one thing to understand
-before adopting.
+Live conversations, account files, and runtime state are private.
+They belong outside a public source snapshot.
 
-```
-sessions/
-  ACTIVE.md                             the live index — lock blocks
-  0001-token-refresh/
-    00-session.md                       intent, mode, decision log
-    .session-live                       the live marker
-    90-0001-refresh-trigger-ask.md      asked, unanswered      → orange
-  0002-cache-invalidation/
-    90-0001-delete-or-write-ask.md
-    90-0001-delete-or-write-answer.md   answered, not pulled   → green
-  0003-schema-migration/
-    90-0001-backfill-shape-ask.md
-    90-0001-backfill-shape-answer.read.md   pulled             → grey
-archive/
-  2026-01-14.md                         one file per day, pure prose
+## Try it locally
+
+Use a separate trial folder first.
+The full environment requires **macOS and iTerm2**.
+Install **Python 3.12+**, **Node.js 22+**, **git**, and current **Claude Code**.
+A Claude Code account is needed for live conversations.
+
+Check the commands your terminal will use:
+
+```sh
+command -v python3 claude node npx git
+python3 --version
+claude --version
+node --version
 ```
 
-Those three are seed data, shipped so a fresh clone shows the real shape rather
-than an empty tree. Clearing them is one loop — see the viewer README.
+The plugin manifests were validated with Claude Code **2.1.316**.
+An older `claude` earlier on PATH needs updating.
+Use Anthropic's [installation instructions](https://code.claude.com/docs/en/setup).
 
-A lock block claims path prefixes. `/1-build` refuses to open a worktree on paths a
-live lock already claims, and prints the colliding block in full so the collision is
-judged on its own terms rather than by a rule. That is what lets several sessions run
-at once against one repository.
+Download the public source and prepare its trial configuration:
 
-`/1-build` cuts a worktree per branch under `.worktrees/`, so the primary checkout never
-moves off the integration branch and several branches are live simultaneously. `/8-ship`
-tears the worktree down only after verifying on disk that the branch really merged.
-
-## Install
-
-```bash
-git clone <this repo> my-project
-cd my-project
-cp .claude/lib/paths.local.sh.example .claude/lib/paths.local.sh
+```sh
+git clone https://github.com/Ceasar369/claude-behavior-layer.git
+cd claude-behavior-layer
+cp .claude/project.example.json .claude/project.json
+python3 scripts/check.py
+python3 .claude/lib/project.py
 ```
 
-`paths.local.sh` holds overrides only — it is sourced before the defaults, so anything
-it sets wins. Never copy `paths.sh` itself.
+The sample names the project **Claude Layer Trial**.
+Its branch is **main**; its dashboard uses port **21100**.
+That keeps the trial separate from another project's port 1100.
+Change the sample's name and branch for your own project.
 
-Dropping the layer into an existing repo takes six paths: `.claude/`, `CLAUDE.md`,
-`sessions/`, `archive/`, `docs/`, `prompts/`. Only the first four are load-bearing —
-`require_paths` hard-fails without `sessions/` and `archive/`. Skip `docs/` and
-`prompts/` and nothing errors, but `/prove`, `/doc-check`, `/7-provide-prompt`, and
-`researcher` all lose the tree they navigate, silently. Point `DOCS` and `PROMPTS` at
-your real ones instead.
+In iTerm2, open **Settings → General → Magic**.
+Enable **Python API**, following [iTerm2's documentation](https://iterm2.com/python-api/tutorial/running.html).
+The first pane operation installs the `iterm2` Python package.
+macOS may request permission for Python to control iTerm2.
 
-Requires `bash`, `jq`, `python3`, and `git`. `gh` only if you use `/8-ship` to open PRs.
+Read the [communication rules](.claude/rules/talking.md) and [reasoning rules](.claude/rules/thinking.md).
+Review [project settings](.claude/settings.json) before trusting the folder.
+They enable hooks and approve the isolated Playwright browser's tools.
 
-Probe the guards before trusting them:
+From the trial folder, install the included local mod:
 
-```bash
-printf '{"tool_input":{"command":"rm -rf build/"}}' | .claude/hooks/guard-destructive.sh
-# → exit 2, with the block reason on stderr
+```sh
+claude plugin marketplace add --scope local ./.claude/mods
+claude plugin install --scope local zero-turn@layer-mods
+claude
 ```
 
-## What you must change first
+Keep this checkout in place while its local marketplace is installed.
+Start Claude from the repository root in iTerm2.
+Complete Claude's project-trust and MCP prompts yourself.
+Playwright may download Chromium on its first browser use.
 
-1. **`.claude/lib/paths.local.sh`** — set `CODE` to your real code checkout. It
-   defaults to `./code`. Set `CODE=""` to switch `guard-infra.sh` off entirely if your
-   repo has no separate checkout. Set `MAIN_BRANCH` if yours is not `main`.
+Inside Claude Code, run these commands separately:
 
-2. **Nothing, if one executor suits you.** `executor` writes the whole worktree, and
-   parallel spawns are separated by their assigned target paths rather than by a hook.
-   Want a hard fence between two subtrees anyway? Add it in three places at once — a
-   `case` branch in `guard-write.sh`, an agent file with its own `guard-write.sh <name>`
-   declaration, and a row in `.claude/agents/README.md`. A row with no `case` branch
-   has no fence.
+```text
+/0-session-start 02
+/00-sessions-dashboard restart
+```
 
-3. **`docs/`** — replace the placeholder with your real documentation, and give it a
-   front door. `prove`, `doc-check`, and `researcher` all start there and navigate by
-   discovery, so any structure works as long as there is an index to follow.
+Open **http://127.0.0.1:21100**.
+The dashboard should show your numbered session.
+Try `/2-clarify` with one decision you want explained.
 
-4. **`CLAUDE.md`** — the communication section is opinionated on purpose: eight words
-   per sentence, answer first, no preamble, pick one option rather than listing three.
-   Keep it or cut it, but decide deliberately. The rest of the file is the routing and
-   delegation doctrine the skills assume, and that part is load-bearing.
+The dashboard can control local sessions and inspect their files.
+Keep its controller local; the public site is a static preview.
 
-5. **Nothing else is machine-specific.** No absolute path appears anywhere in the
-   layer. Every script derives the repo root from its own location; every hook command
-   uses `$CLAUDE_PROJECT_DIR`.
+## Checks and limits
 
-## What it assumes
+```sh
+python3 scripts/check.py
+```
 
-- One repository, several concurrent sessions, one human directing them.
-- Code lives in a checkout that is never written directly, and changes land in branch
-  worktrees.
-- Documentation is a tracked tree in the repo, not a wiki.
-- Claude Code is the runtime: `SKILL.md` frontmatter, `.claude/agents/`, hook events,
-  and `AskUserQuestion` all behave as documented.
-- Branch names start `fix/`, `chore/`, or `feature/`. `worktree.sh` rejects anything else.
+This parses 101 Python files and five JSON files.
+It runs 49 existing tests using isolated temporary fixtures.
+The checks passed on macOS with Python 3.12 and 3.14.
+The mod and marketplace validate under Claude Code 2.1.316.
+Its documented local installation commands also passed an isolated trial.
+A fresh folder containing spaces also passed its hook/configuration checks.
 
-If the second assumption does not hold, drop `guard-infra.sh` and simplify `/1-build`.
-Everything else stands on its own.
+These checks do not start real Claude conversations or panes.
+Playwright/MCP startup was not exercised in these checks.
+Complete first-run iTerm2, macOS, and Claude prompts during setup.
+See [release validation](VALIDATION.md) for exact checks and limits.
+Optional Dock, phone, and external-provider integrations require separate configuration.
+The full environment uses macOS-specific file watchers and terminal tools.
 
-### One dependency worth knowing about
+Live conversations, account files, and runtime state stay outside git.
+The sample settings are separate from my own working installation.
 
-Session identity — the map from a Claude Code session to its folder — is keyed on
-`CLAUDE_CODE_SESSION_ID`. That variable is not a documented contract, so the layer
-never trusts it alone. `boot.sh` writes the map only when it is set; `bus.py` says
-plainly which session it could not resolve; `close.sh` clears the map immediately and
-the `SessionEnd` hook clears it again; and a sweep deletes any file older than a day,
-because a crashed session never reaches `SessionEnd`.
-
-If the variable disappears, `/2-ask`, `/4-inbox`, and `/9-stop` lose the ability to name
-their own session — every one of them then asks rather than guessing. Nothing corrupts.
-That is the intended failure mode, not an oversight.
-
-## Extending it
-
-`/skill-creator` writes new skills to the authoring standard — 200-line cap,
-40-word description cap, required sections, every named path verified to resolve.
-`.claude/agents/README.md` is the equivalent standard for agents, including the rule
-that a write-capable agent without a declared `guard-write.sh` hook has no fence at all.
-
-`.claude/playbook/` holds the layer's own method documents — how to pace a prompt,
-how a slice differs from a pillar, how consequential work gets audited cold, how a
-change is traced through its dependents. They ship inside `.claude/` rather than in
-`docs/` on purpose: `DOCS` is yours to repoint anywhere, and a skill that referenced
-"the Writing a Prompt document" would dangle the moment you did. Every one of them is
-opinionated and every one is yours to cut.
-
-All ten digits are taken, so a new skill takes a plain name — `handoff` is the most
-recent. A digit marks a position in a sequence; a skill with no position never gets one.
-
-## Seed data
-
-Three session folders, one archive day file, and three lock blocks ship with the
-repo. They are real output from the real scripts, not mocks — the fastest way to
-see the shape a session takes on disk, and what it leaves behind when it closes.
-
-Clearing them is one loop, in `.claude/tools/bus-viewer/README.md`.
-
-## License
-
-MIT. See `LICENSE`.
+MIT license. See [LICENSE](LICENSE).

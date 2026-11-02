@@ -1,0 +1,25 @@
+{
+  "engines": {
+    "codex": {
+      "model": "gpt-6-astra",
+      "effort": "max"
+    },
+    "grok": {
+      "model": "grok-4.7",
+      "effort": "xhigh"
+    }
+  },
+  "default": "codex",
+  "webs": {
+    "off": "disabled",
+    "cached": "cached",
+    "live": "live"
+  },
+  "maxFailures": 3,
+  "maxRuns": 6,
+  "atOnce": 3,
+  "timeoutSeconds": 1800,
+  "checkSeconds": 120,
+  "fileBytes": 1000000,
+  "fileCount": 200
+}
