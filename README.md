@@ -1,91 +1,44 @@
-# Claude Behavior Layer
+# My Claude setup
 
-**My working environment for building with Claude Code.**
+This is how I set up Claude Code.
+It works well for me on my own projects.
+I also tried it with [Blindfold Chess](https://github.com/Ceasar369/blindfold-chess).
+That worked well for me too.
 
-[Explore the interface](https://ceasar369.github.io/claude-behavior-layer/) · [Try it locally](#try-it-locally)
+I’m sharing it in case someone else finds it useful.
+You can use the parts that help you.
+Some parts are specific to my Mac and terminal setup.
 
-I built this around how I want to work.
-I describe the outcome, examine proposals, and make decisions.
-The layer coordinates the sessions doing the work.
+[Project page](https://ceasar369.github.io/claude-behavior-layer/) · [Setup](#try-it-locally)
 
-It combines communication rules, reusable workflows, and local tools.
-A browser dashboard brings decisions and progress together.
-Python hooks handle selected session actions without another model turn.
+## Rules and tools
 
-![Current Claude Behavior Layer Skills interface, filtered for assistant](docs/images/current-layer.jpg)
+The main pieces are:
 
-*Current Skills interface, filtered for assistant, with empty sample state.*
-*The screenshot contains no live session data.*
+- My rules for how Claude answers and reasons.
+- Workflows for planning, coding, prototypes, and checking an app.
+- Local pages for questions, decisions, and session progress.
+- Tools for starting sessions and handing work between them.
 
-## Why it exists
+The full setup uses macOS, iTerm2, and Claude Code.
+The rules and workflow files can also be read separately.
 
-A good conversation should lead to software I actually want.
-That needs more than a long opening prompt.
+<details>
+<summary>A screenshot of the local page</summary>
 
-I want sessions to preserve context and explain decisions clearly.
-I want parallel work organized into explicit missions.
-I want to inspect prototypes before committing to their direction.
-I want handovers that preserve the work already done.
+![My local Skills page, filtered for assistant](docs/images/current-layer.jpg)
 
-This repository contains the working system behind that approach.
+This screenshot uses empty sample sessions.
 
-## What it does
+</details>
 
-| Part | What I use it for |
-|---|---|
-| Communication rules | Short answers, concrete explanations, and clear next decisions |
-| Thinking workflows | Explore a subject before choosing what to build |
-| Coding workflows | Plan implementation and check its consequences |
-| Assistant sessions | Divide work into missions and coordinate their completion |
-| Decision pages | Review a session's proposals and send my rulings |
-| Prototypes and walkthroughs | Inspect interfaces and examine how they behave |
-| Handovers | Continue work in a fresh session with written context |
-| Local dashboard | See sessions, decisions, plans, and tools together |
+## Blindfold Chess
 
-## One working result
+I wanted a chess trainer for my own practice.
+I used this Claude setup while making it.
 
-**[Blindfold Chess](https://github.com/Ceasar369/blindfold-chess)** is a personal board-visualization trainer.
-It organizes practice into six chapters.
-Those cover coordinates, movement, notation, memory, updates, and blind play.
-
-I built its behavior around how I wanted to practice.
-Its project-specific layer uses this same approach.
-The trainer makes the workflow's output concrete and inspectable.
-
-## Follow one decision
-
-A session prepares two decisions for a welcome note.
-Its page shows each decision separately.
-I agree with one and change the other.
-Pressing Send returns my rulings to the session.
-The session then writes the note with that direction.
-
-The clarify tools implement this decision flow.
-The approach keeps my decisions visible throughout the work.
-
-## Built for my setup
-
-The full environment targets **macOS, iTerm2, and Claude Code**.
-Python powers its dashboard and session tools.
-Several integrations depend on terminal and browser configuration.
-
-The rules and playbook are easier to adapt independently.
-The whole environment needs its own setup and permissions.
-It is a personal working system with documented assumptions.
-
-## Repository shape
-
-| Path | Contents |
-|---|---|
-| `CLAUDE.md` | Project entry point and working conventions |
-| `.claude/rules/` | Communication and reasoning rules |
-| `.claude/skills/` | Named workflows, grouped into families |
-| `.claude/hooks/` | Event-driven session checks and actions |
-| `.claude/lib/` and `.claude/tools/` | Python implementation and local pages |
-| `knowledge/0010-playbook/` | The working method behind those workflows |
-
-Live conversations, account files, and runtime state are private.
-They belong outside a public source snapshot.
+You can [play it](https://ceasar369.github.io/blindfold-chess/) or [read the code](https://github.com/Ceasar369/blindfold-chess).
+You can also download it and run it locally.
 
 ## Try it locally
 

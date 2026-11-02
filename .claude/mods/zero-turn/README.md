@@ -16,6 +16,6 @@ claude plugin install --scope local zero-turn@layer-mods
 The repository README explains setup and required permissions.
 Restart Claude Code after installation.
 This mod requires a Claude Code version supporting mods.
-The release was validated with Claude Code 2.1.316.
+Its manifest and local installation were checked with Claude Code 2.1.316.
 
 The repository's MIT license applies.
