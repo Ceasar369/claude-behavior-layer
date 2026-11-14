@@ -2,7 +2,7 @@
 
 Up: [[driving-protocols-MOC|Driving Protocols]]
 
-When a stage of a plan I hand you runs, and when a mission starts, once what it needs has stopped, or, in an open plan, once I rule it.
+When a stage of a plan I hand you runs, and when the next stage starts, once what it needs has stopped, or, in an open plan, when a mission starts, once I rule it.
 
 ## The steps, in order
 
@@ -11,9 +11,9 @@ While a stage runs:
 1. **Prepare the next stage's launch page.** The launch page itself, nothing custom: each row's number, name, first message, account, model and effort. The page places each row, as `launch` rules: "Never write where a row lands." The page's defaults fill what you leave unset. Skill: `launch`.
 2. **Leave every row to me until it fires.** Skill: `launch`.
 
-Once what a next stage's mission needs has stopped, or once you take the drive with no stage running:
+Once what the next stage needs has stopped, or once you take the drive with no stage running:
 
-3. **Write the missions free to start.** Skill: `assistant-mission`.
+3. **Write every mission of the stage.** The stage goes out whole, never in part. Skill: `assistant-mission`.
 4. **Queue them.** Skill: `1-assistant`.
 5. **Fire the scheduled page, as my press does.** Through the launch page's own code, never a copy. Skill: `1-assistant`.
 6. **Let a moved layout fall back.** A row whose anchor is gone still launches. The launch tool places it. Skill: `1-assistant`.

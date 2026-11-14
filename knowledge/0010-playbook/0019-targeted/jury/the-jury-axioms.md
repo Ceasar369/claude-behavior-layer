@@ -20,4 +20,4 @@ A juror with no answer is named in the count, never counted.
 
 The conclusion adds no fact. Each sentence names the claim it rests on.
 
-No other skill calls the jury.
+No skill but `my-advisor`, on my yes, calls the jury.

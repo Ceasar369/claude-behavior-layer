@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""outsource.py — one brief, run on Codex or Grok, checked, and answered in JSON.
+"""outsource.py — one brief, run on Codex, checked, and answered in JSON.
 
-A session hands a task to an engine, Codex, ChatGPT's coding agent, or
-Grok Build, xAI's, as a folder inside its own session folder:
+A session hands a task to the engine, Codex, ChatGPT's coding agent, as
+a folder inside its own session folder:
 
   .claude/state/sessions/NN/outsource/<slug>/
     task.md      the brief. The engine reads it and cannot write it.
@@ -33,16 +33,10 @@ Every verb prints one JSON object, and exits 0. Its "status" is one of:
             "problems" holds each. resume with no words sends them back.
 
 Codex runs with my user config and rules ignored, in a workspace-write
-sandbox rooted at out/. Grok runs on a copy of the folder outside the
-repository, so no project file of Claude's or Cursor's loads, and its
-user-level ones are switched off. Its wall is the custom profile WALL,
-which refuses to start rather than run unwalled; a run whose wall Grok's
-log does not show going up fails. It approves its own steps inside that
-wall: a headless Grok skips any step awaiting approval, and still ends well.
-Each runs with its engine's model and effort, the web the brief sets, and
-no keyboard input. What it may touch, and what it must stop and ask, are
-fixed here. The brief names its engine alone: each engine's model and
-effort are outsource.json's, set on its card on 1100/system, as
+sandbox rooted at out/. It runs with its model and effort, the web the
+brief sets, and no keyboard input. What it may touch, and what it must
+stop and ask, are fixed here. The brief names its engine alone: its model
+and effort are outsource.json's, set on its card on 1100/system, as
 lib/engines.py says. So are the caps.
 
 A misuse prints one line on stderr and exits 1.
@@ -53,11 +47,9 @@ import hashlib
 import json
 import os
 import re
-import shutil
 import signal
 import subprocess
 import sys
-import tempfile
 import time
 
 sys.path.insert(0, os.path.join(
@@ -68,10 +60,6 @@ import registry  # noqa: E402
 ROOT = registry.ROOT
 SESSIONS = os.path.realpath(registry.WORK)
 NAMES = engines.NAMES
-GROK_HOME = os.path.expanduser("~/.grok")
-WALL = "outsource"
-GROK_OFF = {**{f"GROK_{v}_{s}_ENABLED": "0" for v in ("CLAUDE", "CURSOR")
-               for s in ("AGENTS", "HOOKS", "MCPS", "RULES", "SKILLS")}, "GROK_MEMORY": "0"}
 
 PARTS = ("Run settings", "Goal", "Read", "Write", "Hand back", "Checks", "Calls that stay mine")
 KEYS = ("engine", "web")
@@ -116,8 +104,6 @@ Never commit, push, install packages or change git.
 If the brief does not answer something you need, or the choice is listed under 'Calls that stay mine', stop and reply with status question. Never guess.
 Your last message must follow the reply schema: status done, or status question. List each file as a path relative to your current folder."""
 
-GROK_REPLY = """The reply schema is one JSON object, alone in your last message, with no code fence: {"status": "done" or "question", "summary": a string, "question": a string, "files": [each a path relative to your current folder]}."""
-
 SCHEMA = {
     "type": "object",
     "additionalProperties": False,
@@ -148,17 +134,9 @@ def resolve(folder: str) -> str:
 
 
 def offered(engine: str) -> dict:
-    """Model -> its efforts, for each model the engine lists. Grok lists no
-    efforts: None. Codex is asked itself: its cache file is shared with
-    Codex's desktop app, whose older list overwrites it. Empty when the
-    engine will not answer."""
-    if engine == "grok":
-        try:
-            got = subprocess.run(["grok", "models"], capture_output=True, text=True,
-                                 timeout=60, stdin=subprocess.DEVNULL)
-        except (OSError, subprocess.TimeoutExpired):
-            return {}
-        return {m: None for m in re.findall(r"^\s+[*-] (\S+)", got.stdout, re.M)}
+    """Model -> its efforts, for each model Codex lists. Codex is asked
+    itself: its cache file is shared with Codex's desktop app, whose older
+    list overwrites it. Empty when it will not answer."""
     try:
         got = subprocess.run(["codex", "debug", "models"], capture_output=True, text=True,
                              timeout=60, stdin=subprocess.DEVNULL)
@@ -214,12 +192,10 @@ def settings(sec: dict, c: dict) -> tuple:
     web = kv.get("web", "off")
     if web not in c["webs"]:
         problems.append(f"web must be one of {', '.join(c['webs'])}, not {web}.")
-    elif engine == "grok" and web == "cached":
-        problems.append("Grok has no cached web: off or live.")
     have = offered(engine)
     if have and model and model not in have:
         problems.append(f"Model {model}, set on 1100/system, is not offered on this account. It offers: {', '.join(have)}.")
-    elif have and model and have[model] is not None and effort not in have[model]:
+    elif have and model and effort not in have[model]:
         problems.append(f"Effort {effort} is not offered for {model}. It offers: {', '.join(have[model])}.")
     return {"engine": engine, "model": model, "effort": effort, "web": c["webs"].get(web, "disabled")}, problems
 
@@ -299,116 +275,27 @@ def events(path: str) -> dict:
     return out
 
 
-def grok_events(path: str) -> dict:
-    """What a Grok run's event stream says, and its reply: the JSON object
-    its last message holds. A usage line closes each message."""
-    out = {"thread": "", "usage": {}, "commands": 0, "error": "", "reply": None}
-    said, last = "", ""
-    with open(path, encoding="utf-8", errors="replace") as f:
-        for line in f:
-            try:
-                e = json.loads(line)
-            except ValueError:
-                continue
-            kind = e.get("type")
-            if kind == "text":
-                said += str(e.get("data", ""))
-            elif kind == "usage":
-                last, said = said or last, ""
-            elif kind == "tool_call" and str(e.get("toolName", "")).startswith("run_terminal"):
-                out["commands"] += 1
-            elif kind == "error":
-                out["error"] = str(e.get("message") or kind)
-            elif kind == "end":
-                out.update({"thread": e.get("sessionId", ""), "usage": e.get("usage", {})})
-                if e.get("stopReason") != "end_turn" and not out["error"]:
-                    out["error"] = f"it stopped on {e.get('stopReason')}"
-    last = said or last
-    try:
-        reply = json.JSONDecoder().raw_decode(last[last.index("{"):])[0]
-        out["reply"] = reply if isinstance(reply, dict) else None
-    except ValueError:
-        pass
-    return out
-
-
-def outside(folder: str) -> str:
-    """Grok's copy of a hand-off folder, outside the repository."""
-    session = os.path.basename(os.path.dirname(os.path.dirname(folder)))
-    return os.path.join(tempfile.gettempdir(), "outsource", f"{session}-{os.path.basename(folder)}")
-
-
-def mirror(src: str, dst: str, skip: tuple = ()) -> None:
-    shutil.rmtree(dst, ignore_errors=True)
-    shutil.copytree(src, dst, symlinks=True, ignore=shutil.ignore_patterns(*skip))
-
-
-def wall() -> None:
-    """Writes the WALL profile into Grok's sandbox.toml, when missing. Grok
-    write-protects that file inside the wall."""
-    path = os.path.join(GROK_HOME, "sandbox.toml")
-    try:
-        with open(path, encoding="utf-8") as f:
-            text = f.read()
-    except OSError:
-        text = ""
-    if f"[profiles.{WALL}]" not in text:
-        with open(path, "a", encoding="utf-8") as f:
-            f.write(("\n" if text and not text.endswith("\n") else "") + f'[profiles.{WALL}]\nextends = "workspace"\n')
-
-
-def walled(work: str, since: int) -> bool:
-    """Whether Grok's sandbox log, past byte since, shows the wall enforced on work."""
-    try:
-        with open(os.path.join(GROK_HOME, "sessions", "sandbox-events.jsonl"), encoding="utf-8", errors="replace") as f:
-            f.seek(since)
-            for line in f:
-                try:
-                    e = json.loads(line)
-                except ValueError:
-                    continue
-                if (e.get("event_type") == "ProfileApplied" and e.get("profile") == WALL and e.get("enforced") is True
-                        and os.path.realpath(e.get("workspace", "")) == os.path.realpath(work)):
-                    return True
-    except OSError:
-        pass
-    return False
-
-
 def invoke(folder: str, c: dict, run: dict, st: dict, prompt: str) -> dict:
     """One run, a new thread or the same one. Returns what it left behind."""
     n = st["runs"] + 1
     stem = os.path.join(folder, "runs", f"{n:02d}")
-    grok, env = run["engine"] == "grok", None
-    if grok:
-        wall()
-        copy = outside(folder)
-        mirror(folder, copy, ("runs", "state.json"))
-        work, env = os.path.join(copy, "out"), {**os.environ, **GROK_OFF}
-        cmd = ["grok", "-p", prompt, "--output-format", "streaming-json", "--rules", INSTRUCTIONS + "\n" + GROK_REPLY,
-               "-m", run["model"], "--sandbox", WALL, "--always-approve", "--no-subagents", "--no-auto-update"]
-        cmd += (["--reasoning-effort", run["effort"]] if run["effort"] else []) + (
-            ["--disable-web-search"] if run["web"] == "disabled" else []) + (["-r", st["thread"]] if st["thread"] else [])
-        log = os.path.join(GROK_HOME, "sessions", "sandbox-events.jsonl")
-        since = os.path.getsize(log) if os.path.exists(log) else 0
-    else:
-        work = os.path.join(folder, "out")
-        schema = os.path.join(folder, "runs", "reply.schema.json")
-        with open(schema, "w", encoding="utf-8") as f:
-            json.dump(SCHEMA, f)
-        cmd = ["codex", "exec"] + (["resume"] if st["thread"] else []) + [
-            "--ignore-user-config", "--ignore-rules", "--json",
-            "-m", run["model"],
-            "-c", f'model_reasoning_effort="{run["effort"]}"',
-            "-c", f'web_search="{run["web"]}"',
-            "-c", 'shell_environment_policy.inherit="core"',
-            "-c", "developer_instructions=" + json.dumps(INSTRUCTIONS),
-            "--output-schema", schema, "-o", stem + "-reply.json"]
-        cmd += (["-c", 'sandbox_mode="workspace-write"', st["thread"]] if st["thread"]
-                else ["--sandbox", "workspace-write"]) + [prompt]
+    work = os.path.join(folder, "out")
+    schema = os.path.join(folder, "runs", "reply.schema.json")
+    with open(schema, "w", encoding="utf-8") as f:
+        json.dump(SCHEMA, f)
+    cmd = ["codex", "exec"] + (["resume"] if st["thread"] else []) + [
+        "--ignore-user-config", "--ignore-rules", "--json",
+        "-m", run["model"],
+        "-c", f'model_reasoning_effort="{run["effort"]}"',
+        "-c", f'web_search="{run["web"]}"',
+        "-c", 'shell_environment_policy.inherit="core"',
+        "-c", "developer_instructions=" + json.dumps(INSTRUCTIONS),
+        "--output-schema", schema, "-o", stem + "-reply.json"]
+    cmd += (["-c", 'sandbox_mode="workspace-write"', st["thread"]] if st["thread"]
+            else ["--sandbox", "workspace-write"]) + [prompt]
     began, timed_out = time.time(), False
     with open(stem + "-events.jsonl", "w") as out, open(stem + "-stderr.txt", "w") as err:
-        proc = subprocess.Popen(cmd, cwd=work, env=env, stdin=subprocess.DEVNULL,
+        proc = subprocess.Popen(cmd, cwd=work, stdin=subprocess.DEVNULL,
                                 stdout=out, stderr=err, start_new_session=True)
         try:
             proc.wait(timeout=c["timeoutSeconds"])
@@ -416,19 +303,13 @@ def invoke(folder: str, c: dict, run: dict, st: dict, prompt: str) -> dict:
             os.killpg(proc.pid, signal.SIGKILL)
             proc.wait()
             timed_out = True
-    if grok:
-        got = grok_events(stem + "-events.jsonl")
-        mirror(work, os.path.join(folder, "out"))
-        if not walled(work, since):
-            got["error"] = "its wall did not show as up in its log"
-    else:
-        got = events(stem + "-events.jsonl")
-        got["reply"] = None
-        try:
-            with open(stem + "-reply.json", encoding="utf-8") as f:
-                got["reply"] = json.loads(f.read())
-        except (OSError, ValueError):
-            pass
+    got = events(stem + "-events.jsonl")
+    got["reply"] = None
+    try:
+        with open(stem + "-reply.json", encoding="utf-8") as f:
+            got["reply"] = json.loads(f.read())
+    except (OSError, ValueError):
+        pass
     got.update({"n": n, "seconds": round(time.time() - began), "code": proc.returncode, "timed_out": timed_out})
     return got
 

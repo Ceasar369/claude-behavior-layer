@@ -29,7 +29,7 @@ The newest `code/prototypes/<subject>/g<N>.json`: its unknowns, and each variati
 
 Each of its variations, `code/prototypes/src/routes/<subject>/g<N>/v<M>.tsx`.
 
-Its subject's own rules. A product screen: The Screen, every document in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`, and `knowledge/0010-playbook/0015-coding/the-stack/the-look.md` beside it, whole. A page 1100 draws: the page rules, atop `.claude/lib/page.py`, and nothing more of it.
+Its subject's own rules. A product screen: The Screen, every document in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`, and `knowledge/0010-playbook/0015-coding/the-stack/the-look.md` beside it, whole, then its side's screens, as `prototype-rules` Step 3 names them. A page 1100 draws: the page rules, atop `.claude/lib/page.py`, and nothing more of it.
 
 My words in this subject's rounds, and my words now. A compacted chat → run `python3 .claude/tools/transcript.py copy NN --into NN`, and read `.claude/state/sessions/NN/transcript-NN.md`.
 

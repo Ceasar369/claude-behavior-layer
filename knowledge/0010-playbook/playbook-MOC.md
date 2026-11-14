@@ -18,6 +18,8 @@ How the work is run, for me and my agents.
 
 ## Admission rule
 
-A document enters here when it binds me, a session, or an agent.
+A document enters here when every session follows it, on both sides, or when it is a law or policy binding the company.
+
+One side's rule never enters. It lives in that side's area.
 
 Nothing sits loose at this root.

@@ -19,17 +19,26 @@ labelled details. Its first column numbers every row 1, 2, 3, through
 the checklist: a letter lives only in a check's name. The walk files
 hold the how; the checklist holds the marks. So a row's marks are kept by
 its name, and a new row starts not passed: ⬜, or — under a step that is
-not mine. A row whose check is gone drops, unless it holds a ✅: then the
+not mine. A journey's lettered detail is the tester's alone: its ⬜ under
+You reads —. A row whose check is gone drops, unless it holds a ✅: then the
 checklist stays as it was. A row that moved to the looks checklist, or a
 vendor's, drops freely: its marks moved with it, or it holds none now.
 
 A step's name is its heading up to its title, like "Sign up 1". A sweep
 step has no title: its whole heading is its name, like "French · Sign up".
 A lettered detail's title sits in its bold, "**a · Type the email**".
+Each rebuild takes a row's title from its walk file. A check with no title
+there keeps the one its row holds.
 
 A cover or looks step whose head's italic line ends naming journey steps,
 "*… · Sign up 1, Forgot 1*", is listed under the first journey holding
 one. Any other step stays under its own file's heading.
+
+A journey's Angles line, after its End, shows under its heading in
+0-checklist.md, above its rows: "**Angles** · Empty: 1a · …". A cover
+step's own, after its italic line, follows it, opening with its step's
+name: "**Docs 1 · Angles** · …". Neither holds a mark, so each rebuild
+copies them fresh from their files.
 """
 
 import os
@@ -49,11 +58,14 @@ HEAD = "| # | Check | What it checks | You | Tester |\n|---|---|---|:-:|:-:|"
 
 STEP = re.compile(r"^### (.+?)\s*$")
 NUMBERED = re.compile(r"^(.+? \d+) · (.+)$")
-LETTER = re.compile(r"^> - \*\*([a-z])(?: · (.+?))?\*\* · ")
+LETTER = re.compile(r"^> - \*\*([a-z]{1,2})(?: · (.+?))?\*\* · ")
+# A journey's lettered detail, like "Sign up 1a". Never a docs, member or looks row: those stay mine.
+JOURNEY_DETAIL = re.compile(r"^(?!Docs |Member )[^·]+ \d+[a-z]{1,2}$")
 LABEL = re.compile(r"^> - \*\*([A-Z][^*]*?)\*\* · ")
 TABLE = re.compile(r"^\| \*\*(.+?)\*\* \|")
 TAIL = re.compile(r"^\*.* · ([^·*]+)\*\s*$")
 TITLED = re.compile(r"^# .+ · (.+?)\s*$")
+ANGLES = "**Angles** · "
 
 
 def looks_of(section):
@@ -83,10 +95,7 @@ def checks(path, known):
             if step is None:
                 n = NUMBERED.match(heading)
                 step = n.group(1) if n and not sweep else heading
-            title = heading[len(step) + 3:] if heading != step else ""
-            if not title and " · " in step:
-                title = step.split(" · ", 1)[1]
-            out.append((step, title, step))
+            out.append((step, heading[len(step) + 3:] if heading != step else "", step))
             continue
         if step is None:
             continue
@@ -100,6 +109,30 @@ def checks(path, known):
         m = LABEL.match(line) or TABLE.match(line)
         if m:
             out.append((f"{step} · {m.group(1)}", m.group(1), step))
+    return out
+
+
+def angles(path):
+    """A journey's Angles line, before its first step, or None."""
+    if not os.path.isfile(path):
+        return None
+    for line in open(path, encoding="utf-8").read().splitlines():
+        if STEP.match(line):
+            return None
+        if line.startswith(ANGLES):
+            return line.rstrip()
+    return None
+
+
+def step_angles(path):
+    """Each step's Angles line in a cover file, by the step's heading."""
+    out, heading = {}, None
+    for line in open(path, encoding="utf-8").read().splitlines():
+        m = STEP.match(line)
+        if m:
+            heading = m.group(1)
+        elif heading and heading not in out and line.startswith(ANGLES):
+            out[heading] = line.rstrip()
     return out
 
 
@@ -158,19 +191,35 @@ def journeys_of(features):
     return head, journeys, keep
 
 
-def lines_of(head, grouped, old):
+def lines_of(head, grouped, old, stepped=None):
+    """The checklist's text. `stepped` holds each cover step's Angles line,
+    by its heading; None, as a looks checklist, shows no Angles line."""
     lines, added, missing = list(head), 0, []
     number = 0
     for j, rows in grouped:
-        lines += [f"## [[{j['link']}|{j['name']}]]", "", HEAD]
+        lines += [f"## [[{j['link']}|{j['name']}]]", ""]
+        if stepped is not None:
+            own = angles(os.path.join(WALKS, j["link"] + ".md"))
+            shown = [own] if own else []
+            for step in dict.fromkeys(r[2] for r in rows):
+                line = next((v for k, v in stepped.items() if k == step or k.startswith(step + " · ")), None)
+                if line:
+                    shown.append(f"**{step} · Angles** · {line[len(ANGLES):]}")
+            for line in shown:
+                lines += [line, ""]
+        lines.append(HEAD)
         for name, what, step in rows:
             if name in old:
                 kept_what, you, tester = old[name]
-                what = kept_what or what
+                what = what or kept_what
             else:
                 added += 1
                 you = "—" if old.get(step, ("", "", ""))[1] == "—" else "⬜"
                 tester = "⬜"
+            if you == "⬜" and JOURNEY_DETAIL.match(name):
+                you = "—"
+            if not what and name == step and " · " in step:
+                what = step.split(" · ", 1)[1]
             if not what:
                 missing.append(name)
             number += 1
@@ -219,7 +268,10 @@ def build(path, write, moved):
     grouped, old = groups(path, keep, FEATURES, True)
     _, every = read_checklist(path)
     held = {k: v for j in every for k, v in j["rows"].items()}
-    text, added, missing = lines_of(head, grouped, {**held, **old})
+    folder = os.path.dirname(path)
+    stepped = {k: v for f in FEATURES if os.path.isfile(os.path.join(folder, f))
+               for k, v in step_angles(os.path.join(folder, f)).items()}
+    text, added, missing = lines_of(head, grouped, {**held, **old}, stepped)
     names = {r[0] for _, rows in grouped for r in rows}
     dropped = [k for k in held if k not in names and "✅" in held[k][1:]
                and k not in moved and not k.startswith("Vendors ")]

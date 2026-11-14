@@ -21,7 +21,9 @@ It says `waiting on you`, and I wrote in chat since the wave → judge my messag
 
 - It answers some items, or all → go to step 5. Only what I answered folds.
 - It asks about an item → answer it in chat. The wave stays open.
-- It moves on, to another subject or a discussion first → close the wave with `--chat`, marking nothing, then answer my message. Its items come back as a new wave when I return to them.
+- It opens a discussion, or a side question → answer it in chat. The wave stays open, my drafts on it kept.
+- It says to close the wave → close it with `--chat`, marking nothing. Its items come back as a new wave when I return to them.
+- It starts a wholly new subject → answer it, and ask once, in one line, whether the wave closes. It stays open until I say.
 
 It says `waiting on you`, and I said nothing in chat → say the wave still waits on me, and stop.
 
@@ -73,11 +75,15 @@ A picture is a fence inside its field. ` ```mermaid ` is a chart. Any other fenc
 
 A chart is `flowchart TB`. The page draws it under the decision, and I can flip it. It tags each node `:::you`, `:::session`, `:::done` or `:::today`. `{}` is a condition, `[()]` a file. `-->` means then, `-.->` reads. Labels stay short.
 
+Every picture, a chart, a table, a tree or text, carries its title: `Figure: …`, the first line under its fence, indented like it. It says what the picture shows and how to read it. The page centers it under the picture. `wave` refuses a picture with none. In chat, it sits on its own line under the fence.
+
 A tree marks each changed line after its name, past two spaces: `+` new, `~` changes, `-` goes. `└── retry.ts   + new`.
 
 The page draws the legend. Never write a style.
 
-In chat, the same fields take bold labels: **Question**, **Decision**, **Why**, **Wrong if**, and so on. A tree or a table sits in a text fence. A chart becomes its flow in a text fence, one arrow per step: `a try fails → third try? → dead_letters`. Never a Mermaid fence.
+The page shows the question, the decision, an assistant's proposal, why and the picture. Wrong if, from, after, today, instead and sources fold under its closed line, The case.
+
+In chat, an item shows only those: **Question**, **Decision**, **Why**, and the picture. The case stays on the page. A tree or a table sits in a text fence. A chart becomes its flow in a text fence, one arrow per step: `a try fails → third try? → dead_letters`. Never a Mermaid fence.
 
 ## Step 5 — Fold my answers
 
@@ -124,6 +130,7 @@ show: ```mermaid
     T -- yes --> D[(dead_letters)]:::done
     T -- no --> F
   ```
+  Figure: A job stops on its third failed try.
 sources: jobs/retry.ts
 EOF
 ```
@@ -136,11 +143,15 @@ A field's first line sits after its name. Every further line is indented two spa
 
 The tool writes the wave. 1100 draws it in my hub, with a white dot on its number once this session's turn ends, until I send it or it closes in chat.
 
-A wave found wrong before I answer → close it with `--chat`, say why in one line, and lay out the fixed one.
+An item found wrong before I answer it → `clarify-page.py fix NN --item N`, the fixed item on stdin. It keeps its number. Say it in one line: "Item 13, Cut the project calls, fixed: its title miscounted them."
+
+The wave's whole order found wrong → close it with `--chat`, say why in one line, and lay out the fixed one.
+
+`wave` refuses more than five items, then Open questions.
 
 ### In chat
 
-Lay the same items out, with the same fields, under the wave's numbers. Head each item `N · its title`, as the page does.
+Lay the same items out, under the wave's numbers, with the parts the page shows above its fold. Head each item `N · its title`, as the page does.
 
 Never ask which to start with. I rule in prose, in my own order.
 

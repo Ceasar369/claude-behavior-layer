@@ -9,18 +9,19 @@ When Send on your Transcript tab's Advise panel, or my words, send you to a sess
 1. **Know the session by its record.** Its title, account and mission, in `.claude/state/sessions/NN/record.json`. Never by its number alone: numbers are reused.
 2. **Name its situation first.** The reply's first line names which situation below it is in.
 3. **An open wave runs `assistant-answer`.** Its newest `.claude/state/sessions/NN/waves/wave-K.md` whose `sent:` is empty.
-4. **Several sessions read in one turn get one reply.** A part each, under its number.
+4. **Measure it against its finish.** Its mission's objectives file, `missions/<id>-objectives.md` beside it, or the `Done when:` of the last work sent to it. The reply says what holds, and what remains. None written → nothing is measured.
+5. **Several sessions read in one turn get one reply.** A part each, under its number.
 
 ## The situations
 
 One line each: how it shows, and the move it ends on.
 
 - **A wave waits.** Its newest wave is not sent. Step 3.
-- **Done, waiting to stop.** It says its work is finished. Run the second chore, then end on its stop.
+- **Done, waiting to stop.** It says its work is finished. Copy its screenshots, report and handovers into its from folder, then end on its stop.
 - **I need to understand it.** Its newest turns explain work or a choice, and nothing new waits on me. An Answer, or a Wait.
 - **Stuck or failing.** Errors, refused steps, failed proof, or a wait repeating. An Action to recover, or a Ruling on a repair.
 - **A proposal to judge.** A plan or a prototype puts a choice to me. A Ruling on that choice.
-- **Sessions to order.** Two sessions meet on a file, or one waits on another. A Ruling on who goes first, or a Wait.
+- **Sessions to order.** Two sessions meet on a file, or one waits on another. Inside one plan, a Ruling moving the one that waits to a later stage. Outside any plan, a Ruling on who goes first, or a Wait.
 - **A ruling asked in prose.** Its reply asks me to decide, with no wave open. A Ruling, or an Action with the exact words.
 - **Waiting on work.** A helper, a command, a report or another session holds its next step. A Wait, naming who works and what ends it.
 - **A walk asks me.** Its lead or its walker asks at a check. Follow [[protocol-a-walk-asks-me|A Walk Asks Me]].

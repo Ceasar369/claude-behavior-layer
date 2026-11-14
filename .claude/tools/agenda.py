@@ -20,8 +20,8 @@ and the refusals.
   agenda.py down ITEM               dealt with: it comes down, and what waited on it moves up
   agenda.py check                   what a hand edit broke, or that nothing is
 
-An ITEM is its file name or its name. A TOPIC is one of the topics, as "Web
-app" or "web-app". A write prints what it did, then each item a new link
+An ITEM is its file name or its name. A TOPIC is one of the topics, as "Side
+project" or "side-project". A write prints what it did, then each item a new link
 pushed to another column. A refusal prints its sentence and exits 1.
 --dir points every verb at another folder, for tests.
 """

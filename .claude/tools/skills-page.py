@@ -18,13 +18,13 @@ to the rows holding each word typed; Enter copies the first.
 The dashboard's server serves it. Imported, never run.
 """
 
-import hashlib
 import os
 import re
 import sys
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import live  # noqa: E402
 import page  # noqa: E402
 import registry  # noqa: E402
 
@@ -48,7 +48,7 @@ def heads() -> list:
     out = []
     for name in sorted(registry.listing(SKILLS)):
         try:
-            with open(os.path.join(SKILLS, name, "SKILL.md")) as f:
+            with open(os.path.join(SKILLS, name, "SKILL.md"), encoding="utf-8", errors="replace") as f:
                 text = f.read(4000)
         except OSError:
             continue
@@ -88,100 +88,11 @@ def line(skill: tuple) -> str:
             + f'<p class="int">{page.esc(intent)}</p></div>')
 
 
-STYLE = """<style>
-  body > main { padding:0; }
-  header.top.skills .mid { justify-self:stretch; color:var(--dim); font-weight:400; font-size:13px; }
-  .find { max-width:560px; }
-  .hm { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--dim); white-space:nowrap; }
-  .hm b { color:var(--text); }
-  .first { padding:12px 12px 0; }
-  .first .skf { margin:0; }
-  .across { display:grid; grid-template-columns:repeat(auto-fit, minmax(max(220px, calc((100% - 72px) / 5)), 1fr)); column-gap:18px; }
-  .across .sr { border-top:1px solid var(--line); }
-  .sk { columns:360px; column-gap:12px; padding:12px; }
-  .skf { break-inside:avoid; margin:0 0 12px; padding:6px 12px; background:var(--panel);
-    border:1px solid var(--line); border-radius:6px; }
-  .skf.none { display:none; }
-  .skh { display:flex; align-items:center; gap:8px; margin:0 0 4px; padding:2px 0 6px; border-bottom:1px solid var(--line); }
-  .skh b { font-size:13px; }
-  .dg { flex:none; min-width:20px; padding:0 4px; border-radius:4px; text-align:center; font-size:11px;
-    font-weight:700; background:var(--raised); color:var(--text); }
-  .sr { padding:6px 0; }
-  .sr.none { display:none; }
-  .sr + .sr { border-top:1px solid var(--line); }
-  .cmd { max-width:100%; display:inline-flex; align-items:center; gap:7px; padding:0; font:inherit;
-    font-size:13px; font-weight:700; line-height:20px; color:var(--text); background:none; border:0; cursor:pointer; }
-  .cmd .t { min-width:0; overflow-wrap:anywhere; text-align:left; }
-  .cmd svg { color:var(--blue); }
-  .cmd:hover .t { color:var(--blue); }
-  .cmd.ok .t, .cmd.ok svg { color:var(--green); }
-  .args { margin:2px 0 0; padding-left:8px; border-left:2px solid var(--blue); font-size:12px; line-height:17px;
-    color:var(--text); overflow-wrap:anywhere; }
-  .args .mn { color:var(--dim); }
-  .int { margin:3px 0 0; font-size:12px; line-height:18px; }
-  mark { background:var(--hover); color:var(--text); border-radius:2px; box-shadow:0 0 0 1px var(--grey); }
-  .nomatch { padding:12px; color:var(--dim); display:none; }
-  @media (max-width:520px) { .first { padding:8px 8px 0; } .sk { padding:8px; } }
-  /* A touch screen, as my phone, and never a Mac, however narrow its pane.
-     Every control takes a fingertip: 44 by 44 points, Apple's minimum. */
-  @media (hover:none) and (pointer:coarse) {
-    .cmd { min-height:44px; }
-  }
-</style>
-"""
-
-# The filter waits to be clicked: nothing takes my keys when the sheet
-# opens. Each word marks where it shows.
-SCRIPT = """<script>
-(() => {
-  const q = document.getElementById('q'), hm = document.getElementById('hm'), all = hm.innerHTML;
-  const rows = [...document.querySelectorAll('.sr')];
-  rows.forEach(r => r.querySelectorAll('.int, .cmd .t').forEach(e => e.dataset.t = e.textContent));
-  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-  const safe = s => s.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
-  let first = null, timer = 0;
-  // It flashes only once the copy landed.
-  function copy(b) {
-    navigator.clipboard.writeText(b.dataset.c).then(() => {
-      document.querySelectorAll('.cmd.ok').forEach(x => x.classList.remove('ok'));
-      b.classList.add('ok');
-      clearTimeout(timer);
-      timer = setTimeout(() => b.classList.remove('ok'), 1600);
-    }).catch(() => {});
-  }
-  document.querySelectorAll('.cmd').forEach(b => b.onclick = () => copy(b));
-  function filter() {
-    const words = q.value.trim().toLowerCase().split(/\\s+/).filter(Boolean);
-    const re = words.length ? new RegExp('(' + words.map(safe).join('|') + ')', 'gi') : null;
-    first = null;
-    rows.forEach(r => {
-      const said = [...r.querySelectorAll('[data-t]')].map(e => e.dataset.t).join(' ').toLowerCase();
-      const hit = words.every(w => said.includes(w));
-      r.classList.toggle('none', !hit);
-      r.querySelectorAll('[data-t]').forEach(e => e.innerHTML = re
-        ? esc(e.dataset.t).replace(re, '<mark>$1</mark>') : esc(e.dataset.t));
-      if (hit && !first) first = r.querySelector('.cmd');
-    });
-    document.querySelectorAll('.skf').forEach(f => f.classList.toggle('none', !f.querySelector('.sr:not(.none)')));
-    document.querySelector('.nomatch').style.display = first ? 'none' : 'block';
-    hm.innerHTML = !words.length ? all : first ? '↵ copies <b>' + esc(first.dataset.c) + '</b>' : 'No match';
-  }
-  // What I filtered by outlives a reload, as a skill's head changing brings.
-  const kept = () => sessionStorage.setItem('skills-filter', q.value);
-  q.addEventListener('input', () => { kept(); filter(); });
-  q.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && first && q.value.trim()) copy(first);
-    if (e.key === 'Escape') { q.value = ''; kept(); filter(); }
-  });
-  q.value = sessionStorage.getItem('skills-filter') || '';
-  if (q.value) filter();
-})();
-</script>
-"""
+STYLE = "<style>\n" + page.shared("skills.css") + "</style>\n"
 
 
-def render() -> str:
-    found = heads()
+def sections(found: list) -> tuple:
+    """The No family section, and every numbered family's, as the page draws them."""
     primary, groups = "", []
     for digit, fam, skills in families(found):
         if not skills:
@@ -196,11 +107,38 @@ def render() -> str:
             groups.append(section)
         else:
             primary = section
-    key = hashlib.sha1(repr(found).encode()).hexdigest()[:12]
-    find = (f'<label class="find">{page.icon("filter", 14)}<input id="q" spellcheck="false" '
-            'aria-label="Filter the skills" placeholder="Filter: a command, what it does"></label>')
-    body = (STYLE + f'<div class="first">{primary}</div><div class="sk">{"".join(groups)}</div>'
-            '<p class="nomatch">No skill\'s command or intent holds that.</p>' + SCRIPT + page.watch(key))
+    return primary, groups
+
+
+FIND = (f'<label class="find">{page.icon("filter", 14)}<input id="q" spellcheck="false" '
+        'aria-label="Filter the skills" placeholder="Filter: a command, what it does"></label>')
+NO_MATCH = '<p class="nomatch">No skill\'s command or intent holds that.</p>'
+
+
+# ---- the page on the contract --------------------------------------------------
+#
+# 1100 draws every skill. The page's own script, .claude/pages/scripts/skills.js,
+# copies and filters: lib/live.py.
+
+def drawn() -> str:
+    """The skills page, every skill drawn, its filter keeping no words past
+    a reload but its own."""
+    found = heads()
+    primary, groups = sections(found)
+    body = (live.watch() + STYLE + f'<div class="first">{primary}</div><div class="sk">{"".join(groups)}</div>'
+            + NO_MATCH + f'<script src="{live.src("skills.js")}"></script>\n')
     return page.render("00-skills", [("", body)],
-                       page.head("skills", "", find, f'<span class="hm" id="hm">{len(found)} skills</span>'),
+                       page.head("skills", "", FIND.replace('<input id="q"', '<input id="q" data-draft="no"', 1),
+                                 f'<span class="hm" id="hm">{len(found)} skills</span>'),
                        refresh=0)
+
+
+def files() -> list:
+    """The skills folder, each skill's folder, and each SKILL.md: a skill
+    added later is heard by the folder."""
+    names = registry.listing(SKILLS)
+    return [SKILLS, *(os.path.join(SKILLS, n) for n in names), *(os.path.join(SKILLS, n, "SKILL.md") for n in names)]
+
+
+# The page's contract, lib/live.py's: its address, its draw, its files.
+LIVE = live.Page(r"/skills", drawn, files=files)

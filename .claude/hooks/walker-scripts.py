@@ -4,11 +4,12 @@
 A PreToolUse hook, matcher browser_evaluate and browser_run_code_unsafe,
 with no skill behind it. A walker is a session whose own folder holds
 walk.json. It runs only the scripts walk-drive's js fences hold, copied
-whole: the passkey, offline and back online, the whole page's height, the
-page text and a docs page's text. Spaces never count. In the page text,
-only the move's words vary, and they never hold a backtick, a $ or a
-backslash. Anything else is refused, and the walker asks its lead. Every
-other session runs any script.
+whole: the passkey, offline and back online, a return to the page, the
+upload's hold and its removal, the whole page's height, the page text and
+a docs page's text. Spaces never count. In the page text, only the move's
+words vary, and they never hold a backtick, a $ or a backslash. Anything
+else is refused, and the walker asks its lead. Every other session runs
+any script.
 
 It reads the fences each call, and holds no copy of them.
 """

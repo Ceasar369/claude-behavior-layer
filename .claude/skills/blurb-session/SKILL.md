@@ -29,7 +29,7 @@ The reader is a session of mine, in another iTerm pane.
 
 It works this repo. It reads the same vault.
 
-Carry what it needs. Carry nothing it already holds.
+Carry what it needs. Carry nothing its conversation shows it already holds.
 
 ## Step 4 — Write it as me
 

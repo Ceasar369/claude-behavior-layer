@@ -11,13 +11,15 @@ A helper is a session you start yourself, for one part of your mission, while yo
 
 A walk-and-close session's helper fixes what its walk finds, while it walks.
 
+Known parallel work is swarmed, as `knowledge/0010-playbook/0011-assisting/assisting-protocols/protocol-swarming.md` says. Read it first.
+
 Your number is MM. The helper's is NN, once it starts.
 
 A number given → Step 6. Otherwise → Step 1.
 
 ## Step 1 — Check the grant
 
-Your mission's `## Your folder` holds one line: "A helper may take <part>, through `helper-session`."
+Your mission's `## Your folder` holds one line per helper: "A helper may take <part>, through `helper-session`."
 
 No such line → no helper. Say so in one line, and stop.
 
@@ -34,7 +36,7 @@ Every one holds, or no helper starts. Name the one that fails, and stop.
 | Named | Every message it sends opens "Session NN reports:". |
 | Checked, stopped | You rerun its named test files, then stop it, before you report. |
 | On the plan | Its name is your mission's id, "helper", and one word: "C1 helper frontend". |
-| One at a time | No helper of yours is running. |
+| One at a time | No helper of yours is running. Swarmed work starts its helpers together. |
 
 ## Step 3 — Propose it
 
@@ -67,6 +69,8 @@ EOF
 )"
 ```
 
+A swarmed helper adds `--model haiku --effort high`.
+
 It prints the pane, then the helper's number.
 
 Say one line: "Session NN helps with <part>."
@@ -87,7 +91,7 @@ Your own report then names its work, one line per file, and each check with its 
 
 ## Never
 
-Never run two helpers at once.
+Never run two helpers at once, but for swarmed work.
 
 Never write its part while it runs.
 

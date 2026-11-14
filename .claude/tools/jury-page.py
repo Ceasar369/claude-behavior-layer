@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """jury-page.py — the jury tab: a jury's plan before Launch, then its results.
 
-/jury drafts a plan for the session I typed it in, in that session's
-newest run folder: jury.py's docstring holds the format. This page draws
-it: the typed question, its context, its claims, each with the source it
+/jury drafts a plan for the session I typed it in, in a run folder of its
+own: jury.py's docstring holds the format. With more than one, the tab lists
+them all, newest first, each its time, its question and where it stands. A
+press on one draws it, its address naming it as ?run=. Its newest is drawn
+until then. This page draws a plan: the typed question, its context, its claims, each with the source it
 names, its answer shape, and each jury session, its approach, its model
 and its effort, as the launch page's pills. The final session, writing the
 conclusion, follows as its own row, its model and effort pills saved under
@@ -31,26 +33,21 @@ line beneath.
 Its looks are borrowed: page.py's shell and the clarify page's items, the
 launch page's rows and pills, the transcript page's table.
 
-  jury-page.py try FILE [--port 1112]   the tab, drawn from a fixture file alone
-
-A fixture holds the session's number and tag, then plan.json and
-results.json whole, under plan and results.
-
-1100 imports this file for render, take, key, heard and tab: the tab
-shows once a plan lands, and waits on me only while its plan waits for
-Launch. Only try runs a server.
+1100 imports this file for LIVE, heard and tab: the tab shows once a plan
+lands, and waits on me only while its plan waits for Launch. Nothing here
+runs a server.
 """
 
-import argparse
 import datetime
-import hashlib
 import json
 import os
 import re
 import sys
+import urllib.parse
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import live  # noqa: E402
 import models  # noqa: E402
 import page  # noqa: E402
 import panes  # noqa: E402
@@ -89,77 +86,7 @@ def model_pills() -> list:
 
 
 # This page's own rules, after the shell's, the launch page's and the table's.
-CSS = """<style>
-  /* The plan's sessions sit under its item, at its sides. */
-  .jt-rows { padding:0 24px 24px; }
-  .jt-rows > h2 { margin:0 0 6px; }
-  .jt-rows > .row + h2 { margin-top:14px; }
-  .jt-rows .row { cursor:default; padding:8px 10px; margin-bottom:8px; }
-  .jt-rows .line { font-size:12px; }
-  .jt-how { color:var(--dim); }
-  .banner { margin:12px 24px 0; }
-  /* A word I edit in place looks as it reads, until it holds the cursor. */
-  [contenteditable] { cursor:text; border-radius:3px; }
-  [contenteditable]:focus { outline:1px solid var(--blue); outline-offset:2px; }
-  /* The results: the claims' table fills the width, its claim and why
-     cells wrapping. A row opens on a click. */
-  .jt-table .grid { display:block; }
-  .jt-table table { width:100%; }
-  .jt-table td.jt-wrap { white-space:normal; }
-  .jt-table td .chip { vertical-align:baseline; }
-  .jt-row { cursor:pointer; }
-  /* A case's points under the fact they rest on, in line with its text. */
-  .jt-point { margin:3px 0 0 44px; }
-  /* The last claim keeps the table's last line, its jurors folded under it. */
-  .jt-table tbody tr:nth-last-child(2):has(+ tr[hidden]) td { border-bottom:0; }
-  /* Each claim's jurors, once unfolded, side by side. */
-  .jt-jurors { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:8px; }
-  #items .jt-jurors .prop { margin:0; min-width:0; }
-  /* A long name, like a setting's or a file's, breaks where it must. */
-  .jt-jurors .prop * { overflow-wrap:anywhere; }
-  /* My phone: every pill and button takes a fingertip, 44 by 44 at least,
-     Apple's least touch size: page rule 20. */
-  @media (hover:none) and (pointer:coarse) {
-    .grp, .pills { gap:4px; }
-    .pills button, header.top .acts button { min-height:44px; min-width:44px; touch-action:manipulation; }
-    .pills button { padding:0 10px; font-size:12px; }
-  }
-</style>"""
-
-SCRIPT = r"""<script>
-const PLAN = %PLAN%;
-let timer = 0;
-const flush = () => { clearTimeout(timer); timer = 0; return post({act: 'plan', plan: JSON.stringify(PLAN)}); };
-const save = () => { clearTimeout(timer); timer = setTimeout(flush, 300); };
-const put = (path, v) => {
-  const ks = path.split('.'), last = ks.pop();
-  ks.reduce((o, k) => o[k], PLAN)[last] = v;
-};
-document.querySelectorAll('[data-f]').forEach(el => {
-  el.addEventListener('input', () => { put(el.dataset.f, el.textContent.trim()); save(); });
-  el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
-});
-document.querySelectorAll('.pills[data-k] button').forEach(b => b.addEventListener('click', () => {
-  const k = b.parentNode.dataset.k;
-  b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-  put(k, b.dataset.v);
-  if (k === 'shape') document.querySelectorAll('.jt-shape').forEach(e => { e.textContent = b.dataset.v; });
-  save();
-}));
-async function launch(b) {
-  if (timer) await flush();
-  pressed(b, {act: 'launch'});
-}
-</script>"""
-
-# A claim's row opens its jurors under it, and folds them again.
-UNFOLD = r"""<script>
-document.querySelectorAll('tr.jt-row').forEach(tr => tr.addEventListener('click', () => {
-  const box = tr.nextElementSibling, shut = box.hidden;
-  box.hidden = !shut;
-  tr.querySelector('.jt-arrow').textContent = shut ? '▾' : '▸';
-}));
-</script>"""
+CSS = "<style>\n" + page.shared("jury.css") + "</style>"
 
 
 # ---- the parts ----------------------------------------------------------------
@@ -345,40 +272,57 @@ def results_part(plan: dict, res: dict) -> str:
             f'launched {clock(res.get("launched"))}, done {clock(res.get("done"))}</div></div></div>')
 
 
-def draw(d: dict, tail: str = "") -> str:
-    """The tab, from a run: d holds the session's nn and tag, and the
-    run's plan and results, None until launched. `tail` is its
-    watch."""
+def plans_part(d: dict) -> str:
+    """Every plan of the session, newest first, the one drawn marked. A lone
+    plan needs no list."""
+    runs = d.get("runs") or []
+    if len(runs) < 2:
+        return ""
+    rows = "".join(f'<a class="row{" active" if r["run"] == d["plan"]["run"] else ""}" '
+                   f'href="?run={urllib.parse.quote(r["run"])}"><div class="line"><b>{esc(r["question"])}</b>'
+                   f'<span class="lbl">{esc(r["when"])}</span><span class="lbl">{esc(r["stands"])}</span></div></a>'
+                   for r in runs)
+    return f'<div class="jt-rows jt-plans"><h2>Plans · {len(runs)}</h2>{rows}</div>'
+
+
+def draw(d: dict, watch: str) -> str:
+    """The tab, from a run: d holds the session's nn and tag, the list of
+    its plans, and the run's plan and results, None until launched.
+
+    `watch` is live.watch()'s, and opens the body. The page's own script
+    is .claude/pages/scripts/jury.js, the same in every state, and the plan goes
+    beside it as data while it takes edits."""
     plan, res = d["plan"], d.get("results")
     if not plan:
-        return page.render(f"{d['nn']}-jury", [("", page.blank("No jury waits") + tail)],
+        return page.render(f"{d['nn']}-jury", [("", watch + page.blank("No jury waits") + scripts(None))],
                            page.head("jury", d["tag"]), refresh=0)
     plan = {**plan, "concluder": jury.concluder(plan)}
     # The jury sessions, then the final session.
     started = len(plan["sessions"]) + 1
-    script, banner = "", ""
+    banner = ""
     if res and res.get("state") == "done":
         mid = progress(plan, res)
         go = '<button class="sent" disabled>Done</button>'
         body = results_part(plan, res)
-        script = UNFOLD
     else:
         live = not res
         tip = f"Types /jury-run {plan['run']} into session {d['nn']}'s pane."
         mid = (f"Plan · {weighs(plan)} · {page.count(started, 'session')} · {jurors_said(plan)}" if live
                else progress(plan, res))
-        go = (f'<button id="launch" title="{esc(tip)}"{"" if live else " disabled"} '
-              f'onclick="launch(this)">{"Launch" if live else "Launched"} · {started}</button>')
+        go = (f'<button id="launch" title="{esc(tip)}"{"" if live else " disabled"}'
+              f'>{"Launch" if live else "Launched"} · {started}</button>')
         banner = f'<div class="banner">{esc(res["error"])}</div>' if res and res.get("error") else ""
         body = plan_part(plan, live)
-        if live:
-            script = page.POST + page.TYPING + SCRIPT.replace("%PLAN%", json.dumps(plan).replace("</", "<\\/"))
     # The clarify page's head, so its phone sizes hold, with the jury's own family.
     rail = (f'<header class="top fam clarify"><span class="who">{page.family("jury")}<span class="dim">·</span>'
             f'<b>{esc(d["tag"])}</b></span><span class="mid">{esc(mid)}</span>'
             f'<span class="acts"><span class="group">{go}</span></span></header>\n')
-    return page.render(f"{d['nn']}-jury", [("", launcher.CSS + TABLE + CSS + banner + body + tail + script)],
-                       rail, refresh=0)
+    return page.render(f"{d['nn']}-jury", [("", watch + launcher.CSS + TABLE + CSS + plans_part(d) + banner + body
+                                             + scripts(plan if not res else None))], rail, refresh=0)
+
+
+def data(plan) -> str:
+    return json.dumps(plan).replace("</", "<\\/")
 
 
 # ---- my edits -----------------------------------------------------------------
@@ -413,11 +357,21 @@ def merged(plan: dict, sent: dict) -> dict:
 
 # ---- a session's run ------------------------------------------------------------
 
-def newest(nn: str) -> str:
-    """Session NN's newest run folder holding a plan, or ""."""
+def runs(nn: str) -> list:
+    """Session NN's run folders holding a plan, newest first."""
     base = jury.folder(nn)
     names = [n for n in registry.listing(base) if os.path.isfile(os.path.join(base, n, "plan.json"))]
-    return os.path.join(base, max(names)) if names else ""
+    return [os.path.join(base, n) for n in sorted(names, reverse=True)]
+
+
+def newest(nn: str) -> str:
+    """Session NN's newest run folder holding a plan, or ""."""
+    return next(iter(runs(nn)), "")
+
+
+def named(nn: str, name: str) -> str:
+    """The run folder of that name, else the newest."""
+    return next((r for r in runs(nn) if os.path.basename(r) == name), newest(nn))
 
 
 def read(path: str):
@@ -428,49 +382,61 @@ def read(path: str):
         return None
 
 
-def world(nn: str) -> dict:
-    """Everything the tab draws for session NN, in a fixture's shape."""
-    run, held = newest(nn), registry.entries()
-    return {"nn": nn, "tag": plans.tag(nn, plans.owners(held)),
+def stands(plan: dict, res: dict) -> str:
+    """Where a plan stands, in a few words: its weight until launched."""
+    if not res:
+        return f"Plan · {weighs(plan)}"
+    st, state = res.get("step") or {}, res.get("state")
+    label = (f"Step {st['n']} of {st['steps']}" + (f" · {st['answered']} of {st['asked']} done" if st.get("asked") else "")
+             if st else "Starting")
+    return "Done" if state == "done" else f"Failed · {label}" if state == "failed" else label
+
+
+def listed(nn: str) -> list:
+    """Each plan of session NN, as the tab's list reads it."""
+    out = []
+    for run in runs(nn):
+        plan = read(os.path.join(run, "plan.json"))
+        if plan:
+            try:
+                when = datetime.datetime.fromisoformat(plan.get("drafted", "")).strftime("%b %-d, %H:%M")
+            except ValueError:
+                when = ""
+            out.append({"run": os.path.basename(run), "question": plan.get("question", ""), "when": when,
+                        "stands": stands(plan, read(os.path.join(run, "results.json")))})
+    return out
+
+
+def world(nn: str, name: str = "") -> dict:
+    """Everything the tab draws for session NN, its run of that name, or its
+    newest."""
+    run, held = named(nn, name), registry.entries()
+    return {"nn": nn, "tag": plans.tag(nn, plans.owners(held)), "runs": listed(nn),
             "plan": read(os.path.join(run, "plan.json")) if run else None,
             "results": read(os.path.join(run, "results.json")) if run else None}
 
 
-def key(nn: str) -> str:
-    """What the tab reloads on: its run's two files. My own save takes the
-    key it left, through page.py's post(), so it never reloads the page."""
-    run, words = newest(nn), []
-    for name in ("plan.json", "results.json"):
-        try:
-            with open(os.path.join(run, name), "rb") as f:
-                words.append(f.read())
-        except OSError:
-            words.append(b"")
-    return hashlib.sha1(b"\0".join([run.encode()] + words)).hexdigest()[:12]
-
-
-def render(nn: str) -> str:
-    return draw(world(nn), page.watch(key(nn)))
-
-
 def take(nn: str, form: dict) -> str:
-    """My edits, saved into plan.json, or Launch. A launched plan takes
-    neither. Launch types at the session's prompt, or while it works; a
+    """My edits, saved into the plan the page drew, or its Launch. A launched
+    plan takes neither. Launch types at the session's prompt, or while it works; a
     dialog waiting, or a pane gone, is refused in one sentence."""
-    run, act = newest(nn), (form.get("act") or [""])[0]
-    if not run or os.path.exists(os.path.join(run, "results.json")):
-        return ""
-    plan = read(os.path.join(run, "plan.json"))
+    name, act = (form.get("run") or [""])[0], (form.get("act") or [""])[0]
+    run = named(nn, name)
+    nothing = "Nothing was typed." if act == "launch" else "Nothing was saved."
+    # A run named and missing never falls back to the newest one.
+    plan = read(os.path.join(run, "plan.json")) if run and (not name or os.path.basename(run) == name) else None
     if not plan:
-        return ""
+        return f"Session {nn} has no jury run {name or 'waiting'}. {nothing}"
+    if os.path.exists(os.path.join(run, "results.json")):
+        return f"Jury run {plan.get('run') or name} was already launched. {nothing}"
     if act == "plan":
         try:
             jury.save(os.path.join(run, "plan.json"), merged(plan, json.loads((form.get("plan") or ["{}"])[0])))
         except (ValueError, AttributeError, TypeError):
-            pass
+            return "The edit was not a plan this page can read. Nothing was saved."
         return ""
     if act != "launch":
-        return ""
+        return f"This page takes no {act or 'blank'} press. Nothing was saved."
     why, _, pane = page.typable(nn, SAFE)
     if why:
         return why
@@ -488,72 +454,70 @@ def tab(nn: str):
     if not plan:
         return None
     res = read(os.path.join(run, "results.json"))
-    if not res:
-        return f"Plan · {weighs(plan)}", os.path.join(run, "plan.json"), True
-    st, state = res.get("step") or {}, res.get("state")
-    label = (f"Step {st['n']} of {st['steps']}" + (f" · {st['answered']} of {st['asked']} done" if st.get("asked") else "")
-             if st else "Starting")
-    label = "Done" if state == "done" else f"Failed · {label}" if state == "failed" else label
-    return label, os.path.join(run, "plan.json"), False
+    return stands(plan, res), os.path.join(run, "plan.json"), not res
 
 
 def heard() -> list:
     """What 1100 hears for every session's tab: its jury folder, where a
-    run lands, and its newest run's folder, where each file is swapped in."""
+    run lands, and each run's folder, where each file is swapped in."""
     out = []
     for nn in registry.listing(registry.WORK):
         if re.fullmatch(r"\d{2}", nn) and os.path.isdir(jury.folder(nn)):
-            out += [jury.folder(nn), newest(nn)]
-    return [p for p in out if p]
+            out += [jury.folder(nn), *runs(nn)]
+    return out
 
 
-# ---- tried alone ----------------------------------------------------------------
+# ---- the page on the contract --------------------------------------------------
+#
+# 1100 draws the tab, and lib/live.py puts each change in place. Its own
+# script, .claude/pages/scripts/jury.js, saves my edits as I go, sends Launch, and
+# opens a claim's jurors.
 
-def fixture(path: str):
-    """A server's render, take, route and key for one fixture file. /plan
-    draws it with its results set aside. Launch types nothing: it prints
-    the line it would type."""
-    load, mark = serve.fixture(path)
-
-    def shown(bare: bool) -> str:
-        d = load()
-        if bare:
-            d["results"] = None
-        return draw(d, page.watch(mark()))
-
-    def pressed(form: dict, _path: str) -> str:
-        d, act = load(), (form.get("act") or [""])[0]
-        if act == "launch":
-            print(f"Launch would type into session {d['nn']}'s pane: /jury-run {d['plan']['run']}", flush=True)
-        elif act == "plan":
-            try:
-                d["plan"] = merged(d["plan"], json.loads((form.get("plan") or ["{}"])[0]))
-            except (ValueError, AttributeError, TypeError):
-                return ""
-            jury.save(path, d)
-        return ""
-
-    def route(p: str):
-        bare = p.partition("?")[0]
-        if bare.endswith("/key"):
-            return mark()
-        return shown(True) if bare == "/plan" else None
-
-    return (lambda: shown(False)), pressed, route, mark
+def scripts(plan) -> str:
+    """The tab's scripts on the contract, the same in every state: the plan
+    as data while it takes edits, null once launched."""
+    return (page.TABS + f'<script type="application/json" id="plan">{data(plan)}</script>\n'
+            f'<script src="{live.src("jury.js")}"></script>\n')
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    sub = ap.add_subparsers(dest="verb", required=True)
-    tried = sub.add_parser("try")
-    tried.add_argument("file")
-    tried.add_argument("--port", type=int, default=1112)
-    args = ap.parse_args()
-    path = os.path.abspath(args.file)
-    shown, pressed, route, mark = fixture(path)
-    serve.run(f"jury-page-{args.port % 100:02d}", args.port, shown, take=pressed, route=route,
-              keyof=mark, hears=lambda: [path])
+def unreadable(run: str) -> str:
+    """The first of a run's two files that stands but cannot be read, or ""."""
+    return next((f for f in ("plan.json", "results.json")
+                 if os.path.isfile(os.path.join(run, f)) and not isinstance(read(os.path.join(run, f)), dict)), "")
 
 
-if __name__ == "__main__":
-    main()
+def drawn(nn: str, query: str = "") -> str:
+    """Session NN's tab on the contract, its run named by ?run=, else its
+    newest. A run whose plan cannot be read keeps its row in the list, and
+    a run drawn whose file cannot be read says so, in place of its plan:
+    drawn as unlaunched, it would offer Launch again."""
+    name = urllib.parse.parse_qs(query).get("run", [""])[0]
+    mine = (registry.entries().get(nn) or {}).get("session_id", "")
+    d, run = world(nn, name), named(nn, name)
+    rows = {r["run"]: r for r in d["runs"]}
+    d["runs"] = [rows.get(os.path.basename(r)) or {"run": os.path.basename(r), "question": os.path.basename(r),
+                                                   "when": "", "stands": "Unreadable"} for r in runs(nn)]
+    bad = unreadable(run) if run else ""
+    if not bad:
+        return draw(d, watch=live.watch(mine))
+    shown = {**d, "plan": {"run": os.path.basename(run)}}
+    return page.render(f"{nn}-jury", [("", live.watch(mine) + launcher.CSS + TABLE + CSS + plans_part(shown)
+                                       + page.blank(f"Jury run {os.path.basename(run)}: its {bad} is unreadable")
+                                       + scripts(None))], page.head("jury", d["tag"]), refresh=0)
+
+
+def files(nn: str, query: str = "") -> list:
+    """Every file whose write can move session NN's tab: its jury folder,
+    where a run lands, each run's folder and its two files, since the list
+    names each, and what names each session."""
+    base = jury.folder(nn)
+    out = registry.watched([nn]) + [os.path.dirname(base), base]
+    for run in runs(nn):
+        out += [run, os.path.join(run, "plan.json"), os.path.join(run, "results.json")]
+    for n in registry.entries():
+        out += [os.path.join(registry.folder(n), registry.RECORD), os.path.join(registry.folder(n), plans.PLAN)]
+    return list(dict.fromkeys(out))
+
+
+# The tab's contract, lib/live.py's: its address, its draw, its files, its take.
+LIVE = live.Page(serve.address("jury", r"(\d{2})"), drawn, files=files, take=take, query=True)

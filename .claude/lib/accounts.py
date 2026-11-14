@@ -8,8 +8,8 @@ needs no naming.
 Every account on this Mac sits in one list, outside every project, so
 each project here reads the same ones: ~/.claude-accounts.json.
 
-  {"accounts": {"1": {"folder": "~/.claude", "plan": "20x", "name": "cesar"},
-                "2": {"folder": "~/.claude-acct2", "plan": "20x", "name": "ahmad"}},
+  {"accounts": {"1": {"folder": "~/.claude", "plan": "20x", "name": "main"},
+                "2": {"folder": "~/.claude-acct2", "plan": "20x", "name": "second"}},
    "chrome": "1"}
 
 An account's number is one digit. Its plan shows on 1100/system, and its
@@ -52,7 +52,13 @@ settings.json, where /model and /effort in any of its sessions write too.
 Claude Code keeps an effort per model, under modelSettings, and keeps max
 for one session only, so max is never saved there.
 
-It stays on Python 3.9, and so does models.py, which it imports.
+A Mac may hold one shared usage reader, the program `usage` names in
+.claude/project.json, lib/project.py's USAGE, its
+format in its own top comment. When it does, own() and save_own() go
+through it, and so does System's usage, through shared(). When it does
+not, or it fails, they read and write as below.
+
+It stays on Python 3.9, and so do models.py and project.py, which it imports.
 memory-guard.py imports it, and launchd runs that on macOS's own
 /usr/bin/python3, 3.9, which never moves with Homebrew.
 
@@ -65,8 +71,12 @@ import fcntl
 import json
 import os
 import re
+import subprocess
+import sys
+import time
 
 import models
+import project
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LIST = os.path.expanduser("~/.claude-accounts.json")
@@ -88,7 +98,7 @@ SAVED = ("low", "medium", "high", "xhigh")
 
 def mac(path: str = LIST) -> dict:
     """The list at PATH, kept to what it may hold: {"accounts": {"1":
-    {"folder": "/Users/me/.claude", "plan": "20x", "name": "cesar"}},
+    {"folder": "/Users/me/.claude", "plan": "20x", "name": "main"}},
     "chrome": "1"}, each folder absolute. With no account it can read,
     one: 1, in ~/.claude."""
     try:
@@ -269,17 +279,27 @@ def logins() -> dict:
     tools/chrome.py and lib/registry.py read them here."""
     out = {}
     for n in KNOWN:
-        folder = ACCOUNTS[n]["folder"]
-        path = (os.path.expanduser("~/.claude.json") if folder == DEFAULT
-                else os.path.join(folder, ".claude.json"))
-        try:
-            with open(path, encoding="utf-8") as f:
-                who = json.load(f).get("oauthAccount") or {}
-        except (OSError, ValueError, AttributeError):
-            continue
+        who = login(n).get("oauthAccount") or {}
         if who.get("accountUuid"):
             out[who["accountUuid"]] = (n, who.get("emailAddress", ""))
     return out
+
+
+def login_file(account: str) -> str:
+    """Account ACCOUNT's .claude.json: ~/.claude.json for Claude Code's own
+    folder, inside the folder for every other."""
+    folder = ACCOUNTS[account]["folder"]
+    return os.path.expanduser("~/.claude.json") if folder == DEFAULT else os.path.join(folder, ".claude.json")
+
+
+def login(account: str) -> dict:
+    """What account ACCOUNT's .claude.json holds, {} when it cannot be read."""
+    try:
+        with open(login_file(account), encoding="utf-8") as f:
+            got = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    return got if isinstance(got, dict) else {}
 
 
 def settings_file(account: str) -> str:
@@ -300,12 +320,43 @@ def settings(account: str) -> dict | None:
     return got if isinstance(got, dict) else None
 
 
+SHARED = project.USAGE
+_SHARED = [0.0, None]
+
+
+def shared():
+    """What the shared usage reader prints now, or None when this Mac has
+    none or it fails. One run serves every read within a second."""
+    if not os.path.isfile(SHARED):
+        return None
+    if time.time() - _SHARED[0] < 1:
+        return _SHARED[1]
+    try:
+        r = subprocess.run([sys.executable, "-I", SHARED], capture_output=True, text=True, timeout=10)
+        got = json.loads(r.stdout) if r.returncode == 0 else None
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        got = None
+    _SHARED[:] = [time.time(), got if isinstance(got, dict) else None]
+    return _SHARED[1]
+
+
+def shared_account(account: str):
+    """Account ACCOUNT as the shared reader prints it, or None."""
+    got = shared()
+    return next((a for a in (got or {}).get("accounts") or [] if str(a.get("n")) == str(account)), None)
+
+
 def own(account: str) -> dict:
     """Account ACCOUNT's own default, as {"saved": "opus", "model":
     "claude-opus-5-5", "effort": "xhigh"}. Saved is the model as its file
     names it. Model is the one it starts on: a family's newest, or the model
     saved. Effort is the one kept for that model. Each is empty when none
-    is: with no model saved, Claude Code picks its own."""
+    is: with no model saved, Claude Code picks its own. The shared reader
+    answers first, when this Mac has one."""
+    mine = (shared_account(account) or {}).get("by_hand")
+    if isinstance(mine, dict):
+        return {"saved": mine.get("family") or "", "model": mine.get("model") if mine.get("family") else "",
+                "effort": mine.get("effort") if mine.get("effort") in SAVED else ""}
     d = settings(account) or {}
     saved = d.get("model") if isinstance(d.get("model"), str) else ""
     base = re.sub(r"\[\w+\]$", "", saved)
@@ -322,6 +373,13 @@ def save_own(account: str, family: str = "", effort: str = "") -> None:
     as /effort keeps it. A file that is not a JSON object is never written,
     nor an effort before a model is saved."""
     if account not in KNOWN:
+        return
+    if shared_account(account) is not None:
+        for flag, value in (("--model", family), ("--effort", effort)):
+            if value:
+                subprocess.run([sys.executable, "-I", SHARED, "set", account, flag, value],
+                               capture_output=True, timeout=10)
+        _SHARED[0] = 0.0
         return
     d = settings(account)
     if d is None:

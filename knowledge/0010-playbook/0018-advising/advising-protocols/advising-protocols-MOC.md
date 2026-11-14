@@ -10,6 +10,7 @@ An advising protocol is a written way to advise me on one kind of matter.
 
 - [[protocol-a-walk-asks-me|A Walk Asks Me]] — a walk's question: when the lead or the walker of my walk asks me something.
 - [[protocol-a-press-on-a-session|A Press On A Session]] — a press on a session: when Send on your Transcript tab's Advise panel, or my words, send you to a session.
+- [[protocol-planning-teams|Planning Teams]] — several teams: when I ask you to plan teams that depend on each other.
 
 ## Admission rule
 

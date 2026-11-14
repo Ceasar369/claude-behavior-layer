@@ -1,0 +1,21 @@
+  .ed-top { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px;
+    margin-bottom:20px; }
+  #order { --g:var(--blue); }
+  #order button { height:27px; padding:0 10px; font-size:13px; }
+  .ed a.btn { color:var(--text); text-decoration:none; }
+  .ed-saves { display:flex; flex-wrap:wrap; gap:8px; }
+  .ed a.ed-all, .ed a.ed-zip { height:40px; padding:0 18px; font-size:15px; }
+  .ed a.ed-all { color:#000; }
+  .ed a.ed-all.done { color:var(--bg); }
+  /* Each document a row, its title, then the line under it, as the column's
+     notes stack, and its download beside it, a press of its own. */
+  .ed-card { display:flex; align-items:center; margin:0 -12px; border-bottom:1px solid var(--line); }
+  .ed-card:first-child { border-top:1px solid var(--line); }
+  .ed a.ed-row { flex:1; min-width:0; padding:16px 12px; color:var(--text); text-decoration:none; }
+  .ed a.ed-row:hover { background:var(--panel); }
+  .ed-row b { display:block; font:600 21px/1.3 var(--sans); }
+  .ed-row span { display:block; margin-top:4px; color:var(--dim); font-size:15px; }
+  .ed a.ed-one { flex:none; width:36px; height:36px; padding:0; margin:0 12px; }
+  @media (hover:none) and (pointer:coarse) {
+    #order button, .ed a.ed-all, .ed a.ed-zip, .ed a.ed-one { min-height:44px; min-width:44px; }
+  }

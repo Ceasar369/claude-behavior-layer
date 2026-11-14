@@ -34,7 +34,7 @@ class WalkClearTest(unittest.TestCase):
         """A walker in seat 91 gets ready: it writes walk.json, once, at `at`."""
         card = os.path.join(self.work.name, "91", "walk.json")
         with open(card, "w") as f:
-            json.dump({"main": "90", "area": "web-app"}, f)
+            json.dump({"main": "90", "area": "site"}, f)
         os.utime(card, (at, at))
 
     def run_tool(self, what):
@@ -57,60 +57,60 @@ class WalkClearTest(unittest.TestCase):
         return os.listdir(os.path.join(self.work.name, "90", "walkers"))
 
     def test_a_whole_second_pass_starts_with_no_file_from_the_first(self):
-        self.walk("web-app/proposals/member", 7, 8, 9)
-        self.walk("web-app/proposals/member")
+        self.walk("site/orders/member", 7, 8, 9)
+        self.walk("site/orders/member")
         self.assertEqual(self.files("91", "walk"), [])
 
     def test_a_walk_of_two_journeys_keeps_both_at_its_end(self):
-        self.walk("web-app/proposals/member", 7, 8)
-        self.walk("web-app/proposals/live", 1)
+        self.walk("site/orders/member", 7, 8)
+        self.walk("site/orders/live", 1)
         self.run_tool("keep")
         [to] = self.kept()
         self.assertEqual(self.files("90", "walkers", to, "walk"),
-                         ["web-app/proposals/live/1.png", "web-app/proposals/member/7.png",
-                          "web-app/proposals/member/8.png"])
+                         ["site/orders/live/1.png", "site/orders/member/7.png",
+                          "site/orders/member/8.png"])
 
     def test_two_areas_keep_one_journey_name_apart(self):
-        self.walk("web-app/proposals/member", 7)
-        self.walk("app/training/member", 7)
+        self.walk("site/orders/member", 7)
+        self.walk("admin/orders/member", 7)
         self.run_tool("keep")
         [to] = self.kept()
         self.assertEqual(self.files("90", "walkers", to, "walk"),
-                         ["app/training/member/7.png", "web-app/proposals/member/7.png"])
+                         ["admin/orders/member/7.png", "site/orders/member/7.png"])
 
     def test_a_journey_kept_again_holds_its_last_pass_alone(self):
-        self.walk("web-app/proposals/proposal", 20, "20-2", "20-3")
-        self.walk("web-app/proposals/proposal", 20, "20-2", mark="again")
+        self.walk("site/orders/order", 20, "20-2", "20-3")
+        self.walk("site/orders/order", 20, "20-2", mark="again")
         self.run_tool("keep")
         [to] = self.kept()
-        folder = os.path.join(self.work.name, "90", "walkers", to, "walk", "web-app", "proposals", "proposal")
+        folder = os.path.join(self.work.name, "90", "walkers", to, "walk", "site", "orders", "order")
         self.assertEqual(sorted(os.listdir(folder)), ["20-2.png", "20.png"])
         with open(os.path.join(folder, "20.png")) as f:
             self.assertEqual(f.read(), "again")
 
     def test_a_new_walker_in_the_seat_keeps_apart(self):
-        self.walk("web-app/proposals/member", 7)
+        self.walk("site/orders/member", 7)
         self.run_tool("keep")
         # The walker is stopped; a new one claims the seat, its folder fresh.
         shutil.rmtree(os.path.join(self.work.name, "91", "walk"))
         self.start(1761771480)
-        self.walk("web-app/proposals/live", 1)
+        self.walk("site/orders/live", 1)
         self.run_tool("keep")
         first, second = sorted(self.kept())
         self.assertRegex(first, r"^91-\d\d-\d\d-\d{4}$")
-        self.assertEqual(self.files("90", "walkers", first, "walk"), ["web-app/proposals/member/7.png"])
-        self.assertEqual(self.files("90", "walkers", second, "walk"), ["web-app/proposals/live/1.png"])
+        self.assertEqual(self.files("90", "walkers", first, "walk"), ["site/orders/member/7.png"])
+        self.assertEqual(self.files("90", "walkers", second, "walk"), ["site/orders/live/1.png"])
 
     def test_a_lead_gone_gets_no_folder(self):
         os.rmdir(os.path.join(self.work.name, "90"))
-        self.walk("web-app/proposals/member", 7)
-        self.walk("web-app/proposals/live")
+        self.walk("site/orders/member", 7)
+        self.walk("site/orders/live")
         self.assertFalse(os.path.exists(os.path.join(self.work.name, "90")))
         self.assertEqual(self.files("91", "walk"), [])
 
     def test_a_journey_without_its_area_is_refused(self):
         with self.assertRaises(SystemExit):
-            self.run_tool("proposals/member")
+            self.run_tool("orders/member")
 
 
 if __name__ == "__main__":

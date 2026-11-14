@@ -1,0 +1,18 @@
+  #items .shelf h2.sec { font-size:26px; line-height:1.25; letter-spacing:0; text-transform:none;
+    color:var(--text); margin:36px 0 16px; padding-top:22px; }
+  #items .shelf h2.sec:first-child { margin-top:0; padding-top:0; border-top:0; }
+  #items .shelf .team { margin:0 0 22px; }
+  #items .shelf .tl { margin:0 0 8px; font:700 10px/1.4 ui-monospace,Menlo,monospace;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+  #items .shelf a.card { display:block; color:var(--text); text-decoration:none; }
+  #items .shelf a.card:hover { outline:2px solid var(--text); outline-offset:-2px; }
+  #items .shelf .thumb { cursor:pointer; }
+  #items .shelf .thumb img { display:block; width:100%; height:100%; object-fit:cover; object-position:top left; }
+  #items .shelf .thumb .stub { display:flex; align-items:center; justify-content:center;
+    color:var(--dim); text-align:center; background:var(--bg); }
+  #items .shelf .cap { padding:8px 10px; border-top:1px solid var(--line); background:var(--panel); }
+  #items .shelf .cap b, #items .shelf .cap span { display:block; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; }
+  #items .shelf .cap b { font-size:13px; }
+  #items .shelf .cap span { margin-top:2px; font-size:11px; color:var(--dim); }
+  #items .shelf p.none { color:var(--dim); font-size:13px; }

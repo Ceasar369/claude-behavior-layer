@@ -12,7 +12,7 @@ A file changing under you is normal, not a fault.
 
 Every layer has one folder under `code/`.
 
-The folder name matches the layer, without its number.
+The folder name matches the layer's vault folder, without its number.
 
 > **Stand-in.** This project's folders under `code/`: each one, and the layer it holds, if any.
 
@@ -30,6 +30,6 @@ A package's gate reads every file in the package.
 
 Two writers meet at each gate run and walk, never between.
 
-`knowledge/`, `code/tokens/`, the root workspace files, the lockfile.
+Every session shares `knowledge/`.
 
 A shared part, folder or topic is where to look. It is no meeting.

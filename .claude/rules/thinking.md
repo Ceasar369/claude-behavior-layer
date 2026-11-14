@@ -215,6 +215,8 @@ Read both works, file by file, before any wait.
 
 A meeting holds only its step. The rest runs.
 
+Inside a plan, nobody waits on a neighbour's step. The one that waits goes to a later stage, or a later team.
+
 Unproven holds nothing. Say so, and find out.
 
 - ❌ "Session 72 writes the docs. D1 waits until it stops."

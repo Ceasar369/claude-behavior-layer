@@ -23,6 +23,8 @@ python3 .claude/tools/follow.py take MM NN --for "<what you follow it for>" --en
 
 `Refused` → say its line. Take nothing more.
 
+6. Run the read it prints, whatever its state. Anything but `working` → it already waits. Answer it now, in this turn, by Step 3, and never say only that you follow it.
+
 ## Step 2 — Wait on it
 
 One wait covers every session you follow and drive. It hears each take and release while it runs.
@@ -42,7 +44,7 @@ End your turn. Its move is a Wait naming the session, like "Wait: session 20 ans
 1. Read the wait's output file whole. Its first line names each session that woke it.
 2. Each block's head says what you do with that session. One you drive → `session-control` Step 2.
 3. One you follow → answer its new turns, in your role. By its `State:`:
-   - `asking`, `done` or `idle` → your task goes on.
+   - `asking`, `done` or `idle` → your task goes on. It woke you idle at 2, 5, 10, 30, 60 or 120 minutes: read its transcript, and act if your task allows. Otherwise tell me once, then write one line: what it still waits on, and for how long. Once I write to you after its last turn, it wakes you idle no more.
    - `capped until` or `error, one more try` → nothing. It goes on by itself.
    - `blocked`, `full` or `error, three times in a row` → it reaches me: its session, and what holds it.
    - `gone` → it reaches me: resume it, or reap it. It stays followed. `As told before.` → nothing.
@@ -56,7 +58,8 @@ End your turn. Its move is a Wait naming the session, like "Wait: session 20 ans
 
 1. Answer me. My ask to clarify runs `2-clarify`, with my words.
 2. "Stop following session NN." → `python3 .claude/tools/follow.py release MM NN`. Say the follow ended. The running wait lets NN go.
-3. Arm no wait. The one running goes on.
+3. My words hand NN's matter elsewhere: to my advisor, another session, or later → release it the same way, on your own. Say it in one line: why, then "Say follow session NN to resume." A side question while NN waits hands nothing elsewhere.
+4. Arm no wait. The one running goes on.
 
 ## Never
 

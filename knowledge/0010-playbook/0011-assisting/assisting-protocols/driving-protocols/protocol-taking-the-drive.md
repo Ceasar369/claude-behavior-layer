@@ -15,7 +15,7 @@ When I hand you a session, a stage or my whole plan to drive.
    - No stage runs → the next stage goes out at once. Your take of the drive is my launch: Kicking Off The Next Stage, steps 3 to 8.
    - Every stage has stopped → [[protocol-ending-the-plan|Ending The Plan]].
    - An open plan → each mission I ruled with no session launches now, while a seat is free. No stage closes, and the plan never ends, at the take.
-6. **Send what waits.** A session I hand you may wait on your answer. Send it now, before your wait. A wave holding my drafts, or no answer of yours, waits for me to send it. Skill: `session-control`.
+6. **Send what waits.** A session I hand you may wait on your answer. Send it now, before your wait. My drafts on its wave stand as my answers. Skill: `session-control`.
 7. **Arm your wait, then end your turn.** [[protocol-hearing-me-mid-drive|Hearing Me Mid-Drive]], step 1. Skill: `session-control`.
 
 ## What reaches me

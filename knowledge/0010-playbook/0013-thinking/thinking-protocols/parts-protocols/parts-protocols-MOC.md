@@ -6,7 +6,7 @@ Every thinking protocol whose subject is running parts: a backend, a frontend, o
 
 ## Children
 
-- [[protocol-parts-as-a-whole|Parts as a Whole]] — When the subject is running parts: a backend, a frontend, or both, thought through as a whole.
+- [[protocol-parts-as-a-whole|Parts As A Whole]] — When the subject is running parts: a backend, a frontend, or both, thought through as a whole.
 
 ## Admission rule
 

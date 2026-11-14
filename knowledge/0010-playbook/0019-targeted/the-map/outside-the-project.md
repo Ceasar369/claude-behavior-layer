@@ -1,8 +1,8 @@
-# Outside the Project
+# Outside The Project
 
 Up: [[the-map-MOC|The Map]]
 
-The sibling folders beside the live project. The archives, and the references.
+Two kinds of sibling folder beside the live project: the archives, and the references.
 
 ## Both sit beside the project
 

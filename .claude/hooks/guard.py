@@ -21,6 +21,13 @@ It reads what is typed through lib/shell.py, down into $(...), backticks,
 bash -c, eval and a heredoc a shell reads. A pid or a port hidden in a
 variable passes unseen, and so does a script that kills.
 
+A git push of my layer is refused too: the layer is public, and
+tools/export.py push is its one push, after its check.
+
+A headless claude chat, -p or --print, is refused too. It holds Claude
+Code's own tools, which message the sessions on this Mac. A test chat
+runs on stand-ins, through tools/test-chat.py.
+
 One more refusal, with no kill in it. When the memory guard stops a
 session's program, tools/memory-guard.py leaves a note for that session
 in state/memory-guard/open/, one file for the incident. The session's
@@ -366,6 +373,56 @@ def stopped(session: str, command: str, cwd: str) -> str:
     return ""
 
 
+CHAT = ("Refused: a headless claude chat holds Claude Code's own tools, and reaches real sessions. A test "
+        "never does. A test chat runs on stand-ins: python3 .claude/tools/test-chat.py \"<your words>\".")
+
+
+def chat(command: str, cwd: str) -> str:
+    """The refusal for a headless claude chat, -p or --print, started from
+    the shell, or "". tools/test-chat.py starts the one a test may."""
+    headless = lambda words: os.path.basename(words[0]) == "claude" and any(
+        w in ("-p", "--print") or w.startswith("--print=") for w in words[1:])
+    reader = Reader()
+    try:
+        reader.read(command, cwd)
+        found = any(headless(words) for words, _, _, _ in reader.found if words)
+    except Exception:
+        found = bool(re.search(r"(^|[\s;&|(`/])claude\s+(.*\s)?(-p|--print)\b", command))
+    return CHAT if found else ""
+
+
+LAYER = ("Refused: my layer is public, and a plain git push reads nothing first. "
+         "Push it through its checks: python3 .claude/tools/export.py push.")
+
+
+def layer_push(command: str, cwd: str) -> str:
+    """The refusal for a git push of my layer, typed in the shell, or "":
+    one run in the layer branch's folder, or one naming the layer, its
+    branch or a remote. tools/export.py push is the one push, after its check."""
+    folder = os.path.realpath(hook.ROOT + "-layer")
+
+    def pushes(words: list, where) -> bool:
+        if os.path.basename(words[0]) != "git":
+            return False
+        i = 1
+        while i < len(words) and words[i].startswith("-"):
+            if words[i] == "-C" and i + 1 < len(words):
+                where = os.path.join(where or "", words[i + 1])
+            i += 2 if words[i] in ("-C", "-c", "--git-dir", "--work-tree") else 1
+        if words[i:i + 1] != ["push"]:
+            return False
+        here = os.path.realpath(where) if where else ""
+        return here == folder or here.startswith(folder + os.sep) or any("layer" in w for w in words[i + 1:])
+
+    reader = Reader()
+    try:
+        reader.read(command, cwd)
+        found = any(pushes(words, where or cwd) for words, _, where, _ in reader.found if words)
+    except Exception:
+        found = bool(re.search(r"\bgit\b[^;&|\n]*\bpush\b", command)) and "layer" in command
+    return LAYER if found else ""
+
+
 def fallback(command: str) -> str:
     """The same refusals by plain search, for a text the reader cannot take."""
     text = re.sub(r"<<-?\s*['\"]?(\w+)['\"]?.*?\n.*?\n\s*\1\s*(\n|$)", "\n", command, flags=re.S)
@@ -393,6 +450,10 @@ def main() -> None:
         note = ""
     if note:
         hook.done(note)
+    if re.search(r"claude", command) and (why := chat(command, cwd)):
+        hook.done(why)
+    if re.search(r"push", command) and (why := layer_push(command, cwd)):
+        hook.done(why)
     if not re.search(r"kill|git|fuser", command):
         sys.exit(0)
     me = int(os.environ.get("CLAUDE_PID") or 0)

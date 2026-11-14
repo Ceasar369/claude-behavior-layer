@@ -1,4 +1,4 @@
-# Protocol — Parts as a Whole
+# Protocol — Parts As A Whole
 
 Up: [[parts-protocols-MOC|Parts Protocols]]
 
@@ -24,7 +24,7 @@ A decision that belongs to another part is named once, in the turn it is found, 
 
 - A concept a provider may bring is recorded as a concept. Its build is named open.
 - A rule every door shares changes in this part alone. The report names the other doors, with the line their shared document would take.
-- A piece another layer holds is read from there. When the part may not call that layer, its owner pushes it, as The Sandbox rules.
+- A piece another layer holds is read from there. When the part may not call that layer, its owner pushes it.
 - A standard the part cannot follow becomes an item. The item names what stops it.
 - A concept that only guards live stays open until live exists.
 - A moved address keeps answering until every part loading it has moved.

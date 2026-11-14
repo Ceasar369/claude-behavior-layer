@@ -65,6 +65,8 @@ My words reach you while the wait runs. Answer me, and leave it running. My ask 
 
 Answer only from my rulings: this conversation, your mission, the agreed items.
 
+A Ruling it asks that no stop holds → type my yes at once. It shows under Done. Each stop is under "Finish what was asked", in `.claude/rules/thinking.md`. A mission's "ask me" alone is no stop.
+
 In a partial drive, answer only on its topic. An item outside it is one my rulings cannot answer.
 
 By its `State:`:
@@ -80,15 +82,17 @@ By its `State:`:
 - `blocked` → a dialog holds it. Type nothing into it, ever: a Return there picks option 1. It reaches me.
 - `gone` → its process ended with no stop. Keep its work, as Step 4 does. It reaches me. The wait wakes on it this once, then says `As told before.` I rule: resume it, or end it. Ended → the skill `reaper`, with its number: its folder and pane go, and the wait releases it. Resumed → the wait hears it.
 - `stopped`, or another session holds its number → the wait released it. Tell me.
-- `idle since HH:MM, N minutes` → it waits on you. A full drive sends it its next work now, or its stop. A partial drive sends it its next work on its topic, or nothing: it waits on me.
+- `idle since HH:MM, N minutes` → it waits on you. It wakes you at 2, 5, 10, 30, 60 and 120 minutes. A full drive sends it its next work now, or its stop. A partial drive sends it its next work on its topic, or nothing: it waits on me.
 
 A `say` the permission check refuses leaves that step unproven. Say so in the turn. It never reaches me as an Action.
 
 A session you drive never sits idle on work you hold. Each finish gets, at once, every piece of work it can do now, or its stop. Work waiting on another session goes the moment that session reports done. Its stop alone waits for its check.
 
-A wave is yours to send only when it holds an answer of yours, and no draft of mine. Moving an item to chat answers nothing. Any other wave: mark nothing, send nothing. It reaches me.
+Every wave of a session you drive is yours to send. My marks already on it stand as my answers. Leave them.
 
-Yours waits on its page. Mark every item:
+Moving an item to chat answers nothing. A wave whose only answers move to chat: mark nothing, send nothing. It reaches me.
+
+Mark every other item on its page:
 
 ```
 python3 .claude/tools/clarify-page.py rule NN --item 3 --agree
@@ -117,7 +121,9 @@ python3 .claude/tools/panes.py say --to NN --line "<one paragraph, in my voice>"
 
 `say` prints the pane it typed into. It prints nothing, or a sentence → nothing was typed. Say it again, three tries in all. A third with no pane reaches me.
 
-What reaches me shows whole in every turn you end, and your move names it, with its session and item, until I answer. The others go on.
+What reaches me shows whole the first time, and your move names it, with its session and item, until I answer.
+
+Once I rule it in chat, write the words from my ruling, and type them at once, with no second yes. The typed words show under Done. An idle wake finding nothing new writes one line: what still waits on me, for how long, and who is stopped. The others go on.
 
 ## Step 3 — Hand over, before you wait again
 
@@ -195,6 +201,8 @@ Never drive any other session.
 Never answer what only I rule.
 
 Never run two waits.
+
+Never hand me words for a session you drive. `.claude/hooks/handed.py` holds the turn that does.
 
 Never leave a session a full drive holds running.
 

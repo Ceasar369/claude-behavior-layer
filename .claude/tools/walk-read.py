@@ -2,13 +2,13 @@
 """walk-read.py — my reader's sections of one docs page, and what changed since my read.
 
 A docs step lives in a section's docs.md, under walks/. Its italic line
-opens with the page's address, then its source: a guide page under
-code/app/docs/pages/, or the published spec for an API tab page.
+opens with the page's address, then its source: a guide page's file,
+or the published spec for an API tab page.
 
   walk-read.py sections STEP [--since NN]   each section of the step's page, in order
   walk-read.py keep STEP NN                 keep the page's source as read, in NN's folder
 
-STEP names the step as a walk list does: "app/training · Docs 1".
+STEP names the step as a walk list does: "admin/orders · Docs 1".
 
 A guide page's sections are its top, from its title to its first "## "
 heading, then each "## " heading to the next. An API tab page's sections

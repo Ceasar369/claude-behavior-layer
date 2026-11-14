@@ -30,8 +30,10 @@ greyed, and takes no press. A step failing after the save names the
 copy first, so I know my conversation is safe.
 
 The press is lib/handover.py's. A driver runs it too, on the sessions it
-drives. Pressed here, it runs inside 1100, so it dies with it. Each step
-goes into the seat's handover.json, which the page draws and 1100 hears.
+drives. Pressed here, it runs as a program of its own, this file's press,
+so it keeps running while 1100 restarts. A press names its act,
+handover; a post naming none hands nothing over. Each step goes
+into the seat's handover.json, which the page draws and 1100 hears.
 A press a driver runs shows here too, as it runs. Handed over,
 the seat holds a fresh session. After a pause the file goes, and the page
 with it. A step whose press died is read as failed, so it never locks the
@@ -39,17 +41,18 @@ page, and one handed over as gone.
 
 System's part, both thresholds and a box to set each, is drawn here too.
 
-1100 imports this file. Its server serves render and take, its home asks
-waiting, and System draws system_part. Nothing here runs a server.
+1100 imports this file. Its server serves LIVE, its home asks waiting,
+and System draws system_part. Nothing here runs a server.
 
-  handover-page.py fixture FILE   the page, drawn from a fixture file alone, beside it as .html
+  handover-page.py press NN PANE SINCE ACCOUNT MODEL EFFORT
+                                  the press Hand over starts, as its own program
 """
 
 import argparse
 import json
 import os
+import subprocess
 import sys
-import threading
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
@@ -57,10 +60,12 @@ import accounts  # noqa: E402
 import context  # noqa: E402
 import handover  # noqa: E402
 import launch  # noqa: E402
+import live  # noqa: E402
 import models  # noqa: E402
 import page  # noqa: E402
 import plans  # noqa: E402
 import registry  # noqa: E402
+import serve  # noqa: E402
 import successor  # noqa: E402
 
 launcher = page.tool("launch-page")
@@ -95,14 +100,44 @@ def take(nn: str, form: dict) -> str:
             or pick["effort"] not in ["", handover.SYSTEM, *offered(launcher.EFFORTS)]):
         return "Pick an account, a model and an effort from the pills. Nothing was typed."
     if handover.progress(nn).get("step") in PRESSED:
-        return ""
+        return f"A handover of session {nn} is already under way. Nothing was typed."
     why, mine, pane = page.typable(nn, handover.SAFE)
     if why:
         return why
     since = context.crossed(mine.get("transcript", ""), context.threshold())
     handover.note(nn, step="saving", since=since)
-    threading.Thread(target=handover.press, args=(nn, mine, pane, pick, since)).start()
+    spawn([*PRESS, nn, pane, str(since), pick["account"], pick["model"], pick["effort"]])
     return ""
+
+
+# The press runs as a program of its own, so it keeps running while 1100
+# restarts: this file's press verb, the pane and the picks after it.
+PRESS = [sys.executable, os.path.abspath(__file__), "press"]
+
+
+def spawn(argv: list) -> None:
+    """One program started on its own, outliving whoever started it."""
+    subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True, cwd=registry.ROOT)
+
+
+def pressing(nn: str, pane: str, since: int, pick: dict) -> None:
+    """The press, in its own program. Its first step names this program,
+    so the page reads it as running while 1100 is down. A press that
+    raises says so, rather than reading as cut short."""
+    handover.note(nn, step="saving", since=since)
+    try:
+        handover.press(nn, registry.entries().get(nn) or {}, pane, pick, since)
+    except Exception as e:
+        handover.note(nn, step="failed", said=f"The press failed: {type(e).__name__}: {e}. Nothing more was typed.")
+
+
+def pressed(nn: str, form: dict) -> str:
+    """A press on the page. It names its act, handover; anything else is
+    refused, and nothing is handed over."""
+    if (form.get("act") or [""])[0] != "handover":
+        return "This page takes no such press. Nothing was typed."
+    return take(nn, form)
 
 
 # ---- what waits -----------------------------------------------------------------
@@ -126,7 +161,7 @@ def waiting(nn: str, mine: dict, running: dict, limit: int):
 
 
 def world(nn: str) -> dict:
-    """Everything the page draws for seat NN, in a fixture file's shape."""
+    """Everything the page draws for seat NN."""
     held, running = registry.entries(), registry.claude_records()
     mine = held.get(nn) or {}
     rec = running.get(mine.get("session_id"))
@@ -141,65 +176,7 @@ def world(nn: str) -> dict:
 
 # The launch page's own look draws the pills and their row. This adds the
 # meter, and the line that says each step.
-CSS = """<style>
-  header.top .acts button { display:inline-flex; align-items:center; gap:6px; }
-  .hp h2 { margin:14px 0 6px; }
-  .hp h2:first-child { margin-top:0; }
-  .hp .gauge { display:flex; align-items:center; gap:10px; margin:22px 0 4px; }
-  .hp .meter { position:relative; flex:1; min-width:60px; height:10px; border-radius:5px;
-    background:var(--bg); border:1px solid var(--line); }
-  .hp .meter .fill { position:absolute; left:0; top:0; bottom:0; border-radius:4px; background:var(--dim); }
-  .hp .meter .fill.hot { background:var(--red); }
-  .hp .meter .tick { position:absolute; top:-5px; bottom:-5px; width:2px; margin-left:-1px; background:var(--text); }
-  .hp .meter .mark { position:absolute; bottom:calc(100% + 7px); transform:translateX(-50%); color:var(--dim);
-    font-size:11px; font-weight:700; line-height:1; }
-  .hp .pct { flex:none; width:44px; text-align:right; font-size:15px; font-weight:700;
-    font-variant-numeric:tabular-nums; }
-  .hp .pct.hot { color:var(--red); }
-  /* The successor is one row, never picked. */
-  .hp .row { margin:0; cursor:default; }
-  .hp .line { margin:0; }
-  .hp .say { margin:10px 0 0; color:var(--dim); font-size:12px; }
-  .hp .say code { color:var(--text); }
-  /* A touch screen, as my phone, and never a Mac, however narrow its pane.
-     Every control takes a fingertip: 44 by 44 points, Apple's minimum. */
-  @media (hover:none) and (pointer:coarse) {
-    header.top button { min-height:44px; }
-    .hp .pills button { min-width:44px; height:44px; }
-  }
-</style>"""
-
-# A pick rides in the address, so a reload keeps it. A setting never picked
-# shows what its successor launches on, and is never posted: handover-resume
-# reads it then. Hand over posts what I picked; the page then follows the
-# press through its file, and a refusal is said.
-SCRIPT = r"""<script>
-const D = %DATA%;
-const picks = {};
-const P = () => Object.assign({account: '', model: '', effort: ''}, picks);
-new URLSearchParams(location.hash.slice(1)).forEach((v, k) => { if (k in D) picks[k] = v; });
-function show() {
-  const p = Object.assign({}, D, picks);
-  document.querySelectorAll('.pills').forEach(g => g.querySelectorAll('button').forEach(b =>
-    b.classList.toggle('on', b.dataset.v === p[g.dataset.k])));
-}
-document.querySelectorAll('.pills button').forEach(b => b.onclick = () => {
-  picks[b.parentNode.dataset.k] = b.dataset.v;
-  history.replaceState(null, '', '#' + new URLSearchParams(picks));
-  show();
-});
-show();
-async function handOver(b) {
-  const all = [b, ...document.querySelectorAll('.pills button')];
-  all.forEach(x => x.disabled = true);
-  const why = await typePost(P());
-  if (why === '') { b.textContent = 'Saving…'; return; }
-  all.forEach(x => x.disabled = false);
-  const say = document.getElementById('say');
-  say.textContent = why === null ? '1100 did not answer. Nothing was typed.' : why;
-  say.hidden = false;
-}
-</script>"""
+CSS = "<style>\n" + page.shared("handover.css") + "</style>"
 
 
 def say(d: dict, busy: bool) -> str:
@@ -219,19 +196,23 @@ def say(d: dict, busy: bool) -> str:
     return WORKING if busy else ""
 
 
-def draw(d: dict, tail: str = "") -> str:
-    """The page, from what world() reads or what a fixture holds. `tail` is its watch."""
+def draw(d: dict, watch: str) -> str:
+    """The page, from what world() reads.
+
+    `watch` is live.watch()'s, and opens the body. The page's own script
+    is .claude/pages/scripts/handover.js, the same in every state, and its picks
+    go beside it as data."""
     nn, step, ctx, limit = d["nn"], d["press"].get("step", ""), d["ctx"], d["threshold"]
     hot = ctx is not None and ctx >= limit
     if step not in PRESSED and not hot:
-        return page.render(f"{nn}-handover", [("", page.blank("No handover waits") + tail)],
+        return page.render(f"{nn}-handover", [("", watch + page.blank("No handover waits") + scripts({}))],
                            page.head("handover", d["tag"]), refresh=0)
     off = " disabled" if step in PRESSED else ""
     busy = not off and d["live"] == "working"
     tip = WORKING if busy else f"Types {handover.PREPARE}, then /handover-resume {nn} with these settings, into {nn}'s pane."
     sent = ' class="sent"' if step == "done" else ""
     go = (f'<button id="go"{sent}{" disabled" if off or busy else ""} '
-          f'title="{page.esc(tip)}" onclick="handOver(this)">{page.icon("check", 13) if step == "done" else ""}'
+          f'title="{page.esc(tip)}">{page.icon("check", 13) if step == "done" else ""}'
           f'{PRESSED.get(step, "Hand over")}</button>')
     heat = " hot" if hot else ""
     gauge = (f'<div class="gauge"><span class="meter"><span class="fill{heat}" style="width:{ctx or 0}%"></span>'
@@ -252,22 +233,70 @@ def draw(d: dict, tail: str = "") -> str:
         + launcher.pills(k, [(own[k] if v == now[k] else v, label, shade) for v, label, shade in opts], pre[k], off)
         + '</span>' for k, cls, opts in groups) + '</div></div>')
     line = say(d, busy)
-    body = (launcher.CSS + CSS + f'<div class="hp"><h2>Over the limit</h2>{gauge}<h2>Its successor</h2>{row}'
-            f'<p class="say" id="say"{"" if line else " hidden"}>{line}</p></div>' + page.TYPING
-            + SCRIPT.replace("%DATA%", json.dumps(pre).replace("</", "<\\/")) + tail)
+    part = (f'<div class="hp"><h2>Over the limit</h2>{gauge}<h2>Its successor</h2>{row}'
+            f'<p class="say" id="say"{"" if line else " hidden"}>{line}</p></div>')
+    body = watch + launcher.CSS + CSS + part + scripts(pre)
     return page.render(f"{nn}-handover", [("", body)],
                        page.head("handover", d["tag"], "", f'<span class="group">{go}</span>'), refresh=0)
 
 
-def render(nn: str) -> str:
-    """Seat NN's page as it stands."""
-    return draw(world(nn), page.watch())
+def data(pre: dict) -> str:
+    return json.dumps(pre).replace("</", "<\\/")
+
+
+# ---- the page on the contract ----------------------------------------------------
+#
+# 1100 draws the page, and lib/live.py puts each change in place. Its own
+# script, .claude/pages/scripts/handover.js, keeps my picks in the address, and
+# sends Hand over, naming its act.
+
+def scripts(pre: dict) -> str:
+    """The page's scripts on the contract, the same in every state, its
+    pre-picks beside them as data."""
+    return (page.TABS + f'<script type="application/json" id="picks">{data(pre)}</script>\n'
+            f'<script src="{live.src("handover.js")}"></script>\n')
+
+
+def drawn(nn: str) -> str:
+    """Seat NN's page on the contract."""
+    mine = (registry.entries().get(nn) or {}).get("session_id", "")
+    return draw(world(nn), watch=live.watch(mine))
+
+
+def files(nn: str) -> list:
+    """Every file whose write can move seat NN's page: its press, its
+    transcript, what its successor launches on, both thresholds, the
+    account order, System's model and effort, the models, and what names
+    each session. A file that may come later is named by its folder."""
+    own = registry.folder(nn)
+    out = registry.watched([nn]) + [handover.path(nn), os.path.join(own, handover.RESUME),
+                                    os.path.join(own, launch.NAMED), successor.path(nn)]
+    mine = registry.entries().get(nn) or {}
+    if mine.get("transcript"):
+        out.append(mine["transcript"])
+    for f in (context.FILE, accounts.FILE, accounts.MODEL, accounts.EFFORT, models.FILE):
+        out += [os.path.dirname(f), f]
+    for n in registry.entries():
+        out += [os.path.join(registry.folder(n), registry.RECORD), os.path.join(registry.folder(n), plans.PLAN)]
+    return list(dict.fromkeys(out))
+
+
+def alive() -> tuple:
+    """Each seat whose press runs, by its program alone: a press whose
+    program ended writes nothing, yet the page reads it as failed."""
+    return tuple(nn for nn in sorted(registry.listing(registry.WORK))
+                 if os.path.isfile(handover.path(nn)) and handover.progress(nn).get("step") in PRESSED)
+
+
+# The page's contract, lib/live.py's: its address, its draw, its files, its
+# look, and its take, which names its act.
+LIVE = live.Page(serve.address("handover", r"(\d{2})"), drawn, files=files, looks=(alive,), take=pressed)
 
 
 # ---- System's part ----------------------------------------------------------------
 
-# Saving posts to System, and reloads it. A reload while I type keeps my
-# words: System's DRAFTS_SCRIPT.
+# System draws it without its script: .claude/pages/scripts/system.js sends each
+# save, and nothing reloads.
 SYSTEM = r"""<style>
   #limit, #wrapup { margin-top:6px; }
   #limit input, #wrapup input { flex:none; width:7ch; text-align:right; font-weight:700; }
@@ -310,14 +339,12 @@ def system_part() -> str:
 def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="verb", required=True)
-    sub.add_parser("fixture").add_argument("file")
+    run = sub.add_parser("press")
+    for name in ("nn", "pane", "since", "account", "model", "effort"):
+        run.add_argument(name)
     args = ap.parse_args()
-    with open(args.file) as f:
-        d = json.load(f)
-    out = os.path.splitext(args.file)[0] + ".html"
-    with open(out, "w") as f:
-        f.write(draw(d))
-    print(out)
+    pressing(args.nn, args.pane, int(args.since or 0),
+             {"account": args.account, "model": args.model, "effort": args.effort})
 
 
 if __name__ == "__main__":

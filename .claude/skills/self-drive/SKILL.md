@@ -25,6 +25,14 @@ Every other stop is in `.claude/rules/thinking.md`, under Finish what was asked.
 
 Off → end your turn in its shape, showing what you need, whole. Never call `9-session-stop` after.
 
+A team's assistant keeps it on: my words make this session my assistant through `1-assistant`.
+
+1. Its plan goes out as one `clarify-items` wave, with no `--then`: my Send folds it first.
+2. Its first item, What I understood, says my words back. A say-back my words ask for is that item, never a stop of its own.
+3. Its next items are the plan's stages with their missions, then its finish list.
+4. My agree on every item → keep the finish list, as `1-assistant` Step 6 says. Then invoke `1-assistant` with `drive plan`. The plan's drive runs from here, to its report and its stop as my move: `assistant-drive` Step 9. Never call `9-session-stop`.
+5. My feedback on any item → fold it, then bring the reworked items in one wave the same way.
+
 ## Step 3 — My words mid-run
 
 Words I type or paste join the work. The drive stays on.

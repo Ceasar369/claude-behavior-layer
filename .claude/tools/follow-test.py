@@ -282,34 +282,44 @@ class WaitTest(Seats):
             return check()
         out = io.StringIO()
         with patch.object(finish, "read", return_value=finish.found("idle")), \
-                patch.object(hear, "until", side_effect=until), patch.object(wait_tool.wake, "IDLE", 2), \
+                patch.object(hear, "until", side_effect=until), patch.object(wait_tool.wake, "IDLE", (2,)), \
                 redirect_stdout(out):
             wait_tool.seat_main("01", SID["01"], 3)
         return out.getvalue()
 
-    def test_a_driven_session_idle_wakes_it_once_and_a_followed_one_never(self):
+    def test_driven_and_followed_sessions_both_wake_it_idle(self):
         said = self.idle_run(time.strftime(wait_tool.STAMP))
-        self.assertTrue(said.startswith("Woke on 11, idle."))
-        again = self.idle_run("", seed=False)
-        self.assertTrue(again.startswith("Woke at its limit"))
-        self.assertLess(len(self.asked), 15)
+        self.assertTrue(said.startswith("Woke on 10, 11, idle."))
 
     def test_an_idle_stretch_due_while_no_wait_ran_wakes_it_at_once(self):
         said = self.idle_run(time.strftime(wait_tool.STAMP, time.localtime(time.time() - 3)))
-        self.assertTrue(said.startswith("Woke on 11, idle."))
+        self.assertTrue(said.startswith("Woke on 10, 11, idle."))
         self.assertEqual(self.asked, [])
 
-    def test_an_idle_stretch_already_woken_on_wakes_nothing_again(self):
+    def test_past_its_last_time_an_idle_stretch_wakes_nothing_again(self):
         mark = time.strftime(wait_tool.STAMP, time.localtime(time.time() - 3))
         self.idle_run(mark)
         said = self.idle_run(mark, seed=False)
         self.assertTrue(said.startswith("Woke at its limit"))
         self.assertLess(len(self.asked), 15)
 
-    def test_the_named_wait_wakes_once_per_idle_stretch_too(self):
+    def test_a_followed_session_wakes_it_idle_no_more_once_i_wrote_to_its_follower(self):
+        mark = time.strftime(wait_tool.STAMP, time.localtime(time.time() - 3))
+        mine = time.strftime(wait_tool.STAMP, time.localtime(time.time() + 5))
+        with patch.object(transcripts, "turns", return_value=TURNS + [("User", "", ["elsewhere"], mine)]):
+            said = self.idle_run(mark)
+        self.assertTrue(said.startswith("Woke on 11, idle."))
+
+    def test_the_idle_times_are_2_5_10_30_60_120_minutes(self):
+        self.assertEqual(wait_tool.wake.IDLE, tuple(m * 60 for m in (2, 5, 10, 30, 60, 120)))
+
+    def test_each_wake_waits_for_the_next_time_never_a_cascade(self):
         now = time.time()
-        self.assertGreater(wait_tool.idle_at(time.strftime(wait_tool.STAMP, time.localtime(now - 60)), now), now)
-        self.assertEqual(wait_tool.idle_at(time.strftime(wait_tool.STAMP, time.localtime(now - 400)), now), 0)
+        stamp = time.strftime(wait_tool.STAMP, time.localtime(now - 400))
+        base = time.mktime(time.strptime(stamp, wait_tool.STAMP))
+        self.assertEqual(wait_tool.idle_at(stamp, 0), base + 120)
+        self.assertEqual(wait_tool.idle_at(stamp, now), base + 600)
+        self.assertEqual(wait_tool.idle_at(stamp, base + 7200), 0)
         self.assertEqual(wait_tool.idle_at("", now), 0)
 
     def test_a_second_wait_on_a_seat_is_refused(self):
@@ -340,6 +350,68 @@ class WaitTest(Seats):
                 patch.object(hear, "until", side_effect=until), redirect_stdout(out):
             wait_tool.seat_main("01", SID["01"], 60)
         self.assertTrue(out.getvalue().startswith("Woke on 12."))
+
+
+class DrivenFinishTest(Seats):
+    """A driven session's real transcript, read by the real finish: its turn
+    over, nothing it sent to the background running, its move a Wait."""
+
+    def finished(self, move: str, ago: int = 0, waits: bool = False) -> str:
+        """Session 11 answers my last words, its turn over on MOVE, AGO
+        seconds back, then the one wait, driven by 01, runs as
+        session-control arms it. WAITS: its turn armed a wait of its own in
+        the background, still running."""
+        utc = lambda s: time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime(time.time() - ago - s))
+        own = ({"type": "assistant", "uuid": "a0", "parentUuid": "u1", "timestamp": utc(50),
+                "message": {"role": "assistant", "content": [
+                    {"type": "tool_use", "id": "t1", "name": "Bash",
+                     "input": {"command": "python3 .claude/tools/transcript.py wait --awake",
+                               "run_in_background": True}}]}},
+               {"type": "user", "uuid": "r1", "parentUuid": "a0", "timestamp": utc(40),
+                "toolUseResult": {"backgroundTaskId": "b1"},
+                "message": {"role": "user", "content": [
+                    {"type": "tool_result", "tool_use_id": "t1",
+                     "content": "Command running in background with ID: b1."}]}}) if waits else ()
+        with open(self.held["11"]["transcript"], "w") as f:
+            for d in ({"type": "user", "uuid": "u1", "parentUuid": None, "timestamp": utc(60),
+                       "message": {"role": "user", "content": "Run /session-report as the mission says, then wait."}},
+                      *own,
+                      {"type": "assistant", "uuid": "a1", "parentUuid": "r1" if waits else "u1", "timestamp": utc(30),
+                       "message": {"role": "assistant", "content": [
+                           {"type": "text", "text": f"The report is written.\n\n**Your move**\n{move}"}]}},
+                      {"type": "system", "subtype": "turn_duration", "uuid": "s1", "parentUuid": "a1",
+                       "timestamp": utc(30)}):
+                f.write(json.dumps(d) + "\n")
+        registry.TAILS.pop(self.held["11"]["transcript"], None)
+        successor.take("01", ["11"])
+        follow.update("01", successor.path("01"), lambda d: d["11"].update(
+            {"bookmark": time.strftime(wait_tool.STAMP, time.localtime(time.time() - ago - 45))}))
+        out = io.StringIO()
+        live = {SID["11"]: {"status": "idle", "pid": 999999, "startedAt": 0}}
+        with patch.object(registry, "claude_records", return_value=live), \
+                patch.object(hear, "until", side_effect=lambda check, *a, **k: check()), \
+                patch.dict(os.environ, {"CLAUDE_CODE_SESSION_ID": SID["01"]}), redirect_stdout(out):
+            wait_tool.seat_main("01", SID["01"], 0)
+        return out.getvalue()
+
+    def test_a_finish_waiting_on_its_own_stop_wakes_its_driver(self):
+        # Session 61's own words, at 18:15 on 13 November: they once read
+        # working forever, and its driver never woke.
+        said = self.finished("Wait: nothing is running. Session 11 is finished. "
+                             "Stop it with `/9-session-stop` when you are done.")
+        self.assertTrue(said.startswith("Woke on 11."), said)
+        self.assertIn("State: done", said)
+
+    def test_a_wait_with_nothing_running_wakes_its_driver_idle(self):
+        # Its turn ended three minutes back: its first idle time, two minutes on, has come.
+        said = self.finished("Wait: session 05 speaks next.", ago=180)
+        self.assertTrue(said.startswith("Woke on 11, idle."), said)
+
+    def test_a_wait_on_its_own_background_wait_still_works(self):
+        # A driver of its own, its wait armed: it works, and wakes nobody.
+        said = self.finished("Wait: session 05 speaks next.", ago=180, waits=True)
+        self.assertTrue(said.startswith("Woke at its limit"), said)
+        self.assertIn("State: working", said)
 
 
 class HoldTest(Seats):
@@ -374,6 +446,48 @@ class HoldTest(Seats):
             with self.assertRaises(SystemExit):
                 unwatched.main()
         self.assertEqual(out.getvalue(), "")
+
+    def ended(self, said, covers=(), title=""):
+        """What the hook prints for seat 01's turn ending on `said`."""
+        if title:
+            self.held["01"]["title"] = title
+        live = {SID[n]: {"pid": 100 + int(n)} for n in SID}
+        event = {"session_id": SID["01"], "last_assistant_message": said}
+        out = io.StringIO()
+        with patch.object(registry, "claude_records", return_value=live), \
+                patch.object(unwatched, "waits", return_value=list(covers)), \
+                patch.object(unwatched.handover, "progress", return_value={}), \
+                patch("sys.stdin", io.StringIO(json.dumps(event))), redirect_stdout(out):
+            try:
+                unwatched.main()
+            except SystemExit:
+                pass
+        return out.getvalue()
+
+    def test_a_wait_line_names_every_session(self):
+        self.assertEqual(unwatched.waited_on("Done.\n\n**Your move**\n\nWait: sessions 10, 11 and 12 answer. "
+                                             "I then launch stage B."), ["10", "11", "12"])
+        self.assertEqual(unwatched.waited_on("Wait: this session's 3 agents finish near 15:40."), [])
+        self.assertEqual(unwatched.waited_on("I read session 10.\n\nRuling: keep it."), [])
+
+    def test_a_wait_with_no_step_of_mine_passes(self):
+        """Told to stay idle, a seat waits on the one that stops it: no wake."""
+        self.assertEqual(unwatched.waited_on("Wait: session 01 keeps my folder, then stops this session."), [])
+        self.assertEqual(self.ended("Wait: session 01 stops this session. It sits idle until then."), "")
+
+    def test_a_wait_on_a_session_nothing_watches_is_held(self):
+        said = json.loads(self.ended("Wait: session 10 reworks its wave. I then fold its items."))
+        self.assertEqual(said["decision"], "block")
+        self.assertIn("session 10", said["reason"])
+        self.assertIn("`follow`", said["reason"])
+
+    def test_a_wait_on_a_watched_session_passes(self):
+        self.assertEqual(self.ended("Wait: session 12 answers.", [{"12"}]), "")
+        follow.take("01", "10", "a", "b")
+        self.assertEqual(self.ended("Wait: session 10 reworks its wave.", [None]), "")
+
+    def test_an_advisor_waits_with_no_follow(self):
+        self.assertEqual(self.ended("Wait: session 10 reworks its wave.", title="01-advisor"), "")
 
 
 if __name__ == "__main__":

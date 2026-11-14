@@ -27,7 +27,7 @@ Read `knowledge/0010-playbook/0011-assisting/assisting-protocols/assisting-proto
 
 A line matching this work → read what it names, one MOC per tier, down to its protocol. Follow that protocol.
 
-Work holding a walk → read `knowledge/0010-playbook/0017-walking/walking-protocols/protocol-my-walk.md`, under Walks stage by stage. Any walk order you propose follows it.
+Work holding a walk with me that I asked for → read `knowledge/0010-playbook/0017-walking/walking-protocols/protocol-my-walk.md`, under Walks stage by stage. Any walk order you propose follows it.
 
 ## Step 3 — Read each session's need
 
@@ -40,6 +40,8 @@ It prints each mission's id, its need, and its session. A need is answer, send, 
 Send means its answer waits, unsent, on 1100. Waiting on you means a wave waits for my Send.
 
 A mission with no need prints its state instead: not started, stopped, working or idle.
+
+Every turn naming one of my sessions runs it first, my plain words too. A need shown in an earlier turn is never repeated from memory.
 
 ## Step 4 — Route
 
@@ -79,9 +81,15 @@ A stage's letter takes each of its missions whose need is answer, send, waiting 
 
 Invoke `assistant-stages`, with my words, or with none.
 
-Stop. The plan is mine to rule.
+Stop. The plan is mine to rule. Self-driven → it goes out as `self-drive` Step 2 says.
 
-Once I rule it → Step 7.
+Once I rule it → keep each pause point I named, after a stage or a mission: `python3 .claude/tools/drive.py point NN <letters and ids>`. Then keep each finish line I agreed, then Step 7. Each starts red:
+
+```
+python3 .claude/tools/drive.py finish NN <<'EOF'
+<one line each>
+EOF
+```
 
 ## Step 7 — Move the plan on
 
@@ -109,6 +117,8 @@ It proposed or planned new work → judge it against my goal. It fits → it joi
 
 Then the stage goes out:
 
+A mission written for a night drive stays as written, and its row takes the account, model and effort its entry names.
+
 1. `assistant-mission` for each of its missions.
 2. `assistant-mission` for each later mission with no file yet. It starts as notes.
 3. `python3 .claude/tools/assistant-page.py queue NN` with every id of this stage. It refuses while a stage before holds a gone session, and names each.
@@ -129,7 +139,7 @@ Invoke `assistant-drive`, with my words.
 Each finish its wait brings, by its state:
 
 - Asking → `assistant-answer`, with its mission id. Send its answer as its Step 7 says.
-- Done → `assistant-check`, with its mission id. It holds → keep its work, then stop it: `session-control` Steps 4 and 5. Not done → send it the fixes.
+- Done → `assistant-check`, with its mission id. It holds → keep its work, then stop it: `session-control` Steps 4 and 5. Its work leaves steps for my hands → its stop waits for my word that they are done. Not done → send it the fixes.
 - Capped, an error, full, blocked or gone → `session-control` Step 2.
 
 A session past the threshold is handed over while you answer it: `session-control` Step 3. Once `hand` succeeds, send the answer you wrote at once, until `say` prints its pane. Its successor's first turn ends on a Wait, which wakes nothing.

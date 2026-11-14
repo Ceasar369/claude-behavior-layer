@@ -52,13 +52,13 @@ sys.path.insert(0, os.path.join(
 import hook  # noqa: E402
 import iterm  # noqa: E402
 import launch  # noqa: E402
-import page  # noqa: E402
 import panes  # noqa: E402
 import ports  # noqa: E402
 import prototypes  # noqa: E402
 import registry  # noqa: E402
 import serve  # noqa: E402
 import wake  # noqa: E402
+import waves  # noqa: E402
 
 TRIGGER = "/9-session-stop"
 WAIT = 60  # seconds Claude has to exit before its pane closes anyway
@@ -139,7 +139,7 @@ def main() -> None:
 
     kept = len(registry.files(number)) if number else 0
     try:
-        wave, head, left = page.tool("clarify-page").open_wave(number) if number else (0, {}, [])
+        wave, head, left = waves.open_wave(number) if number else (0, {}, [])
     except Exception:  # a wave that will not read never holds the stop
         wave, head, left = 0, {}, []
 

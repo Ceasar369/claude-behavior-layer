@@ -290,7 +290,7 @@ def key(folder: str = FOLDER) -> str:
 
 def topic(word: str) -> str:
     """The topic a word names, as TOPICS write it, or "" when it names
-    none: "web app" and "web-app" both name Web app."""
+    none: "side project" and "side-project" both name Side project."""
     return next((name for name in NAMES if slug(name) == slug(word)), "")
 
 

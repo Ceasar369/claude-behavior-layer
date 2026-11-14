@@ -1,0 +1,92 @@
+  body > main { padding:12px; }
+  .lbl { font:700 10px/1.4 ui-monospace,Menlo,monospace; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+  .band { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 190px), 1fr)); gap:8px; margin:6px 0 16px; }
+  .grp { min-width:0; padding:7px 10px; background:var(--panel); border:1px solid var(--line); border-radius:6px; }
+  .port { display:flex; align-items:center; gap:7px; min-width:0; margin-top:3px; color:var(--text); text-decoration:none; }
+  .port:hover { color:var(--blue); }
+  .port .nm, .op .c { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .port .nm { flex:1; }
+  .dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--c); }
+  .ops { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 330px), 1fr)); column-gap:24px; margin:6px 0 16px; }
+  .op { display:grid; grid-template-columns:6ch 17ch minmax(0,1fr); gap:8px; align-items:center; min-width:0;
+    padding:3px 4px; border-bottom:1px solid var(--line); }
+  /* An app view's row: its name whole at any width, and the view this page sits in marked. */
+  #views .op { grid-template-columns:max-content minmax(0,1fr); }
+  #views .op.here b { color:var(--blue); }
+  #views .op.here .c:last-child::after { content:" · this panel"; color:var(--blue); }
+  .op a { color:var(--text); text-decoration:none; }
+  .op a:hover { color:var(--blue); }
+  /* Every other app's port, folded into one line, its arrow as Files' folders wear. */
+  .rest { margin:-10px 0 16px; }
+  .rest summary { list-style:none; cursor:pointer; padding:3px 4px; }
+  .rest summary::-webkit-details-marker { display:none; }
+  .rest summary::before { content:"▸ "; }
+  .rest[open] summary::before { content:"▾ "; }
+  .rest .ops { margin-top:2px; }
+  /* The account order: each turn, the next one outlined, then a box to set a new one. */
+  .order { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:6px 0 8px; }
+  .turn { display:inline-flex; align-items:center; justify-content:center; min-width:30px; height:26px; padding:0 8px;
+    font-weight:700; background:var(--panel); border:1px solid var(--line); border-radius:5px; }
+  .turn.next { border-color:var(--text); box-shadow:inset 0 -2px 0 var(--text); }
+  /* The launch page's pills, a row of them wrapping as the order does. */
+  .order .pills { flex-wrap:wrap; }
+  .set { display:flex; gap:6px; align-items:center; max-width:520px; }
+  .set input { flex:1; min-width:0; height:27px; padding:0 10px; font:inherit; border-radius:4px;
+    background:var(--bg); color:var(--text); border:1px solid var(--line); }
+  .set input:focus { outline:none; border-color:var(--blue); }
+  .set input.bad { border-color:var(--red); }
+  .hint { max-width:520px; margin:6px 0 16px; color:var(--dim); }
+  /* Two parts side by side. */
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:0 40px; }
+  .pair > div { min-width:0; }
+  .pair .set, .pair .hint { max-width:none; }
+  @media (max-width:700px) { .pair { grid-template-columns:1fr; } }
+  /* Each account's two windows, as bars: its percent and its reset. */
+  .use { display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 16px; }
+  .use > .grp { flex:1 1 0; min-width:240px; }
+  .use .hd { display:flex; justify-content:space-between; gap:8px; }
+  .use .sn { font:inherit; color:var(--text); background:none; border:0; padding:0 2px; cursor:pointer; }
+  .use .sn:hover { color:var(--blue); }
+  .win { margin-top:8px; }
+  .win .wl { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0 8px; }
+  .meter { position:relative; height:8px; margin-top:4px; background:var(--line); border-radius:4px; }
+  .meter i { display:block; height:100%; background:var(--blue); border-radius:4px; }
+  .use .seen { margin-top:8px; }
+  /* Each account's own default, at the foot of its card. Max, which no
+     settings.json keeps, is greyed. An outsource engine's wears it too. */
+  .own, .eng { margin-top:10px; padding-top:8px; border-top:1px solid var(--line); }
+  .own .order, .eng .order { margin:4px 0 0; gap:5px; }
+  .use + .hint { margin-top:-8px; }
+  /* The memory guard's findings, last: one line each, its buttons after
+     it. Stand-in, G3 v1's: every size and colour, bar End's red fill. */
+  .mem { margin:6px 0 16px; font-size:12px; }
+  .mem .calm { margin:0; padding:4px 0; }
+  .mem .row { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; padding:4px 0; }
+  .mem .t, .mem .q { flex:1 1 320px; min-width:0; }
+  .mem .t .dot { margin-right:8px; vertical-align:1px; }
+  .mem .bs { display:flex; flex-wrap:wrap; gap:6px; max-width:100%; }
+  .mem .btn { height:22px; padding:0 7px; font-size:11px; }
+  .mem .said { flex-basis:100%; color:var(--dim); }
+  .mem .idle { padding:2px 0 2px 15px; }
+  .mem .row [hidden] { display:none; }
+  /* While a finding is open, its bar sits under the head, edge to edge. */
+  .bars { margin:-12px -12px 12px; }
+  .mbar { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; height:32px;
+    padding:0 12px; font:inherit; font-size:12px; color:var(--text); text-align:left; cursor:pointer;
+    background:var(--panel); border:0; border-left:3px solid var(--c); }
+  .mbar .dim { flex:none; white-space:nowrap; }
+  @media (max-width:520px) { body > main { padding:8px; } .bars { margin:-8px -8px 10px; } }
+  /* A touch screen, as my phone, and never a Mac, however narrow its pane.
+     Every control takes a fingertip: 44 by 44 points, Apple's minimum. A
+     field's text is 16px, WebKit's standard size: smaller, a tap into it
+     zooms the page. */
+  @media (hover:none) and (pointer:coarse) {
+    .set input { height:44px; font-size:16px; }
+    .set .btn, .pills button { min-width:44px; height:44px; }
+    .port { min-height:44px; }
+    .op a { display:flex; align-items:center; min-height:44px; }
+    .rest summary { display:flex; align-items:center; min-height:44px; }
+    .use .sn { min-width:44px; min-height:44px; }
+    .mem .btn { min-width:44px; height:auto; min-height:44px; }
+    .mbar { height:auto; min-height:44px; }
+  }

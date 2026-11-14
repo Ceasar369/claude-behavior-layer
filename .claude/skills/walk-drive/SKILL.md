@@ -23,16 +23,17 @@ NN is your number, as `CLAUDE.md` defines it. MM is the session my words say to 
 
 ## Step 3 — Get ready, once
 
-1. Make your login, as `before-you-start.md`'s "The walker's login" says. It names a login already taken → ask MM, Step 7, quoting that line.
+1. Make your login, as `before-you-start.md`'s "The walker's login", or "The walker's logins", says. It names a login already taken → ask MM, Step 7, quoting that line.
 2. Write `.claude/state/sessions/NN/walk.json`: `{"main": "MM", "area": "<the area>", "login": "<your login>", "walk": "<my words, whole>"}`. Never write it again: its time names the folder MM keeps your evidence in.
 3. `browser_resize` to the width the standard walks a flow at, 1500 by 950 when it names none.
+4. Your tabs share one login per address. Each further login open at once → its window opens at the address `before-you-start.md`'s Where gives it.
 
-Your logins stand for the step's, as "The walker's login" says: a step naming a seeded login, you walk as yours. A login a step makes takes the name it gives, and its company too.
+Your logins stand for the step's, as "The walker's login", or "The walker's logins", says: a step naming a seeded login, you walk as yours. A login a step makes takes the name it gives, and its company too.
 
 ## Step 4 — Walk one journey
 
 1. First, every journey, approved or not: `python3 .claude/tools/walk-clear.py NN <area>/<section>/<journey file's name>`. It keeps your whole `walk/` in MM's folder, then deletes it, this journey's last pass included, and every file in your `playwright/`. So my Screenshots tab holds this pass of this journey alone. Then read its journey file once: its Start, its Prep, its End, its steps. Reach the Start.
-2. A Prep → do it, exactly as its line names. Its key is the one its line writes, as `Authorization: Bearer <your-walk-test-key>`. Never open a `.env` file, even one the line names. A Prep, Start or End naming a reset → do not. Note it as a move not done, and go on.
+2. A Prep → do it, exactly as its line names. Its key is the one its line writes, as `Authorization: Bearer local-test-key`. Its password is your login's, Step 3.1. Never open a `.env` file, even one the line names. A Prep, Start or End naming a reset → do not. Note it as a move not done, and go on.
 3. Each step, then each of its lettered details, in the checklist's order. Each is one check.
 4. Do its Do, one move per call: find what to press in a fresh `browser_snapshot`, then press it. A ref lives one snapshot.
 5. Every move of a check changes the screen: a press, a typed field, an opened address, a scroll. After each one, before the next move, save its evidence, Step 5. Then save once more at the check's end, even when nothing changed since. Never pick which moves to save: picking is judging. A move only reaching the Start, like signing in, takes none.
@@ -60,14 +61,33 @@ async (page) => {
 ```js
 () => { window.fetch = window.__realFetch; }
 ```
-10. A widths row → `browser_resize` to its width, then save. Its End → back to the flow's width.
-11. A docs row → open its page's address, then save its text alone, Step 5.4. A See or detail naming a look, like a colour or the side menu, saves its screenshot too.
-12. A move cannot be done: nothing to press, a page that will not open, an error → save, then ask MM, Step 7, naming the move. A move the step names is not on the screen → that move cannot be done. Never press another to reach it.
-13. A command the auto-mode check refuses → ask MM, Step 7, quoting the command. Never reach it another way.
+10. Coming back to a tab or a window → once back on it, `browser_evaluate`, this function. Your browser never fires a return itself: this one hides the page, shows it again, then gives it two seconds to read again.
+
+```js
+async () => {
+  const seen = (state) => {
+    Object.defineProperty(document, "visibilityState", { value: state, configurable: true });
+    Object.defineProperty(document, "hidden", { value: state === "hidden", configurable: true });
+    document.dispatchEvent(new Event("visibilitychange"));
+  };
+  seen("hidden");
+  await new Promise((r) => setTimeout(r, 500));
+  seen("visible");
+  delete document.visibilityState;
+  delete document.hidden;
+  await new Promise((r) => setTimeout(r, 2000));
+}
+```
+
+11. A widths row → `browser_resize` to its width, then save. Its End → back to the flow's width.
+12. A docs row → open its page's address, then save its text alone, Step 5.4. A See or detail naming a look, like a colour or the side menu, saves its screenshot too.
+13. A move cannot be done: nothing to press, a page that will not open, an error → save, then ask MM, Step 7, naming the move. A move the step names is not on the screen → that move cannot be done. Never press another to reach it.
+14. A command the auto-mode check refuses → ask MM, Step 7, quoting the command. Never reach it another way.
+> **Stand-in.** 15. Each Prep this project's walks name, and the browser function it runs.
 
 ## Step 5 — Save a check's evidence
 
-1. The stem is `.claude/state/sessions/NN/walk/<area>/<section>/<journey file's name>/<#>`, like `…/walk/web-app/authentication/sign-up/7`. A check saved once, at its end alone, keeps the stem bare. A check saved more than once ends every save `-1`, `-2`, `-3`, in order, its end's last.
+1. The stem is `.claude/state/sessions/NN/walk/<area>/<section>/<journey file's name>/<#>`, like `…/walk/site/authentication/sign-up/7`. A check saved once, at its end alone, keeps the stem bare. A check saved more than once ends every save `-1`, `-2`, `-3`, in order, its end's last.
 2. Its screenshot, the whole page, top to foot. The apps scroll inside a panel, so a full-page screenshot alone stops at the window. Four calls, in order:
    1. `browser_evaluate`, this function. It answers the page's whole height.
 
@@ -79,11 +99,11 @@ async (page) => {
    3. `browser_take_screenshot`, `filename` the stem ending `.png`, `fullPage` true.
    4. `browser_resize` back to the width and height you walk at.
 
-   A docs row takes one only as Step 4.11 says.
+   A docs row takes one only as Step 4.12 says.
 3. Its page text: `browser_evaluate`, this function, `filename` the stem ending `.txt`. Its first line names the move just made, its step's own words quoted, like `Press "Untitled"`. The save at the check's end names `The check's end`. Only those words change. A docs row's is the next line's.
 
 ```js
-() => `Move · <the move>\nAddress · ${location.href}\n\n${document.body.innerText}`
+() => `Move · <the move>\nAddress · ${location.href}\nTitle · ${document.title}\n\n${document.body.innerText}`
 ```
 
 4. A docs row's page text: `browser_evaluate`, this function, `filename` the stem ending `.txt`. It opens with the page's address, then keeps the article alone, never the side menu or the search box: every tab of every code sample, and each link with its address.

@@ -15,6 +15,8 @@ import time
 EVENTS = getattr(os, "O_EVTONLY", 0x8000)
 WRITTEN = (select.KQ_NOTE_WRITE | select.KQ_NOTE_EXTEND
            | select.KQ_NOTE_DELETE | select.KQ_NOTE_RENAME)
+# The watched file itself went: removed, or swapped for a new one.
+GONE = select.KQ_NOTE_DELETE | select.KQ_NOTE_RENAME
 
 
 def until(check, files=(), pids=(), seconds: float = 0) -> bool:
@@ -22,21 +24,26 @@ def until(check, files=(), pids=(), seconds: float = 0) -> bool:
 
     It is asked at once, again once the watch is set, then each time a file
     is written or a pid exits. A file missing or a pid already gone is not
-    watched: check() already sees it.
+    watched: check() already sees it. A file swapped whole for a new one,
+    as registry.write_whole swaps it, is followed to the new one.
     """
     if check():
         return True
     kq = select.kqueue()
-    fds = []
+    fds = {}
+
+    def watch(path) -> None:
+        try:
+            fd = os.open(path, EVENTS)
+        except OSError:
+            return
+        fds[fd] = path
+        kq.control([select.kevent(fd, select.KQ_FILTER_VNODE,
+                                  select.KQ_EV_ADD | select.KQ_EV_CLEAR, WRITTEN)], 0)
+
     try:
         for path in files:
-            try:
-                fd = os.open(path, EVENTS)
-            except OSError:
-                continue
-            fds.append(fd)
-            kq.control([select.kevent(fd, select.KQ_FILTER_VNODE,
-                                      select.KQ_EV_ADD | select.KQ_EV_CLEAR, WRITTEN)], 0)
+            watch(path)
         for pid in pids:
             try:
                 kq.control([select.kevent(int(pid), select.KQ_FILTER_PROC,
@@ -48,7 +55,14 @@ def until(check, files=(), pids=(), seconds: float = 0) -> bool:
             return True
         deadline = time.time() + seconds
         while (left := deadline - time.time()) > 0:
-            if kq.control(None, 8, left) and check():
+            heard = kq.control(None, 8, left)
+            # A file swapped whole is a new file under its old name. The
+            # watch moves to it, or every later swap would go unheard.
+            for e in heard:
+                if e.filter == select.KQ_FILTER_VNODE and e.fflags & GONE and e.ident in fds:
+                    os.close(e.ident)
+                    watch(fds.pop(e.ident))
+            if heard and check():
                 return True
         return check()
     finally:

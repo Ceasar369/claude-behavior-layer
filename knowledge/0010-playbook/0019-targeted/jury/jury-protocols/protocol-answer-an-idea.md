@@ -20,3 +20,7 @@ It returns one idea, its reason, and the quote it rests on, with its place.
 
 1. What does the idea serve? The question names it.
 2. How does it come back? Every idea listed whole, never counted.
+
+## The lessons
+
+Nothing sits here.

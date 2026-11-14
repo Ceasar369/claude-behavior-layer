@@ -1,0 +1,15 @@
+  .ob { background:#1e1e1e; color:#dadada; padding:18px 22px; min-height:100%;
+    font:14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  main:has(> .ob) { padding:0; }
+  .ob-block { width:fit-content; max-width:100%; margin:0 0 22px; }
+  .ob-block:last-child { margin-bottom:0; }
+  .ob-h { display:flex; align-items:baseline; flex-wrap:wrap; gap:12px; margin:0 0 8px; text-transform:none;
+    letter-spacing:0; font-size:16px; font-weight:700; color:#dadada; }
+  .ob-link { color:#a78bfa; text-decoration:underline; }
+  .ob-path { font:12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight:400; }
+  .ob table { border-collapse:collapse; width:fit-content; max-width:100%; }
+  .ob th, .ob td { border:1px solid #363636; padding:4px 10px; text-align:left; vertical-align:top; }
+  .ob th { font-weight:600; }
+  .ob td.ob-what { max-width:56ch; }
+  .ob .ob-mark { text-align:center; }
+  .ob-reads { margin:8px 0 0; }

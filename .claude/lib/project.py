@@ -31,6 +31,8 @@ folder's name. A file that cannot be read names nothing.
             click opens none. No workspace: the project's folder.
   shift     a shift this project always takes, and flip then refuses.
             None: the state file's, or 0.
+  usage     a shared usage reader on this Mac, a program's path, ~ for my
+            home. lib/accounts.py reads through it. None: none.
 
 A shift moves every port of this project clear of another project's, so
 both run on one Mac: 20000 puts 1100 on 21100, and session 05's 7205 on
@@ -103,11 +105,12 @@ def servers(value) -> list:
             for group, held in groups if isinstance(held, dict)]
 
 
-def fixed(root: str) -> int:
-    """The shift project.json fixes for the project at ROOT. 0 when it fixes
-    none, or one that would push a port past 65535."""
+def fixed(root: str):
+    """The shift project.json fixes for the project at ROOT, 0 included: a
+    project fixed at 0 never flips. None when it fixes none, or one that
+    would push a port past 65535."""
     got = read(root).get("shift")
-    return got if type(got) is int and 0 < got <= 50000 else 0
+    return got if type(got) is int and 0 <= got <= 50000 else None
 
 
 def shift(root: str) -> int:
@@ -115,7 +118,7 @@ def shift(root: str) -> int:
     fixes, else the state file's. 0 with none, or one that would push a port
     past 65535."""
     by = fixed(root)
-    if by:
+    if by is not None:
         return by
     try:
         with open(os.path.join(root, SHIFT_FILE)) as f:
@@ -162,6 +165,7 @@ def facts(root: str) -> dict:
         "docs": docs + "/" if docs else "",
         "editor": words(dock.get("editor")),
         "workspace": os.path.join(root, workspace) if workspace else root,
+        "usage": os.path.expanduser(text(got.get("usage"))),
     }
 
 
@@ -172,6 +176,7 @@ FIXED = FACTS["fixed"]
 BAND, COMMAND, MATCH = FACTS["band"], FACTS["command"], FACTS["match"]
 DATABASE, DOCS = FACTS["database"], FACTS["docs"]
 EDITOR, WORKSPACE = FACTS["editor"], FACTS["workspace"]
+USAGE = FACTS["usage"]
 
 
 def identity() -> str:

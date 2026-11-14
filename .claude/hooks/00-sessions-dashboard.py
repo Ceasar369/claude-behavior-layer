@@ -80,7 +80,7 @@ def main() -> None:
                            capture_output=True, text=True)
         hook.done(r.stdout.strip() or "Nothing was running.")
     if word == "flip":
-        if project.FIXED:
+        if project.FIXED is not None:
             hook.done(f"Refused: .claude/project.json fixes this project's shift at {project.FIXED}, "
                       "so its ports do not flip.")
         if not project.refusal(serve.PORT):

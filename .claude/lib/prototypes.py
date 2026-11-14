@@ -20,9 +20,13 @@ Each hold stamps the subject with its session's number and title, in
 `session.json` beside its generations, so both outlive the session's
 folder.
 
+The whole app sits under BASE, /proto/, and 1100 passes every address
+there through to 1400. So 1100 frames it from its own origin: the Claude
+app's browser panel refuses a frame from any other local port.
+
 While a session's process runs and its subject is not locked in, 1100
-frames the subject in its hub, from 1400. Every other subject shows on
-1400's library, at /: each winner under Locked, the rest under Saved.
+frames the subject in its hub. Every other subject shows on 1400's
+library, at BASE: each winner under Locked, the rest under Saved.
 
 A lock-in marks the one generation it keeps. Its one variation is the
 winner. The session that builds it takes it down once its real version is
@@ -57,6 +61,8 @@ SUBJECT = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 # The one app, band 00's, with the shift in force: 21400 while it holds.
 PORT = 1400 + project.SHIFT
+# Where the app sits, on 1400 and on 1100 alike: vite.config.ts's base.
+BASE = "/proto/"
 
 # Folders of the app itself, which a subject's name can never take.
 TAKEN = {"src", "node_modules", "public"}

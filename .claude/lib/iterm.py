@@ -53,9 +53,9 @@ def call(*args: str) -> str:
         FAILED[0] = "its Python venv could not be made"
         return ""
     try:
-        # Its cookie request can bring iTerm up: panes.clean says why.
-        r = subprocess.run([PYTHON, TOOL, *args], env=panes.clean(),
-                           capture_output=True, text=True, timeout=30)
+        # Its cookie request can bring iTerm up: panes.clean says why. It
+        # takes a place among panes.ASKERS.
+        r = panes.ask([PYTHON, TOOL, *args], 30)
     except Exception as e:
         FAILED[0] = str(e) or type(e).__name__
         return ""

@@ -2,7 +2,7 @@
 
 Up: [[coding-protocols-MOC|Protocols]]
 
-Built code, walked whole against its record: a plan's last stage.
+Built code, checked whole against its record by the session alone, never with me: a plan's last stage.
 
 ## The parts it touches
 

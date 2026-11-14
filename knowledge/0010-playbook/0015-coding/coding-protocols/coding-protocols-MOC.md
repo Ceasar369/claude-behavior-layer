@@ -8,7 +8,7 @@ A coding protocol is a written way to code one kind of thing.
 
 ## Children
 
-- [[protocol-walk-and-close|Walk And Close]] — Built code, walked whole against its record: a plan's last stage.
+- [[protocol-walk-and-close|Walk And Close]] — Built code, checked whole against its record by the session alone, never with me: a plan's last stage.
 
 ## Admission rule
 

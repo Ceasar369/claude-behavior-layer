@@ -93,6 +93,14 @@
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/cleared.py\""
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/page-opener.py\""
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -283,6 +291,14 @@
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/unwatched.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/handed.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/plain.py\""
           }
         ]
       }

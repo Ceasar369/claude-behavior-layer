@@ -14,6 +14,6 @@ When the lead or the walker of my walk asks me something, and I bring it to you.
 
 ## One case
 
-A walker asks for my hands at Sign up 2, a step marked Real.
+A walker asks for my hands at Checkout 2, a step marked Real.
 
-> Session 31, the authentication walker, at Sign up 2. The code must arrive by real email. Open your inbox, find the app's code, and paste it in 31's pane.
+> Session 31, the checks walker, at Checkout 2. The payment app's flow must finish on a real phone. On the staging server, scan the frame's code with your phone, finish the flow, then say in 31's pane what the page shows.

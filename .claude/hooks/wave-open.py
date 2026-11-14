@@ -25,8 +25,8 @@ import sys
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
-import page  # noqa: E402
 import registry  # noqa: E402
+import waves  # noqa: E402
 
 # What a notice opens with. I typed none of them.
 NOTICE = ("<task-notification", "<agent-message", "Another Claude session sent a message")
@@ -37,14 +37,12 @@ def line(prompt: str, session_id: str) -> str:
     if not prompt or prompt.startswith(NOTICE) or prompt.startswith("/clarify-items"):
         return ""
     number = registry.number_of(session_id)
-    # Most sessions hold no wave. Only one that does loads the tool.
     if not number or not os.path.isdir(os.path.join(registry.folder(number), registry.WAVES)):
         return ""
-    clarify = page.tool("clarify-page")
-    wave, head, left = clarify.open_wave(number)
-    if not wave or " ".join(prompt.split()) == clarify.then(head):
+    wave, head, left = waves.open_wave(number)
+    if not wave or " ".join(prompt.split()) == waves.then(head):
         return ""
-    turn = f"Before anything else, run `{clarify.then(head)}` through the Skill tool, as Send would"
+    turn = f"Before anything else, run `{waves.then(head)}` through the Skill tool, as Send would"
     if head.get("sent"):
         return f"Wave {wave} was sent on my page, and never folded. {turn}: it folds what I sent."
     waits = (f"Wave {wave} waits on my page, unanswered there: {'; '.join(left)}." if left

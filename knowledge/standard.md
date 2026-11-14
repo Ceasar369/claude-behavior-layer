@@ -4,6 +4,14 @@ Up: [[MOC|Vault Root]]
 
 The only documentation standard in this vault. Every document obeys it.
 
+## Three areas, and a document's scope decides its home
+
+The playbook holds what every session follows, on both sides, with the laws and policies binding the company. The infrastructure holds what is true of it, and how its sessions work on it. The web app holds the same of itself.
+
+A document lives in the narrowest folder serving every session it binds. Both sides: the playbook. One side: its area. One layer: that layer's folder.
+
+Each line inside holds for that whole scope, or moves down.
+
 ## Every folder carries a MOC
 
 A MOC is the folder's front door and its index.
@@ -19,7 +27,7 @@ A MOC is written and maintained. It is never an automatic inventory.
 
 ## Numbers mark places, names mark things
 
-An area folder takes `0010` to `0090`. A subject folder inside takes `N1` to `N9`, once.
+An area folder takes `0010`, `0020` or `0030`. A subject folder inside takes `N1` to `N9`, once.
 
 `0010-playbook` holds `0011` to `0019`.
 
@@ -31,7 +39,7 @@ A name never says where it sits. A move edits `Up:` and two MOCs. No link breaks
 
 `0010-playbook/0013-thinking/thinking-protocols/behaviour-protocols/the-behaviour-axioms.md` is one.
 
-A folder's documents of one kind stay together, under headings, until its MOC passes nine children. Only then do they split into subfolders. A new kind of document opens its own folder, whatever the count.
+Three or more documents on one subject, narrower than their folder's, take a folder of their own. A new kind of document opens its own folder, whatever the count.
 
 ## A document's structure
 
@@ -57,6 +65,10 @@ A rule for a whole kind keeps its principle, never the value the code holds.
 - ❌ "The rail holds Home, Settings and Members, then a line."
 - ✅ "A list that exports puts Export last in its bar."
 
+## The Hidden mark
+
+Hidden marks a piece that exists or is designed. No session builds, walks or proposes on it until I say.
+
 ## A document about a thing states what is
 
 A port, a folder, a layer, a site, a machine, a vendor.
@@ -70,7 +82,7 @@ State the fact that makes an instruction unnecessary.
 - ❌ "An archive is frozen. Never edit one."
 - ✅ "An archive is frozen. It records what one trial believed."
 
-Every numbered folder outside the playbook holds this kind.
+Each area holds this kind about its parts. The playbook holds it for the laws binding the company.
 
 ## A document about the way we work states what to do
 
@@ -83,9 +95,7 @@ It may also state the fact that makes an instruction unnecessary.
 - ✅ "A session binds its derived port, and no other."
 - ✅ "Name the subject, never the category."
 
-`0010-playbook/` holds this kind, and only this kind.
-
-Its own purpose line says so: how the work is run.
+`0010-playbook/` holds this kind for every session. An area holds it for its own sessions alone.
 
 ## A glossary explains our words
 

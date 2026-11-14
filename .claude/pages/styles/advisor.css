@@ -1,0 +1,49 @@
+  .tp { position:relative; flex:1; min-height:0; display:flex; flex-direction:column; container-type:inline-size; }
+  .tp > .scroll { padding-top:40px; }
+  .adv { --violet:#a78bfa; position:absolute; top:0; left:0; z-index:3; display:flex; flex-direction:column;
+    gap:6px; }
+  .atab { flex:none; align-self:flex-start; display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:30px; margin-left:8px; color:var(--text); background:var(--raised);
+    border:1px solid var(--grey); border-top:0; border-radius:0 0 6px 6px; box-shadow:0 4px 12px rgba(0,0,0,.4);
+    text-align:center; }
+  .atab:hover { background:var(--hover); }
+  .adv:not(.open) > .rows { display:none; }
+  .adv.open { max-height:calc(100% - 24px); padding:0 14px 10px; background:var(--bg);
+    border-bottom:1px solid var(--grey); border-right:1px solid var(--grey); border-radius:0 0 6px 0;
+    box-shadow:0 10px 24px rgba(0,0,0,.55); }
+  .adv.open > .atab { margin-left:-6px; color:#000; background:#fff; border-color:#fff; box-shadow:none; }
+  .adv .rows { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; display:flex;
+    flex-direction:column; gap:4px; }
+  .adv .note { margin:0; }
+  .adv .sb { display:none; position:absolute; right:4px; width:6px; border-radius:3px; background:var(--line);
+    pointer-events:none; }
+  .adv.open > .sb.on { display:block; }
+  .adv .sb i { position:absolute; left:0; right:0; border-radius:3px; background:var(--dim); }
+  .adv .row { flex:none; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:6px 10px;
+    padding:5px 8px; background:var(--panel); border:1px solid var(--line); border-radius:5px; }
+  .adv .sq { display:inline-flex; align-items:center; justify-content:center; width:28px; height:22px;
+    border-radius:4px; color:var(--bg); font-size:12px; font-weight:700; }
+  .adv .nm { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; contain:inline-size; }
+  .adv .acts { grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .adv .pair { width:22ch; }
+  .adv .acts > .mark { width:auto; }
+  .adv .hold .btn { padding:0 4px; }
+  .adv .btn.fo { background:var(--blue); color:#000; border-color:var(--blue); }
+  .adv .btn.dr { background:var(--violet); color:#000; border-color:var(--violet); }
+  .adv .btn.fo.on { background:none; color:var(--blue); }
+  .adv .btn.dr.on { background:none; color:var(--violet); }
+  .adv .btn.done { background:var(--green); color:var(--bg); border-color:var(--green); }
+  @container (max-width: 560px) {
+    .adv.open { right:0; border-right:0; border-radius:0; }
+    .adv .pair { width:auto; }
+  }
+  /* My phone: every control takes a fingertip (rule 20). */
+  @media (hover:none) and (pointer:coarse) {
+    .tp > .scroll { padding-top:54px; }
+    .atab { width:48px; height:44px; }
+    .atab svg { width:20px; height:20px; }
+    .adv.open { padding:0 10px 10px; }
+    .adv .sb { right:2px; }
+    .adv.open > .atab { margin-left:-2px; }
+    .adv .row .btn { height:44px; }
+  }

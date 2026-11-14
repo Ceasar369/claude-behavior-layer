@@ -1,0 +1,38 @@
+  /* The plan's sessions sit under its item, at its sides. */
+  .jt-rows { padding:0 24px 24px; }
+  .jt-rows > h2 { margin:0 0 6px; }
+  .jt-rows > .row + h2 { margin-top:14px; }
+  .jt-rows .row { cursor:default; padding:8px 10px; margin-bottom:8px; }
+  .jt-rows .line { font-size:12px; }
+  /* The list of plans: each row opens its plan. */
+  .jt-plans { padding-top:12px; padding-bottom:0; }
+  .jt-plans a.row { display:block; cursor:pointer; color:inherit; text-decoration:none; }
+  .jt-plans a.row .line { margin-bottom:0; }
+  .jt-how { color:var(--dim); }
+  .banner { margin:12px 24px 0; }
+  /* A word I edit in place looks as it reads, until it holds the cursor. */
+  [contenteditable] { cursor:text; border-radius:3px; }
+  [contenteditable]:focus { outline:1px solid var(--blue); outline-offset:2px; }
+  /* The results: the claims' table fills the width, its claim and why
+     cells wrapping. A row opens on a click. */
+  .jt-table .grid { display:block; }
+  .jt-table table { width:100%; }
+  .jt-table td.jt-wrap { white-space:normal; }
+  .jt-table td .chip { vertical-align:baseline; }
+  .jt-row { cursor:pointer; }
+  /* A case's points under the fact they rest on, in line with its text. */
+  .jt-point { margin:3px 0 0 44px; }
+  /* The last claim keeps the table's last line, its jurors folded under it. */
+  .jt-table tbody tr:nth-last-child(2):has(+ tr[hidden]) td { border-bottom:0; }
+  /* Each claim's jurors, once unfolded, side by side. */
+  .jt-jurors { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:8px; }
+  #items .jt-jurors .prop { margin:0; min-width:0; }
+  /* A long name, like a setting's or a file's, breaks where it must. */
+  .jt-jurors .prop * { overflow-wrap:anywhere; }
+  /* My phone: every pill and button takes a fingertip, 44 by 44 at least,
+     Apple's least touch size: page rule 20. */
+  @media (hover:none) and (pointer:coarse) {
+    .grp, .pills { gap:4px; }
+    .pills button, header.top .acts button { min-height:44px; min-width:44px; touch-action:manipulation; }
+    .pills button { padding:0 10px; font-size:12px; }
+  }

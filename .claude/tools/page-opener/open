@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""open — macOS's open, except a web address opens in its own Chrome profile.
+
+hooks/page-opener.py puts this folder first on every session's PATH. A
+command that opens a page calls `open`, and lands here: cloudflared's
+sign-in for ssh.example.com does. macOS's own open would show it in
+whichever profile Chrome used last.
+
+Each http or https address is looked up in the Sites table of
+knowledge/0010-playbook/0019-targeted/the-map/the-browser.md, by its host.
+A listed address covers its subdomains, and the longest match wins. Each
+address then opens in Chrome, in its row's profile directory. Any other
+word on the line, an -a naming another app included, is dropped.
+
+One address with no row opens nothing: the command fails, and says to ask
+me. A line holding no web address goes to /usr/bin/open untouched.
+
+A program calling /usr/bin/open by its full path never reaches here.
+"""
+
+import os
+import re
+import subprocess
+import sys
+from urllib.parse import urlsplit
+
+REAL = "/usr/bin/open"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__)))))
+LIST = "knowledge/0010-playbook/0019-targeted/the-map/the-browser.md"
+
+
+def table() -> dict:
+    """Each listed address, and the profile directory its row names."""
+    rows, columns = {}, None
+    with open(os.path.join(ROOT, LIST)) as f:
+        for line in f:
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if not line.startswith("|"):
+                columns = None
+            elif "Address" in cells and "Directory" in cells:
+                columns = cells.index("Address"), cells.index("Directory")
+            elif columns and len(cells) > max(columns):
+                directory = cells[columns[1]].strip("`")
+                for address in re.findall(r"`([^`]+)`", cells[columns[0]]):
+                    rows[address.lower()] = directory
+    return rows
+
+
+def profile(url: str, rows: dict):
+    """The profile directory holding URL's site, or None."""
+    host = (urlsplit(url).hostname or "").lower()
+    found = [a for a in rows if host == a or host.endswith("." + a)]
+    return rows[max(found, key=len)] if found else None
+
+
+def main(args: list) -> int:
+    pages = [a for a in args if re.match(r"https?://", a, re.I)]
+    if not pages:
+        os.execv(REAL, [REAL] + args)
+    rows = table()
+    routes = [(url, profile(url, rows)) for url in pages]
+    missing = [urlsplit(url).hostname for url, d in routes if d is None]
+    if missing:
+        print(f"open: {', '.join(missing)} has no row in {LIST}, so nothing opened. "
+              "Ask me which Chrome profile holds it, then add its row.",
+              file=sys.stderr)
+        return 1
+    for url, directory in routes:
+        subprocess.run([REAL, "-na", "Google Chrome", "--args",
+                        f"--profile-directory={directory}", url], check=True)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -11,6 +11,8 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), "lib"))
+import page  # noqa: E402
 
 
 def constants(name, keys):
@@ -21,10 +23,14 @@ def constants(name, keys):
             and isinstance(node.targets[0], ast.Name) and node.targets[0].id in keys}
 
 
-launch = constants("launch-page.py", {"SCRIPT", "CSS"})
-files = constants("sessions-dashboard.py", {"FILES_SCRIPT"})
+# The launch page's style, its script, Files' script and the shared script
+# are files of .claude/pages/, each read as its page loads it, never from
+# a tool's source.
+launcher = page.tool("launch-page")
+launch = {"SCRIPT": page.shared("launch.js"), "CSS": launcher.CSS}
+files = {"SCRIPT": page.shared("files.js")}
 station = constants("workstation.py", {"HOME"})
-shared = constants("../lib/page.py", {"ANYWHERE"})
+shared = {"ANYWHERE": page.ANYWHERE}
 
 TEST = r"""
 const assert = require('assert');
@@ -33,19 +39,27 @@ const fs = require('fs');
 const source = JSON.parse(fs.readFileSync(0, 'utf8'));
 const data = {layout:[{window:'w',tabs:[{tab:'t',root:{pane:'live',w:1000,h:600,number:'01',label:'live'}}]}],
   starter:'live', rows:[{uid:1,n:'02',name:'first',pos:0,win:'L:w',tab:'L:t',at:{anchor:'p:live',side:'right'}}],
-  accounts:[],models:[],efforts:[],order:{order:[],next:0},fallback:'',system:{},after:''};
-const launch = '<style>:root {--blue:#60a5fa;--panel:#ddd;--line:#aaa} main{width:1000px}</style>' + source.launch.CSS
-  + '<main><div id="save-error" hidden></div><div id="launch-error" hidden></div><div id="map"></div>'
-  + '<div id="rows"></div><button id="launch"></button><button id="add"></button><button id="addweb"></button></main>'
-  + '<script>window.fail=true;window.post=async f=>{if(window.fail)return false;window.saved=JSON.parse(f.rows);window.savedMoves=JSON.parse(f.moves);window.savedLayouts=JSON.parse(f.layouts);return true};'
-  + 'window.fetch=async()=>({json:async()=>structuredClone(window.saved)});</script>'
-  + source.launch.SCRIPT.replace('%(data)s',JSON.stringify(data)).replaceAll('%%','%');
+  accounts:[],models:[],families:{},efforts:[],order:{order:[],next:0},fallback:'',system:{},after:''};
+// live.js stood in: a page stands at once, and a save lands unless window.fail.
+const LIVE = '<script>window.fail=true;window.live={ready:f=>f(),drawn(){},sent(){},now:async()=>{},'
+  + 'post:async f=>{if(window.fail)return {ok:false,said:""};window.saved=JSON.parse(f.rows);'
+  + 'window.savedMoves=JSON.parse(f.moves);window.savedLayouts=JSON.parse(f.layouts);return {ok:true,said:""}}};</script>';
+// launch.js keeps its state inside its one function. T reads it, added before its close.
+const T = 'window.T={get ROWS(){return ROWS},get drag(){return drag},get active(){return active},changed,persist,dragStart,dragMove};\n';
+const script = source.launch.SCRIPT.replace(/\}\)\(\);\s*$/, T + '})();');
+assert.notEqual(script, source.launch.SCRIPT, 'launch.js no longer ends with its closing })();');
+const launchPage = d => '<style>:root {--blue:#60a5fa;--panel:#ddd;--line:#aaa} main{width:1000px}</style>' + source.launch.CSS
+  + '<main><div id="save-error" hidden><button type="button" id="retry">Retry save</button></div><div id="launch-error" hidden></div>'
+  + '<div id="map"></div><div id="rows"></div><button id="launch"></button><button id="add"></button><button id="addweb"></button></main>'
+  + '<script type="application/json" id="launch-data">' + JSON.stringify(d).replace(/</g, '\\u003c') + '</script>'
+  + LIVE + '<script>' + script + '</script>';
+const launch = launchPage(data);
 const files = '<div class="files"><div class="tree"><div class="scroll"></div></div><div id="fview"></div>'
   + '<div id="fpath"></div><div id="watch"></div><div id="copy-status"></div><button id="copy"></button>'
-  + '<button id="shut"></button><button id="again"></button></div>'
+  + '<button id="shut"></button><button id="again"></button></div>' + LIVE
   + '<script>class CI {constructor(x){this.data=x} static supports(){return false}};window.ClipboardItem=CI;'
   + 'Object.defineProperty(navigator,"clipboard",{value:{write:async items=>{window.copied=await Object.values(items[0].data)[0]}}});</script>'
-  + source.files.FILES_SCRIPT;
+  + '<script>' + source.files.SCRIPT + '</script>';
 const pause = ms => new Promise(r=>setTimeout(r,ms));
 async function boxOf(page, selector) {
   await page.locator(selector).waitFor({state:'visible'});
@@ -61,10 +75,10 @@ async function boxOf(page, selector) {
   const page = await browser.newPage();
   const errors=[]; page.on('pageerror', e=>errors.push(e.message));
   await page.setContent(launch);
-  await page.evaluate(async()=>{ROWS[0].name='unsaved'; await changed()});
+  await page.evaluate(async()=>{T.ROWS[0].name='unsaved'; await T.changed()});
   assert.equal(await page.locator('#save-error').evaluate(el=>el.hidden),false);
-  assert.equal(await page.evaluate(()=>ROWS[0].name),'unsaved');
-  await page.evaluate(async()=>{window.fail=false; await persist(true)});
+  assert.equal(await page.evaluate(()=>T.ROWS[0].name),'unsaved');
+  await page.evaluate(async()=>{window.fail=false; await T.persist(true)});
   assert.equal(await page.locator('#save-error').evaluate(el=>el.hidden),true);
   assert.equal(await page.evaluate(()=>window.saved[0].name),'unsaved');
   // A lost capture must restore the removed pane without saving a move.
@@ -72,12 +86,12 @@ async function boxOf(page, selector) {
     const map=document.getElementById('map'), capture=map.setPointerCapture;
     map.setPointerCapture=()=>{};
     const box=document.querySelector('[data-anchor="r:1"]').getBoundingClientRect();
-    dragStart({pointerId:777,button:0,clientX:box.x+5,clientY:box.y+5},0);
-    dragMove({pointerId:777,clientX:box.x+20,clientY:box.y+5,preventDefault(){}});
+    T.dragStart({pointerId:777,button:0,clientX:box.x+5,clientY:box.y+5},0);
+    T.dragMove({pointerId:777,clientX:box.x+20,clientY:box.y+5,preventDefault(){}});
     const removed=!document.querySelector('[data-anchor="r:1"]');
     map.dispatchEvent(new PointerEvent('lostpointercapture',{pointerId:777,bubbles:true}));
     map.setPointerCapture=capture;
-    return {removed,restored:!!document.querySelector('[data-anchor="r:1"]'),idle:drag===null};
+    return {removed,restored:!!document.querySelector('[data-anchor="r:1"]'),idle:T.drag===null};
   });
   assert.deepStrictEqual(lost,{removed:true,restored:true,idle:true});
   // A new primary press clears a drag whose end never arrived.
@@ -85,11 +99,11 @@ async function boxOf(page, selector) {
     const map=document.getElementById('map'), capture=map.setPointerCapture;
     map.setPointerCapture=()=>{};
     const box=document.querySelector('[data-anchor="r:1"]').getBoundingClientRect();
-    dragStart({pointerId:778,button:0,clientX:box.x+5,clientY:box.y+5},0);
-    dragMove({pointerId:778,clientX:box.x+20,clientY:box.y+5,preventDefault(){}});
+    T.dragStart({pointerId:778,button:0,clientX:box.x+5,clientY:box.y+5},0);
+    T.dragMove({pointerId:778,clientX:box.x+20,clientY:box.y+5,preventDefault(){}});
     window.dispatchEvent(new PointerEvent('pointerdown',{pointerId:779,isPrimary:true,button:0,bubbles:true,cancelable:true}));
     map.setPointerCapture=capture;
-    return {restored:!!document.querySelector('[data-anchor="r:1"]'),idle:drag===null};
+    return {restored:!!document.querySelector('[data-anchor="r:1"]'),idle:T.drag===null};
   });
   assert.deepStrictEqual(resumed,{restored:true,idle:true});
   let box=await page.locator('[data-anchor="p:live"]').boundingBox();
@@ -125,10 +139,10 @@ async function boxOf(page, selector) {
   touchData.rows.push({uid:2,n:'03',name:'second',pos:1,win:'L:w',tab:'L:t',at:{anchor:'r:1',side:'down'}});
   const touchContext=await browser.newContext({viewport:{width:1200,height:900},hasTouch:true,isMobile:true});
   const touch=await touchContext.newPage(); touch.on('pageerror',e=>errors.push(e.message));
-  await touch.setContent(launch.replace(JSON.stringify(data),JSON.stringify(touchData)));
+  await touch.setContent(launchPage(touchData));
   let touchBox=await boxOf(touch,'[data-anchor="r:2"]');
   await touch.touchscreen.tap(touchBox.x+touchBox.width/2,touchBox.y+touchBox.height/2);
-  assert.equal(await touch.evaluate(()=>ROWS[active].uid),2);
+  assert.equal(await touch.evaluate(()=>T.ROWS[T.active].uid),2);
   await touch.evaluate(()=>{
     window.captureBeforeRedraw=null;
     document.getElementById('map').addEventListener('gotpointercapture',e=>{
@@ -145,7 +159,7 @@ async function boxOf(page, selector) {
   await touchClient.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await touch.waitForFunction(()=>window.saved && window.saved.at(-1).uid===2);
   assert.equal(await touch.evaluate(()=>window.captureBeforeRedraw),true);
-  assert.equal(await touch.evaluate(()=>drag===null),true);
+  assert.equal(await touch.evaluate(()=>T.drag===null),true);
   assert.deepStrictEqual(await touch.evaluate(()=>window.saved.at(-1).at),{anchor:'p:live',side:'right'});
   await touchContext.close();
 
@@ -235,7 +249,7 @@ async function boxOf(page, selector) {
     b=await boxOf(mobile,'[data-anchor="p:live"]');
     await mobile.mouse.move(b.x+b.width*.9,b.y+b.height/2);await mobile.mouse.up();
     await mobile.waitForFunction(()=>window.saved && window.saved[0].at.side==='right');
-    assert.equal(await mobile.evaluate(()=>drag===null),true);
+    assert.equal(await mobile.evaluate(()=>T.drag===null),true);
     await ctx.close();
   }
   // Home-screen iPhones keep controls clear of the status-bar blur.

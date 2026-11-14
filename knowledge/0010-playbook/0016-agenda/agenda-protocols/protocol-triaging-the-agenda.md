@@ -1,4 +1,4 @@
-# Protocol — Triaging the Agenda
+# Protocol — Triaging The Agenda
 
 Up: [[agenda-protocols-MOC|Agenda Protocols]]
 
@@ -29,8 +29,14 @@ A ruling that changes what a person sees follows [[protocol-what-a-person-sees|W
 7. How does it end? One of five. I rule which, live or through the lessons below.
    - Take it down, as the README says.
    - Fold it into another item, as the README says.
-   - Act now. A fix session self-drives it. The ruling names its account, model and effort. Partially drive it on its item, through `session-control`: this protocol is my ask. Its work done, propose its take-down. A look I can't picture yet is prototyped first, at Compare, then stop. The item takes a Mine line naming the lock-in.
-   - Keep it. Say in one line what it waits on. An item I want to think through first stays, its What a Decide, for a session of its own.
+   - Act now.
+     - A fix session self-drives it.
+     - The ruling names its account, model and effort.
+     - Partially drive it on its item, through `session-control`: this protocol is my ask.
+     - Its work done, propose its take-down.
+     - A look I can't picture yet is prototyped first, at Compare, then stop.
+     - The item takes a Mine line naming the lock-in.
+   - Keep it. Say in one line what it waits on. An item I want to think through first stays, its What line's action set to Decide, for a session of its own.
    - Mine. It stays, with its Mine line.
 8. How does it close? Once I say close, nothing new starts: no item, no drawing, no round. Fixes already running finish. Then `session-report`, its Agreed listing every item's ending in my words, and the triage stops.
 

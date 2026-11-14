@@ -44,8 +44,8 @@ on 10 minutes, a test run holding the cores, a program outside every
 session using half a core for two minutes. It acts on nothing alone.
 
 Everything shows on 1100/system, from one file, findings.json. A finding
-is written only when it opens, changes or closes, never on a clock. Each
-finding carries the buttons that act on its own program, through
+is written only when it opens, changes or closes, never on a clock. A
+stop, a burst or a hot program closes once none of its programs runs. Each finding carries the buttons that act on its own program, through
 
   memory-guard.py act ID VERB     tell freeze thaw end lower dismiss logging-off
 
@@ -867,6 +867,11 @@ class Guard:
             for f in list(self.known.values()):             # "went on" is news for ten minutes
                 if f["level"] == "thawed" and time.time() - f["at"] > CEILING:
                     self.close(f["id"])
+                # A stop, a burst or a hot program closes once none of its
+                # programs runs, a restart of this guard between them too.
+                elif f.get("kind") in ("stop", "burst", "hot") and not any(started(p) == s for p, s in f.get("roots") or []):
+                    self.cause.pop(f["id"], None)
+                    self.close(f["id"])
         armed = left < ARM_ABS * GIB
         if not armed and left < ARM_LINE * GIB:
             armed = self.ago(now, 2.0) - left >= ARM_FALL * GIB
@@ -1404,7 +1409,8 @@ class Guard:
         self.put({"id": fid, "kind": "hot", "level": "slow", "at": round(now, 2), "clock": clock(), "title": f"{who} is slow",
                   "line": f"{clock()} · {who} has used {int(c)}% of a core for {'a minute' if iterm else '2 minutes'}."
                           + (" It slows every pane." if iterm else ""),
-                  "short": who, "session": None, "buttons": [DISMISS], "roots": [], "incident": None, "tell": []})
+                  "short": who, "session": None, "buttons": [DISMISS], "roots": [[root, t[root][5]]], "incident": None,
+                  "tell": []})
         self.cause[fid] = tid
 
     def iterm(self, now: float) -> None:

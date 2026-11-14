@@ -8,7 +8,16 @@ resuming it, keeping each session's work, closing a stage, ending it.
   drive.py keep 90 B1              B1's session's folder, without screenshots, and transcript, into 90's reports/B1/
   drive.py close 90 B <<'EOF'      B's summary as said in chat, into summaries/B.md, then B closed
   drive.py end 90                  the drive ended, once its end holds
-  drive.py show 90                 the drive, then where it stands
+  drive.py show 90                 the finish list, the drive, then where it stands
+  drive.py finish 90 <<'EOF'       each line I agreed joins the finish list, red
+  drive.py green 90 2 <<'EOF'      line 2 green, its proof on stdin
+  drive.py out 90 2 <<'EOF'        line 2 ruled out, my words on stdin
+  drive.py point 90 A A1           a pause point after stage A, and after mission A1
+
+A pause point fires by itself. Once its stage is closed, or its mission's
+work kept, the next verb pauses the drive there, says what finished, and
+where to look, and exits lib/drive.py's PAUSED. "Resume the drive." goes
+on past it, as after my pause.
 
 The drive itself is lib/drive.py's file. Every verb but keep ends on where
 the drive stands, and its next step, read from the plan and the drive. A
@@ -51,8 +60,9 @@ The end holds once every stage is closed, every session stopped, and each
 stage the drive closed has its summary and each of its missions' work
 kept. A stage closed before the plan was taken was mine, so the drive
 asks neither of it. In an open plan, a mission never launched holds
-nothing, nor does a stage holding only such. Anything else holds it, and
-is named.
+nothing, nor does a stage holding only such. A drive of the plan also
+holds on each red line of the finish list. Anything else holds it, and is
+named.
 
 A stage closes once none of its sessions runs. In an open plan, a mission
 never launched leaves it free to close, and the stage closes driven or
@@ -113,10 +123,22 @@ def sends(nn: str, live: list) -> str:
     return f"send {' and '.join(got)}, through `session-control` Step 2, then " if got else ""
 
 
+def finish_lines(nn: str) -> list:
+    """The finish list, numbered, its state beside each line, with its proof or my words."""
+    return [f"{i} · {l['state']} · {l['line']}" + (f" · {l['said']}" if l.get("said") else "")
+            for i, l in enumerate(plans.plan(nn).get("finish", []), 1)]
+
+
+def finish_count(nn: str) -> list:
+    """How many of the list's lines are green, those ruled out uncounted. No list says nothing."""
+    left = [l for l in plans.plan(nn).get("finish", []) if l["state"] != "out"]
+    return [f"Finish list: {sum(l['state'] == 'green' for l in left)} of {len(left)} green."] if left else []
+
+
 def stands(nn: str, d: dict, resumed: bool = False) -> list:
     """Where the drive stands, then its next step, one line each. Just
     resumed, a finish that came while paused is handled before the wait."""
-    said = [f"Drive: {d.get('drive') or 'nothing'}, {d.get('state') or 'not taken'}."]
+    said = [f"Drive: {d.get('drive') or 'nothing'}, {d.get('state') or 'not taken'}."] + finish_count(nn)
     if d.get("state") == "paused":
         return said + ['Next: nothing launches or stops until "Resume the drive."']
     if not drive.driving(d):
@@ -188,12 +210,43 @@ def holds(nn: str, d: dict) -> list:
             if whole and not os.path.isfile(drive.summary(nn, at)):
                 out.append(f"Stage {at}'s summary is not in "
                            f"{os.path.relpath(drive.summary(nn, at), registry.ROOT)}.")
+    if whole:
+        out += [f"Finish line {i} is red: {l['line']}"
+                for i, l in enumerate(plans.plan(nn).get("finish", []), 1) if l["state"] == "red"]
     return out
+
+
+def reached(nn: str, d: dict) -> tuple:
+    """The drive, paused at the first pause point it reached and has not
+    passed, with what to say of it. A stage's is reached once it is closed,
+    a mission's once its work is kept. Only a drive of the plan closes a
+    stage; a mission's point holds in any drive holding it. Nothing reached
+    says nothing."""
+    if d.get("state") != "running":
+        return d, []
+    keys = drive.words(d)
+    whole = drive.PLAN in keys
+    for i, s in enumerate(plans.plan(nn).get("stages", [])):
+        at = chr(65 + i)
+        due = [(at, f"stage {at}", os.path.relpath(drive.summary(nn, at), registry.ROOT))
+               ] if whole and s.get("pause") and at in d["closed"] else []
+        due += [(m["id"], m["id"], os.path.relpath(drive.report(nn, m["id"]), registry.ROOT) + "/")
+                for m in s.get("missions", []) if m.get("pause") and m.get("session") and kept(nn, m)
+                and (whole or at in keys or m["id"] in keys)]
+        for point, name, look in due:
+            if point not in d["passed"]:
+                done = [m["id"] for _, ms in stages(nn) for m, gone in ms if gone] + [
+                    m["id"] for m in s.get("missions", []) if m.get("session") and kept(nn, m)]
+                return drive.reach(nn, point), [
+                    f"Pause point reached: after {name}. Nothing new launches.",
+                    f"Finished: {', '.join(dict.fromkeys(done))}. Look at {look}."]
+    return d, []
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("verb", choices=["take", "pause", "resume", "keep", "close", "end", "show"])
+    ap.add_argument("verb", choices=["take", "pause", "resume", "keep", "close", "end", "show", "finish", "green",
+                                     "out", "point"])
     ap.add_argument("nn")
     ap.add_argument("keys", nargs="*")
     args = ap.parse_args()
@@ -231,6 +284,29 @@ def main() -> None:
         print(f"Kept {assistant.tag(m)}: {len(got)} files, in "
               f"{os.path.relpath(drive.report(nn, m['id']), registry.ROOT)}/.")
         print("\n".join(os.path.relpath(p, registry.ROOT) for p in got))
+        d, said = reached(nn, d)
+        if said:
+            print("\n".join(said + [f"Next: stop {assistant.tag(m)}, as its finish asks. Then nothing launches "
+                                    f"or stops until \"Resume the drive.\""]))
+            sys.exit(drive.PAUSED)
+        return
+    elif args.verb == "point":
+        p = plans.plan(nn)
+        if not plan:
+            sys.exit(f"Session {nn} holds no plan.")
+        wrong = [k for k in args.keys if k not in letters and k not in ids]
+        if not args.keys or wrong:
+            sys.exit(f"point names stage letters or mission ids. Not {' '.join(wrong) or 'nothing'}.")
+        for i, s in enumerate(p["stages"]):
+            if chr(65 + i) in args.keys:
+                s["pause"] = True
+            for m in s.get("missions", []):
+                if m["id"] in args.keys:
+                    m["pause"] = True
+        plans.save(nn, p)
+        print("Pause points: " + ", ".join(
+            [f"after stage {chr(65 + i)}" for i, s in enumerate(p["stages"]) if s.get("pause")]
+            + [f"after {m['id']}" for s in p["stages"] for m in s.get("missions", []) if m.get("pause")]) + ".")
         return
     elif args.verb == "close":
         # An open plan's stage closes on my word, driven or not.
@@ -256,7 +332,28 @@ def main() -> None:
             print("\n".join(held))
             sys.exit(1)
         d = drive.end(nn)
-    print("\n".join(stands(nn, d, args.verb == "resume")))
+    elif args.verb in ("finish", "green", "out"):
+        if not plan:
+            sys.exit(f"Session {nn} holds no plan.")
+        p = plans.plan(nn)
+        got = p.setdefault("finish", [])
+        words = sys.stdin.read().strip()
+        if args.verb == "finish":
+            if not words:
+                sys.exit("finish takes the lines I agreed on stdin, one per line.")
+            got += [{"line": w.strip(), "state": "red"} for w in words.splitlines() if w.strip()]
+        else:
+            if len(args.keys) != 1 or not args.keys[0].isdigit() or not 1 <= int(args.keys[0]) <= len(got):
+                sys.exit(f"{args.verb} names one line of the finish list, 1 to {len(got)}.")
+            if not words:
+                sys.exit(f"{args.verb} takes {'its proof' if args.verb == 'green' else 'my words'} on stdin.")
+            got[int(args.keys[0]) - 1].update(state=args.verb, said=words)
+        plans.save(nn, p)
+    listed = finish_lines(nn) if args.verb in ("show", "finish", "green", "out") else []
+    d, said = reached(nn, d)
+    print("\n".join(listed + said + stands(nn, d, args.verb == "resume")))
+    if said:
+        sys.exit(drive.PAUSED)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,9 @@ missions: each launches once I rule it, and no stage closes or ends the
 plan but on my word. knowledge/0010-playbook/0011-assisting/the-stages.md
 rules both kinds.
 
+A plan also holds its finish list, `finish`: what is true once the team is
+done. tools/drive.py keeps it.
+
 Imported, never run.
 """
 

@@ -16,6 +16,10 @@ yet when this runs. A turn whose start lies past the transcript's tail
 passes: what it said early cannot be read.
 
 A ruling with no number passes unchecked. Only the rule covers it.
+
+An item on the session's own wave still open on my page passes: that
+wave was laid out whole when it was written, and is named, never shown
+again.
 """
 
 import json
@@ -25,28 +29,24 @@ import sys
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import items  # noqa: E402
 import registry  # noqa: E402
 import transcripts  # noqa: E402
+import waves  # noqa: E402
+
+
+def on_page(session_id: str) -> set:
+    """The item numbers of this session's own wave still open on my page."""
+    me = registry.number_of(session_id or "", registry.entries())
+    if not me:
+        return set()
+    wave, _, head, listed = waves.newest(me)
+    if not wave or head.get("sent") or head.get("closed"):
+        return set()
+    return {int(it["n"]) for it in listed if str(it.get("n", "")).isdigit()}
 
 # A move that asks me something. A Wait asks nothing.
 ASKS = re.compile(r"^(Ruling|Answer|Action)\b")
-# The items a move names: "item 10", "items 7 and 8", "items 1 to 4".
-NAMED = re.compile(r"\bitems?\s+(\d+(?:\s*(?:,|and|to|–|-)\s*\d+)*)", re.I)
-
-
-def asked(move: str) -> list:
-    """The item numbers a move names, in order. "1 to 4" is four."""
-    out = []
-    for group in NAMED.findall(move):
-        last, span = None, False
-        for tok in re.findall(r"\d+|to|–|-", group):
-            if not tok.isdigit():
-                span = True
-                continue
-            n = int(tok)
-            out += range(last + 1, n + 1) if span and last is not None else [n]
-            last, span = n, False
-    return sorted(set(out))
 
 
 def said(path: str):
@@ -60,10 +60,6 @@ def said(path: str):
         if d.get("type") == "assistant":
             words.append(transcripts.texts(d.get("message") or {}))
     return None
-
-
-def shown(n: int, words: str) -> bool:
-    return bool(re.search(rf"(?mi)^[\s>*#-]*(?:item\s+)?{n}\s*·", words))
 
 
 def main() -> None:
@@ -82,7 +78,10 @@ def main() -> None:
     move = moves[-1].replace("**", "").strip() if moves else ""
     if not ASKS.match(move):
         sys.exit(0)
-    unshown = [n for n in asked(move) if not shown(n, words)]
+    unshown = [n for n in items.asked(move) if not items.laid_out(n, words)]
+    if unshown:
+        open_now = on_page(event.get("session_id") or "")
+        unshown = [n for n in unshown if n not in open_now]
     if not unshown:
         sys.exit(0)
     named = " and ".join(str(n) for n in unshown)

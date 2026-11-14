@@ -23,6 +23,7 @@ import subprocess
 
 import hear
 import project
+import reader
 
 # What runs a dev server, and so may sit above the one listening.
 LAUNCHERS = {"node", "pnpm", "npm", "npx", "yarn", "tsx", "bun", "deno", "vite"}
@@ -52,7 +53,7 @@ def flip() -> int:
 
     Only processes started after it read it. A running server keeps the
     port it bound. A shift project.json fixes never moves."""
-    if project.FIXED:
+    if project.FIXED is not None:
         return SHIFT
     import registry  # registry imports this module, so it comes in here
     to = 0 if SHIFT else SHIFTED
@@ -61,15 +62,41 @@ def flip() -> int:
     return to
 
 
-def started(pids) -> dict:
+def everything() -> dict:
+    """Every process now, by pid: its parent, when it started, in UTC as
+    started() says it, its terminal as ps names it, and its command. One
+    ps call."""
+    r = subprocess.run(["/bin/ps", "-axww", "-o", "pid=,ppid=,lstart=,tty=,command="],
+                       capture_output=True, text=True, env={**os.environ, "TZ": "UTC", "LC_ALL": "C"})
+    out = {}
+    for line in r.stdout.splitlines():
+        a = line.split(None, 8)
+        if len(a) >= 8 and a[0].isdigit() and a[1].isdigit():
+            out[int(a[0])] = (int(a[1]), " ".join(a[2:7]), a[7], a[8] if len(a) > 8 else "")
+    return out
+
+
+# Every process, read in the background once 1100 starts it, so no draw
+# starts ps: lib/reader.py. A draw takes its last answer, three seconds old
+# at most. Whatever acts on a session still asks ps itself.
+PROCESSES = reader.Reader(everything)
+
+
+def started(pids, fresh: bool = False) -> dict:
     """When each running pid started, in UTC, spacing aside. One ps call.
 
     A pid not running is left out. A pid can be handed to a new process
     once its own ends, so a start time is how a pid is told from its reuse.
+
+    Inside 1100, a draw takes PROCESSES' last answer, and starts no
+    program. `fresh` asks ps itself.
     """
     wanted = [str(int(p)) for p in pids if str(p).isdigit() and int(p) > 0]
     if not wanted:
         return {}
+    if not fresh and PROCESSES.running():
+        seen = PROCESSES.last()
+        return {int(p): seen[int(p)][1] for p in wanted if int(p) in seen}
     r = subprocess.run(["/bin/ps", "-o", "pid=,lstart=", "-p", ",".join(wanted)],
                        capture_output=True, text=True,
                        env={**os.environ, "TZ": "UTC", "LC_ALL": "C"})

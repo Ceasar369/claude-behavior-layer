@@ -10,7 +10,7 @@ The shell only copies, moves and deletes files.
 
 Write and Edit refuse a file not read first. A heredoc or `sed -i` writes blind, in a tree several sessions write at once.
 
-## 2. Band 00 runs the working tree
+## 2. Band 00 runs the working tree, and each session its own ports
 
 A save that breaks a layer breaks it for every session.
 
@@ -34,7 +34,7 @@ It runs again, after a pause. The rest of the work goes on.
 
 ## 4. The vault and the docs take proposals
 
-A line either should hold, outside the session's folder, goes into its report as a proposal.
+A line the vault or the docs should hold goes into the session's report, as a proposal.
 
 ## 5. Tests, builds and type checks start under `taskpolicy -b`
 
@@ -62,6 +62,12 @@ Its type check, lint and build run once, at its end.
 
 No session runs or recommends a whole suite.
 
-## 9. A step that needs no browser may go to the cloud
+## 9. A command left running wakes its session by a deadline
+
+A command left running in the background arms a wake with a deadline before the turn ends.
+
+Past it, the session reads the run, and stops what hangs by its own checked pid.
+
+## 10. A step that needs no browser may go to the cloud
 
 Propose it as one item, through `cloud-step`.

@@ -1,37 +1,33 @@
 #!/usr/bin/env python3
 """Check framed prototype rendering at each dashboard zoom.
 
-No package of the project holds playwright. The Playwright server
-.mcp.json pins does, so the test runs inside that npx package, found on
-the PATH npx gives it. One pixel is read from a one-pixel screenshot,
-inflated with Node's own zlib.
+lib/trial.py's browsers() runs it, with the Playwright .mcp.json pins in
+reach. One pixel is read from a one-pixel screenshot, inflated with
+Node's own zlib. The page is drawn on the contract, its scripts served
+from .claude/pages/.
 
 It walks WebKit, then Chromium. One whose build is not installed is
-skipped, and named with the command that fetches it.
+skipped, and named.
 """
 
 import importlib.util
 import os
-import re
-import subprocess
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), "lib"))
+import trial  # noqa: E402
+
 spec = importlib.util.spec_from_file_location("prototype_page", os.path.join(HERE, "prototype-page.py"))
 page = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(page)
-fixture = {"nn": "05", "tag": "05-test", "subject": "test", "generations": [
+fixture = {"nn": "05", "tag": "05-test", "subject": "test", "live": "", "generations": [
     {"generation": 1, "variations": [{"id": "v1", "route": "/test/g1/v1"}]}]}
-
-with open(os.path.join(os.path.dirname(os.path.dirname(HERE)), ".mcp.json")) as f:
-    MCP = re.search(r"@playwright/mcp@[\w.-]+", f.read()).group()
+PAGES = os.path.join(os.path.dirname(HERE), "pages", "scripts")
 
 TEST = r"""
-const path = require('path');
-const bin = process.env.PATH.split(':').find(p => p.includes('_npx') && p.endsWith(path.join('node_modules', '.bin')));
-const {chromium, webkit} = require(path.join(bin, '..', 'playwright'));
 const zlib = require('zlib');
 const assert = require('assert');
-const fs = require('fs');
 const html = fs.readFileSync(0, 'utf8');
 // A one-pixel PNG's red, green and blue: its one row is its filter byte,
 // then the pixel, whatever the filter, since nothing sits left or above.
@@ -47,7 +43,16 @@ function pixel(png) {
   assert(depth === 8, 'screenshot is not 8 bits deep');
   return [...zlib.inflateSync(Buffer.concat(idat)).subarray(1, 4)];
 }
+// A frame shows white until its variation loads, and the page's script
+// shows each view, and so starts its frames' loads, after the page loads.
+// So the frame's own variation is waited for, then the page's script has
+// zoomed it on its load.
 async function edge(page, selector) {
+  await page.waitForFunction(s => {
+    const d = document.querySelector(s)?.contentDocument;
+    return !!d && d.readyState === 'complete' && /variation/.test(d.body?.textContent || '');
+  }, selector, {timeout: 10000});
+  await page.waitForTimeout(100);
   const box = await page.locator(selector).boundingBox();
   assert(box && box.width > 15 && box.height > 15, selector + ' must be visible');
   const size = page.viewportSize();
@@ -58,27 +63,32 @@ async function edge(page, selector) {
 }
 (async () => {
   const ran = [];
-  for (const engine of [webkit, chromium]) {
-    if (!fs.existsSync(engine.executablePath())) {
-      console.log(`${engine.name()} skipped: its build is not installed. npx -p ${process.env.ZOOM_MCP} playwright install ${engine.name()} fetches it.`);
-      continue;
-    }
+  for (const engine of engines) {
     ran.push(engine.name());
     const browser = await engine.launch({headless:true});
     const context = await browser.newContext({viewport:{width:1000,height:800}});
     const p = await context.newPage();
-    await p.route('http://prototype.test/**', route => route.fulfill({contentType:'text/html',body:
-      new URL(route.request().url()).pathname === '/' ? html :
-      '<style>html,body{margin:0;min-height:100%;background:#000}</style><p style="color:white">variation</p>'}));
+    await p.route('http://prototype.test/**', route => {
+      const at = new URL(route.request().url()).pathname;
+      // The page's own scripts, live.js and prototype.js, as 1100 serves them.
+      if (at.startsWith('/pages/'))
+        return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(process.env.ZOOM_PAGES, path.basename(at)))});
+      return route.fulfill({contentType:'text/html',body: at === '/' ? html :
+        '<style>html,body{margin:0;min-height:100%;background:#000}</style><p style="color:white">variation</p>'});
+    });
     await p.goto('http://prototype.test/');
+    await p.waitForSelector('#items section.item.on');
+    // The page's script is enclosed: a view is named by the hash, as the app door names it.
+    const view = k => p.evaluate(k => { location.hash = k; }, k);
     for (const z of [.5,.75,1,1.25,2]) {
-      await p.evaluate(z => {document.documentElement.style.zoom = String(z); dispatchEvent(new Event('ws-zoom')); show('all')}, z);
+      await p.evaluate(z => {document.documentElement.style.zoom = String(z); dispatchEvent(new Event('ws-zoom'))}, z);
+      await view('all');
       await p.waitForTimeout(100);
       await edge(p, '#items .thumb iframe');
-      await p.evaluate(() => show('1/v1'));
+      await view('1/v1');
       await p.waitForTimeout(100);
       await edge(p, 'section.item.v.on iframe');
-      await p.evaluate(() => show('pick'));
+      await view('pick');
       await p.waitForTimeout(100);
       await edge(p, '#pf');
     }
@@ -90,5 +100,7 @@ async function edge(page, selector) {
 })().catch(e => {console.error(e);process.exit(1)});
 """
 
-subprocess.run(["npx", "-y", "-p", MCP, "-c", 'node -e "$ZOOM_TEST"'], input=page.draw(fixture), text=True,
-               check=True, env={**os.environ, "ZOOM_TEST": TEST, "ZOOM_MCP": MCP})
+r = trial.browsers(TEST, env={"ZOOM_PAGES": PAGES}, stdin=page.drawn_page(fixture))
+print(r.stdout, end="")
+print(r.stderr, end="", file=sys.stderr)
+sys.exit(r.returncode)

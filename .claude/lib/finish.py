@@ -76,8 +76,11 @@ import wake
 
 # A move proposing its own stop, or handing its assistant its report: its
 # work is reported done.
-DONE = re.compile(r"^action: stop this session|/9-session-stop|^action: tell session \d+ .*report\.md", re.I)
-# A move waiting on work still running: it is working.
+DONE = re.compile(r"^action: stop this session|/9-session-stop|^action: .*tell session \d+ .*report\.md", re.I)
+# A move that waits. With work it sent to the background still running, it
+# is working: wake.waiting's. With none, nothing of its own wakes it, so it
+# sits idle, and its watcher wakes at each idle time. One naming its own
+# stop is done.
 WAIT = re.compile(r"^wait\b", re.I)
 
 # The words Claude Code ends a turn on once its context fills its window.
@@ -150,8 +153,8 @@ def read(number: str, since: str = "") -> dict:
         return found("error", max(transcripts.stamp(hit), tried), due_at,
                      transcripts.texts(hit.get("message") or {}).strip())
     said, at, move = transcripts.last_said(path)
-    if WAIT.search(move):
-        return found("working")
+    if WAIT.search(move) and not DONE.search(move):
+        return found("idle")
     if said and transcripts.stamp(at) > since:
         return found("done" if DONE.search(move) else "asking", transcripts.stamp(at), move=move)
     return found("idle")

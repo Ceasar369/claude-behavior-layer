@@ -18,11 +18,13 @@ A project with no `walks/` takes the layer's standard, `.claude/tools/walks-stan
 
 **The lead** is the session I talk to. It is the brain. I start it with `7-walk`: "Walk my app with me", a section, a subject, or any one thing. It finds the walk, checks its files with me, launches the walker, reads the case, and fixes with me. It acts on my word, and my yes to its ruling is my word. It then types into the walker or a fixer itself.
 
-**The walker** is a session the lead launches. It runs on Sonnet, at the effort I pick, on the account I pick. It walks in its own hidden Playwright browser, never in my Chrome. It follows each step to the word, and judges nothing. At every check it saves a screenshot of the whole page, top to foot, and the page's text. The text opens with the move just made and the page's address. A docs page saves its text alone: the article, every tab of every code sample, each link with its address. A docs check judging a look keeps its screenshot. It does its own Preps. A move it cannot do, it asks the lead, which brings it to me.
+**The walker** is a session the lead launches. It runs on the model and effort `walk-launch` sets, on the account I pick. It walks in its own hidden Playwright browser, never in my Chrome. It follows each step to the word, and judges nothing. At every check it saves a screenshot of the whole page, top to foot, and the page's text. The text opens with the move just made and the page's address. A docs page saves its text alone: the article, every tab of every code sample, each link with its address. A docs check judging a look keeps its screenshot. It does its own Preps. A move it cannot do, it asks the lead, which brings it to me.
 
 **`walk-analyzer`** is the one judge: an agent the lead sends, `.claude/agents/walk-analyzer.md`. It judges each check against its See line, its screenshot and its page text, blind to anything else. A docs check, from its page text, but for a look. It traces an issue to where it came from: the code, the walk files, the docs. When those disagree, it states each side and picks none. I rule which side is right.
 
-**The reader** is a session the lead launches once a docs page's checks all hold. It runs on Sonnet, at low effort, on the account I pick. It brings me each docs page the lead hands it, one section per turn, and I read every word myself, on the docs site. It judges nothing, fixes nothing, and writes no mark.
+**The reader** is a session the lead launches once a docs page's checks all hold. It runs on the model and effort `walk-launch` sets, on the account I pick. It brings me each docs page the lead hands it, one section per turn, and I read every word myself, on the docs site. It judges nothing, fixes nothing, and writes no mark.
+
+The tester is the walker and the analyzer together. The walker walks; the analyzer's verdict is each row's Tester mark.
 
 One walker, and one reader, carry the whole walk. A fresh one starts only when I ask.
 
@@ -38,9 +40,9 @@ A check the walk needs that no checklist holds goes into a section's checklist f
 
 ## Right before each journey
 
-`walk-write` brings the journey's walk files in line with the code on disk, and each other source `walks/walks-standard.md` names, as it rules. A change a file already rules, it makes. Each other change comes to me as an item, and I rule it. Only then does the walker walk it.
+`walk-write` brings the journey's walk files in line with the code on disk, and each other source `walks/walks-standard.md` names, as it rules. A change a file already rules, it makes. Each other change comes to me as an item, and I rule it. It also searches the journey and its docs steps for cases no detail walks, as the standard's "The search" rules: one item each, whose list I rule whole. Only then does the walker walk it.
 
-A change none of my sessions explains is one I never ruled. It stays a finding. One no check of the journey rests on waits until the journey's case is done.
+A change no session of the walk explains is one I never ruled. It stays a finding. A finding no check of the journey rests on waits until the journey's case is done.
 
 ## The walker walks
 
@@ -56,7 +58,7 @@ A step marked Real is my hands, where the standard says it walks. There, the wal
 
 ## The lead judges, through the analyzer
 
-The walker's line reaches the lead. The lead sends `walk-analyzer` over the journey's checks, in slices of about 25, six at once at most. Each slice comes back with a verdict per check, and each issue with its screenshot's name, or a docs check's page text.
+The walker's line reaches the lead. The lead sends `walk-analyzer` over the journey's checks, in slices, as `walk-case` sets. Each slice comes back with a verdict per check, and each issue with its screenshot's name, or a docs check's page text.
 
 The lead writes the case: `.claude/state/walk-case/<walker>-<area>-<section>-<journey>-<first check>.md`, outside every session's folder. A part walked again after a fix adds `-2`, then `-3`. Its Issues name each screenshot, or a docs check's page text, by its path under the walker's `walk/`. The walker's Screenshots tab marks each one with a red dot, when the case is newer than the screenshot.
 
@@ -76,7 +78,7 @@ The lead then brings each issue first, one at a time, without asking my opinion:
 
 Once the issues are dealt with, the lead asks my yes on the rest, docs rows aside. My yes writes "You" ✅ on each row that holds. A docs row's "You" comes from my read alone.
 
-Nothing else is written. The checklist keeps marks alone. The case, the transcript and git keep the rest.
+Nothing else is written, but each vendor file's "Walked" line, at each journey's end. The checklist keeps marks alone. The case, the transcript and git keep the rest.
 
 ## My read of the docs
 
@@ -119,7 +121,7 @@ On my word, the lead tells the walker to walk the whole journey again. A journey
 
 A Hidden thing that shows: I say which side is right. "Hide it" is a failure like any other. "Keep it" changes the vault line, through a fixer too.
 
-A Not built or Not designed step is a missing piece. My words on one are built now, like any finding.
+A Not built step, or an angle listed Not designed, is a missing piece. My words on one are built now, like any finding.
 
 A finding inside a part no session works on gets no fixer. It comes to me.
 
@@ -135,7 +137,7 @@ One walker walks the feature, line by line, on its own login. A counter walks be
 
 Any session proposing a walk order follows this one: the lead, my assistant, my advisor.
 
-Only a session that is not a walker resets the test data, and never while another walk's `walk.json` stands. A walker on its own login never resets, and its Preps act on its own login and company. A Prep, Start or End that needs a reset, names a seeded login, or relies on a login or record an earlier feature made, is a line `walk-write` rewrites.
+Only a session that is not a walker resets the test data, and never while another walk's `walk.json` stands. A walker on its own login never resets, and its Preps act on its own login and company. A Prep, Start or End that needs a reset, acts on a seeded login or its company, or relies on a login or record an earlier feature made, is a line `walk-write` rewrites, right before its walk.
 
 ## A walk's end
 

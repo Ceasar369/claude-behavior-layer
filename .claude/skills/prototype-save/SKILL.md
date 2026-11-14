@@ -1,6 +1,6 @@
 ---
 name: prototype-save
-description: Lets go of this session's prototype, whole, for 1400's Saved list. "Save it for later" means this skill.
+description: Lets go of this session's prototype, whole, for the library's Saved list. "Save it for later" means this skill.
 allowed-tools: Read
 ---
 

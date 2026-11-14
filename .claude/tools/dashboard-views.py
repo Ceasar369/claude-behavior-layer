@@ -42,8 +42,9 @@ from prototypes import APP  # noqa: E402
 # every tab kind's, by page.TAB_KINDS, the team tab's, and the advisor's
 # panel's.
 tools = {kind: page.tool(name) for kind, (_, name) in page.TAB_KINDS.items()}
-clarify, gallery, launcher, handover, jury, shots, walk_list = (
-    tools[k] for k in ("clarify", "prototype", "launch", "handover", "jury", "shots", "walk"))
+clarify, gallery, launcher, handover, jury, shots, walk_list, explanation, teams = (
+    tools[k] for k in ("clarify", "prototype", "launch", "handover", "jury", "shots", "walk", "explanation",
+                       "teams"))
 assistant = page.tool("assistant-page")
 advisor = page.tool("advisor-page")
 
@@ -82,8 +83,9 @@ def launch_line(nn: str) -> str:
 def heard() -> list:
     """Every file whose write can move home or a page 1100 draws: each
     session's own, its plan's answers and drive, what it took to drive and
-    to follow, the subject it holds, and its jury runs. The numbers come
-    from the folder's listing: a tick reads no record."""
+    to follow, the subject it holds, its jury runs, its walk and its
+    explanation documents. The numbers come from the folder's listing: a
+    tick reads no record."""
     held = [n for n in registry.listing(registry.WORK) if re.fullmatch(r"\d{2}", n)]
     out = registry.watched(held)
     for nn in held:
@@ -94,4 +96,4 @@ def heard() -> list:
         out += [os.path.join(answers, n) for n in registry.listing(answers)]
         if subject := prototypes.subject_of(nn):
             out.append(os.path.join(APP, subject))
-    return out + jury.heard() + shots.heard() + walk_list.heard()
+    return out + jury.heard() + shots.heard() + walk_list.heard() + explanation.heard()

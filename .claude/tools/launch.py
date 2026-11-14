@@ -7,9 +7,16 @@ so a skill starts exactly what it needs.
 
   launch.py session [--name "demo skeleton"] [--message "..."] [--number 08]
                     [--account 1] [--model claude-opus-5-5] [--effort max]
-                    [--from 07] [--where down]
+                    [--clone 01] [--from 07] [--where down]
   launch.py browser --site 7204 [--from 07] [--where down]
   launch.py seat                                the seat a new assistant takes
+  launch.py page NN [--resume]                  session NN's launch page's launch
+
+`page` runs the launch my press on session NN's launch page started, as a
+program of its own: lib/launch.py's run(). The press marks the rows and
+hands it the page's lock, --held. `--resume` picks up a launch whose
+program died. Ended by a signal, it fails the rows still booting, so the
+page is never left locked.
 
 --from is a session number or a pane id. Left out, it is the caller's own
 pane. --where is right, left, down or up of it, tab for a new tab in its
@@ -27,6 +34,10 @@ number and received its message, and prints its number. Its record names
 the caller as the session that launched it. Anything that
 stops it is said on stderr, and it exits 1.
 
+--clone is a session's number. The new session starts from that one's
+conversation, forked, on its own account, model and effort:
+lib/launch.py's line().
+
 --site is a port on this machine, or any address.
 
 A browser pane already showing the same site is kept, and its id printed.
@@ -35,7 +46,10 @@ A page never opens twice.
 
 import argparse
 import os
+import re
+import signal
 import sys
+import threading
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
@@ -65,6 +79,7 @@ def main() -> None:
     s.add_argument("--account", default="")
     s.add_argument("--model", default="")
     s.add_argument("--effort", default="")
+    s.add_argument("--clone", default="")
     b = sub.add_parser("browser")
     b.add_argument("--site", required=True)
     b.add_argument("--name", default="")
@@ -72,7 +87,25 @@ def main() -> None:
         p.add_argument("--from", dest="frm", default="")
         p.add_argument("--where", choices=WHERE, default="down")
     sub.add_parser("seat")
+    g = sub.add_parser("page")
+    g.add_argument("nn")
+    g.add_argument("--held", type=int, default=-1)
+    g.add_argument("--resume", action="store_true")
     args = ap.parse_args()
+
+    if args.kind == "page":
+        if not re.fullmatch(r"\d{2}", args.nn):
+            fail("page takes a session number, like 07.")
+
+        # A signal can land while this thread holds the page's file lock, so
+        # another thread fails the rows still booting.
+        def cut(*_):
+            threading.Thread(target=lambda: (launch.unboot(args.nn), os._exit(1)), daemon=True).start()
+
+        for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+            signal.signal(sig, cut)
+        launch.run(args.nn, args.held, args.resume)
+        return
 
     if args.kind == "seat":
         got = launch.seat()
@@ -101,6 +134,8 @@ def main() -> None:
         row.update(n=f"{int(n):02d}" if str(n).isdigit() else n, name=args.name,
                    message=args.message, account=args.account,
                    model=args.model, effort=args.effort)
+        if args.clone:
+            row["clone"] = f"{int(args.clone):02d}" if args.clone.isdigit() else args.clone
     if args.where == "window":
         row["win"] = "new"
     elif args.where == "tab":
@@ -128,7 +163,7 @@ def main() -> None:
     if launch.browser(row):
         return
     if not launch.arrive(row, pane, caller):
-        fail(f"{row['n']} never claimed its number.", held)
+        fail(row["why"], held)
     print(row["n"])
 
 

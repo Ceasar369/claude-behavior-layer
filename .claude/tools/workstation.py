@@ -9,8 +9,9 @@ tab shows from its plan landing, for its session's newest run, and waits
 on me only while that plan waits for Launch: jury-page.py's tab(). A
 Walk tab shows while a session holds walk-list.md, and a Screenshots tab
 once its own walk holds a screenshot:
-walk-list-page.py's and walk-shots-page.py's tab(). Neither waits on
-me. Every other page shows only while it waits on me: a clarify wave not sent, a
+walk-list-page.py's and walk-shots-page.py's tab(). A Teams tab shows
+while an advisor holds teams.json: teams-page.py's tab(). None of them
+waits on me. Every other page shows only while it waits on me: a clarify wave not sent, a
 launch with rows, a prototype a running session holds, not locked in, or
 a handover once a session's context passes System's threshold. A launch a
 drive scheduled shows too, and so does a handover once pressed, until its
@@ -33,8 +34,13 @@ once I pick any other tab, hub or page.
 
 A team is an assistant and its sessions, read from disk, never guessed. An
 assistant on a zero seat with a plan leads its ten: 10 leads 11 to 19. A
-session running a plan's mission sits under that plan. Every other session
-stands alone. Who launched a session makes no team.
+session running a plan's mission sits under that plan. Who launched a
+session makes no team.
+
+An advisor's group is an advisor with a list, advisor-page.py's, and the
+listed sessions no team holds. It opens as one hub as a team does, and it
+has no team tab: the advisor heads its band, whatever its number. A session
+on two lists joins the lowest advisor's. Every other session stands alone.
 
 Every team opens as one hub, and so does every session standing alone. A
 team's Team icon opens its hub on its team tab: its assistant's page, at
@@ -46,7 +52,8 @@ session, its head first, then each member, lowest number first, as the
 rail runs, on my Mac and my phone alike. Each session's run by kind:
 those that can wait on me first, then those I read: its clarify, jury,
 handover, launch and prototype, then its transcript, transcript-page.py's,
-its walk and its screenshots: page.TAB_KINDS.
+its explanation documents, its walk, its screenshots, and an advisor's
+plan of teams last: page.TAB_KINDS.
 A number on the rail opens its
 hub on its own session's first tab waiting on me, of any kind: a fully
 driven session has none. Otherwise its Clarify, while it holds a wave
@@ -76,13 +83,16 @@ group holding the tab on show wears the white line under its chip too,
 folded or not, so I always see whose tab I am on.
 
 The rail is one column. Skills, white, is pinned on top, and opens the
-Skills page. Then System, Agenda, Launch, which opens my own launch page,
-Prototypes, which opens 1400's library, and Files, then the hubs,
-team by team, a thin line
+Skills page. Under it, one button closes and opens the utilities, and stays
+as I left it, on each device. Closed, it wears an outline while a utility's
+page is on show. Open, under it sit System, Agenda, Launch, which opens my
+own launch page, Prototypes, which opens 1100's library, Files, Library,
+then zoom in and zoom out. Then the hubs, team by team, a thin line
 before each. A session standing alone is its own number. A team is one grey band, edge
 to edge: its Team icon, the team tab's icon on a dark square, then its
 head's number, then each member's, lowest first, its number over its
-mission. A hub with a team tab is a team, before any member joins. Each
+mission. A hub with a team tab is a team, before any member joins. An
+advisor's group wears the same band, with no Team icon. Each
 number's square wears its session's colour, at one size, page rule 41's.
 Its number sits on the left; what it wears stacks in a black column on
 its right, inside the square: a white dot while a page of its own waits
@@ -94,7 +104,7 @@ dot on its corner while the team tab waits on me, and its head's number
 never does for it. The outline sits on the session
 on show: the one whose tab shows on the right, or the Team icon while its
 team tab shows alone. A number opens its hub, a session standing alone as a
-team's right side does. Zoom in and zoom out sit right under Files.
+team's right side does.
 What runs out of room scrolls under Skills, with a fade and an arrow at
 each edge more numbers sit past, the arrow wearing a red dot while one
 hidden that way waits on me. My Mac and my phone draw it alike, the
@@ -127,8 +137,8 @@ and back. Each device keeps my pick, for every hub.
 
 Nothing is stored here. /model reads the registry, Claude Code's records,
 and each session's files, the way 1100's views read them. Home asks it
-again each time a file it hears moves, and reloads itself once 1100
-restarts on new code. Of the pages it keeps, only those on show are
+again each time a file it hears moves, and reloads itself once its own
+code moved and I pause. Of the pages it keeps, only those on show are
 watched; one hidden is told what moved once it shows again.
 
 The dashboard's server serves it. Imported, never run.
@@ -145,14 +155,15 @@ sys.path.insert(0, os.path.join(
 import context  # noqa: E402
 import drive  # noqa: E402
 import launch  # noqa: E402
+import live  # noqa: E402
 import page  # noqa: E402
 import panes  # noqa: E402
 import plans  # noqa: E402
-import ports  # noqa: E402
 import project  # noqa: E402
 import push  # noqa: E402
 import registry  # noqa: E402
 import serve  # noqa: E402
+import show  # noqa: E402
 import successor  # noqa: E402
 
 views = page.tool("dashboard-views")
@@ -191,6 +202,21 @@ def teams_of(held: dict, owned: dict) -> list:
     return [(h, sorted(n for n in held if n != h and root(n) == h)) for h in heads]
 
 
+def advisor_groups(teams: list, held: dict, sessions: dict) -> list:
+    """`teams`, with each listing advisor heading the listed sessions no team
+    holds. A session holding a list of its own, or already taken by a lower
+    advisor, stays out."""
+    has_team = lambda h, members: bool(members or plans.plan(h).get("stages"))
+    alone = sorted((h for h, members in teams if not has_team(h, members)), key=int)
+    lists = {a: views.advisor.listed(a, held) for a in alone if sessions[a].get("role") == "advisor"}
+    under = {}
+    for a, numbers in lists.items():
+        for n in numbers:
+            if n in alone and n != a and not lists.get(n) and n not in under:
+                under[n] = a
+    return [(h, members or sorted(n for n, a in under.items() if a == h)) for h, members in teams if h not in under]
+
+
 def born(path: str) -> int:
     try:
         return int(os.stat(path).st_birthtime)
@@ -214,6 +240,7 @@ def failed(what: str) -> None:
     """The error being handled, into 1100's log, once per what and its kind."""
     if (what, sys.exc_info()[0]) not in FAILED:
         FAILED.add((what, sys.exc_info()[0]))
+        print(f"{serve.stamp()} home: {what} failed to read", file=sys.stderr)
         traceback.print_exc()
 
 
@@ -227,7 +254,6 @@ def model() -> dict:
     drivers, topics = successor.driven_all(held), successor.topics(held)
     limit = context.threshold()
     sessions, pages, own = {}, {}, {}
-    app_up = None
     for nn, mine in sorted(held.items()):
         name = mine.get("title", nn)
         try:
@@ -236,12 +262,10 @@ def model() -> dict:
                             "by": drivers.get(nn, ""), "topic": topics.get(nn, "")}
             own[nn] = []
 
-            def add(kind: str, label: str, since: int, path: str, port: int = 0, up: bool = True,
-                    waits: bool = True) -> None:
+            def add(kind: str, label: str, since: int, path: str, waits: bool = True) -> None:
                 key = f"{kind}:{nn}"
                 own[nn].append(key)
-                pages[key] = {"kind": kind, "nn": nn, "label": label, "waits": waits, "since": since,
-                              "port": port, "path": path, "up": up}
+                pages[key] = {"kind": kind, "nn": nn, "label": label, "waits": waits, "since": since, "path": path}
 
             # Its role, the badge its square wears: the advisor; a walk's lead,
             # which holds the walk's list; or a walker, which holds walk.json.
@@ -265,15 +289,16 @@ def model() -> dict:
                 add("launch", views.launch_line(nn), born(launcher.path(nn)), serve.address("launch", nn),
                     waits=not launcher.scheduled(nn))
             if subject := views.prototypes.on_hub(nn, live.get(mine.get("session_id"))):
-                if app_up is None:
-                    app_up = ports.answering(views.prototypes.PORT)
-                add("prototype", views.proto_line(subject), since_prototype(nn, subject),
-                    "/?" + urllib.parse.urlencode({"subject": subject, "session": nn}),
-                    views.prototypes.PORT, app_up)
+                at = views.prototypes.BASE + "?" + urllib.parse.urlencode({"subject": subject, "session": nn})
+                add("prototype", views.proto_line(subject), since_prototype(nn, subject), at)
             if got := views.handover.waiting(nn, mine, live, limit):
                 label, since = got
                 add("handover", label, since, serve.address("handover", nn),
                     waits=label not in views.handover.PRESSED.values())
+            if got := views.explanation.tab(nn):
+                add("explanation", got[0], born(got[1]), serve.address("explanation", nn), waits=False)
+            if got := views.teams.tab(nn):
+                add("teams", got[0], born(got[1]), serve.address("teams", nn), waits=False)
         except Exception:
             # A session whose files fail to read draws grey, with its
             # transcript alone, and every other session draws on: one bad
@@ -284,7 +309,7 @@ def model() -> dict:
             sessions[nn] = {"name": name, "colour": "grey", "dashed": True, "tag": nn, "by": "", "topic": ""}
             own[nn] = []
         pages[f"transcript:{nn}"] = {"kind": "transcript", "nn": nn, "label": name, "waits": False,
-                                     "since": 0, "port": 0, "path": serve.address("transcript", nn), "up": True}
+                                     "since": 0, "path": serve.address("transcript", nn)}
 
     def first(keys: list) -> list:
         return sorted(keys, key=lambda k: pages[k]["since"])
@@ -297,7 +322,7 @@ def model() -> dict:
         return sorted(keys, key=lambda k: order.index(kind(k)) if kind(k) in order else len(order))
 
     hubs = {}
-    for h, members in teams_of(held, owned):
+    for h, members in advisor_groups(teams_of(held, owned), held, sessions):
         # The head first, then each member, lowest number first, as the rail.
         team = [h] + members
         waiting = [k for nn in team for k in first(own[nn])]
@@ -312,8 +337,8 @@ def model() -> dict:
             except Exception:
                 failed(f"plan {h}")
             pages[overview] = {"kind": "assistant", "nn": h, "label": line, "waits": bool(owed),
-                               "since": min((t for _, _, t in owed), default=0), "port": 0,
-                               "path": serve.address("assistant", h), "up": True, "hub": h}
+                               "since": min((t for _, _, t in owed), default=0),
+                               "path": serve.address("assistant", h), "hub": h}
             # The next stage's scheduled launch page has no tab, until I press
             # its Launch page. It is the one page home hides this way. Whatever
             # the drive holds, a session, a stage or the whole plan.
@@ -345,17 +370,52 @@ def model() -> dict:
     for k in pages:
         pages[k]["side"] = "l" if k in left else "r"
     waits = first([k for k in pages if pages[k]["waits"]])
-    # The rail's numbers, team by team.
+    # The rail's numbers, team by team. Home's own code says when home
+    # must reload: CODE.
     return {"sessions": sessions, "pages": pages, "hubs": hubs, "waits": waits, "rail": list(hubs),
-            "pid": os.getpid()}
+            "code": CODE[0]}
+
+
+def pictured() -> tuple:
+    """The model as data. 1100's table keeps it, and draws it again only
+    once a file or a look it names moved: lib/live.py."""
+    return json.dumps(model()).encode(), "application/json"
+
+
+def files() -> list:
+    """Every file and folder whose write can move the model: what 1100
+    hears for its sessions, the handover threshold, and, session by
+    session, what its state is read from. Its transcript says whether it
+    works, how full its context is, and what its missions need. Then its
+    handover and the copies it left, its advisor's list, its team's
+    auto-send, its walk's screenshots, and its subject's generations."""
+    out = views.heard() + [context.FILE]
+    for nn, mine in registry.entries().items():
+        own = registry.folder(nn)
+        out += [mine.get("transcript", ""), views.handover.handover.path(nn),
+                os.path.join(own, views.handover.handover.HANDOVERS), os.path.join(own, views.advisor.LIST),
+                os.path.join(own, assistant.AUTO)]
+        if os.path.exists(os.path.join(own, "walk.json")) or os.path.isdir(os.path.join(own, "walk")):
+            out += views.shots.files(nn)
+        if subject := views.prototypes.subject_of(nn):
+            home = os.path.join(views.APP, subject)
+            out += [os.path.join(home, f) for f in registry.listing(home)]
+    return [f for f in dict.fromkeys(out) if f]
+
+
+# The model's contract: its address, its draw, its files, and what no file
+# carries: a pane opening or closing, a session's program starting or
+# ending, and a handover press's program ending.
+LIVE = live.Page("/model", pictured, files=files,
+                 looks=(assistant.panes_open, assistant.programs, views.handover.alive))
 
 
 # ---- home ---------------------------------------------------------------------
 
 # Home's icons: every tab kind's, by page.TAB_KINDS, then the team tab's,
 # the advisor's badge and the rail's own.
-ICONS = [*page.TAB_KINDS, "assistant", "advisor", "agenda", "system", "skills", "files", "zoom-in", "zoom-out",
-         "left", "right"]
+ICONS = [*page.TAB_KINDS, "assistant", "advisor", "agenda", "system", "skills", "files", "library", "utilities",
+         "zoom-in", "zoom-out", "left", "right", "up"]
 
 FOOT = ('<div class="foot"><div class="cut"></div>'
         '<button class="b0 rb" id="bell" onclick="nav.bell()" aria-label="Buzz me when a session is done" '
@@ -380,13 +440,32 @@ GLASS = ('<meta name="viewport" content="width=device-width, initial-scale=1, ma
 
 def home() -> str:
     """The workstation. It draws itself from /model, and reloads only when
-    1100 restarts. Its watch starts from the key of the model drawn in, so
-    a change landing while it loads is told at once."""
+    its own code moved. Its watch starts from the key of the model drawn
+    in, so a change landing while it loads is told at once. So does its
+    show order's, read first: the newest stamp of any view's, since home is
+    drawn the same for each. An order older than the load is never acted on."""
+    shown = str(show.last())
     drawn = json.dumps(model())
+    return around(drawn, serve.hashed(drawn), shown)
+
+
+# The mark of home's own code, code()'s, set as 1100 starts. Home reloads
+# only when it moves, never on a restart alone.
+CODE = [""]
+
+
+def code() -> str:
+    """A mark of home's own code: home, drawn around no model at all."""
+    return serve.hashed(around("{}", "", ""))
+
+
+def around(drawn: str, seen: str, shown: str) -> str:
+    """Home, around one model: its JSON, its key, and the show order's key."""
     shell = (HOME.replace("%MODEL%", drawn.replace("</", "<\\/"))
-             .replace("%SEEN%", serve.hashed(drawn))
+             .replace("%SEEN%", seen)
+             .replace("%SHOWN%", shown)
              .replace("%PUSH%", json.dumps(push.public()))
-             .replace("%PROTOTYPES%", str(views.prototypes.PORT))
+             .replace("%PROTOTYPES%", views.prototypes.BASE)
              .replace("%ZOOMS%", json.dumps(page.ZOOMS))
              .replace("%WORDS%", json.dumps({**{k: w for k, (w, _) in page.TAB_KINDS.items()}, "assistant": "Team"}))
              .replace("%ORDER%", json.dumps(list(page.TAB_KINDS)))
@@ -419,8 +498,8 @@ HOME = r"""<style>
   .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
   /* The rail: one column, 44px, overriding the shell's 280. Skills stays
-     pinned on top. System, Agenda, Launch, Prototypes, Files, zoom in and
-     out, and every hub's number scroll under it once they run out of room. */
+     pinned on top. The utilities' button, the utilities while open, and
+     every hub's number scroll under it once they run out of room. */
   aside.rail { width:44px; padding:6px 0; display:flex; flex-direction:column; align-items:center; overflow:hidden; }
   .pin { flex:none; display:flex; justify-content:center; width:100%; padding-bottom:6px; }
   .list { flex:1; min-height:0; width:100%; overflow-y:auto; display:flex; flex-direction:column; align-items:center;
@@ -451,7 +530,7 @@ HOME = r"""<style>
   /* Zoomed: the rail by its own zoom; the strip and the lines home writes
      by the page's. Each framed page zooms itself, so nothing zooms twice. */
   aside.rail { zoom:var(--rail, 1); }
-  .strip, .empty, .down { zoom:var(--zoom, 1); }
+  .strip, .empty { zoom:var(--zoom, 1); }
   .rb { flex:none; position:relative; display:inline-flex; align-items:center; justify-content:center; width:32px;
     height:32px; color:var(--dim); border:1px solid transparent; text-align:center; }
   .rb:hover { color:var(--text); background:var(--hover); }
@@ -514,7 +593,6 @@ HOME = r"""<style>
   .pane > .on, .tool > .on { display:block; }
   /* A frame paints dark before its page arrives: never a white flash. */
   .pane > iframe, .tool > iframe { background:var(--bg); }
-  .down { padding:24px; color:var(--dim); }
   /* The strip: one row that scrolls sideways, an arrow and a fade at each end that hides more. */
   .tabs { position:relative; display:flex; flex-wrap:nowrap; min-width:0; min-height:40px; overflow-x:auto;
     overflow-y:hidden; overscroll-behavior-x:contain; }
@@ -658,9 +736,9 @@ const oneAtATime = () => !wide() || sides === 1;
 const ago = t => { const d = Math.max(0, Math.floor(Date.now() / 1000 - t));
   return d < 60 ? d + 's' : d < 3600 ? Math.floor(d / 60) + 'm' : Math.floor(d / 3600) + 'h'; };
 // The rail's pages, each in main. Launch opens my own launch page,
-// Prototypes the library on the prototypes app's own port.
-const TOOLS = ['skills', 'system', 'agenda', 'launch', 'prototypes', 'files'], LAUNCH = '/p/launch/00';
-const PROTOTYPES = `${location.protocol}//${location.hostname}:%PROTOTYPES%/`;
+// Prototypes the library, at the prototypes' own prefix.
+const TOOLS = ['skills', 'system', 'agenda', 'launch', 'prototypes', 'files', 'library'], LAUNCH = '/p/launch/00';
+const PROTOTYPES = '%PROTOTYPES%';
 let view = {kind: 'skills'}, back = {kind: 'skills'};
 // lastOf is each session's own last tab on show, so its number brings it
 // back: never another session's, though a team's sessions share one hub.
@@ -668,6 +746,8 @@ const picks = {}, frames = {}, lastRight = {}, lastOf = {};
 // The groups I folded, kept on each device: a hub, then a session's tag, as
 // 10:11-B1. A tag names its mission, so the next mission's starts unfolded.
 const folded = new Set(JSON.parse(localStorage.getItem('home-folded') || '[]'));
+// The rail's utilities, open or closed, kept on each device.
+let utilitiesOpen = localStorage.getItem('home-utilities') === 'open';
 function fold(key, shut) {
   if (shut) folded.add(key); else folded.delete(key);
   const live = new Set(Object.entries(M.hubs).flatMap(([id, h]) => h.tabs.map(k => id + ':' + M.sessions[M.pages[k].nn].tag)));
@@ -728,7 +808,7 @@ const keep = (id, p) => {
 };
 
 // Where I am rides in the address, so a reload lands back there: #agenda,
-// #skills, #system, #files, #launch, #prototypes, or a hub's number, then the tab I picked, as
+// #skills, #system, #files, #library, #launch, #prototypes, or a hub's number, then the tab I picked, as
 // #90/clarify:95. A hub with no team tab never reads overview.
 function mark() {
   const id = hubOn(), hub = id && M.hubs[id], p = hub && picks[id] && pickOf(id);
@@ -777,7 +857,7 @@ const told = k => `\n${WORD[M.pages[k].kind]} · ${M.pages[k].label}, waiting ${
 // colour. A team is one grey band: its Team icon, which opens the team
 // tab, then its head's number, then each member's, its number over its
 // mission, each in its own colour. A hub with a team tab is a team before
-// any member joins. Every number opens its own session's tab, by entry().
+// any member joins. An advisor's group wears the band with no Team icon. Every number opens its own session's tab, by entry().
 // What a square wears stacks in its black column: a white dot while its
 // page waits on me, and its bubble names each one; the wheel and its
 // driver's number while another session drives it, the dot under them
@@ -834,16 +914,29 @@ function zoomTool(step) {
     + `title="Zoom the page ${way} · ${Math.round(zoom * 100)}% now"${end ? ' disabled' : ''}>${ICONS['zoom-' + way]}</button>`;
 }
 
-// System, Agenda, Launch, Prototypes and Files, then zoom in and out, then
-// every hub, team by team.
-function tools() {
+// The button that closes and opens the utilities. Closed, its outline says a
+// utility's page is on show.
+function utilitiesButton() {
+  const showing = !utilitiesOpen && view.kind !== 'skills' && TOOLS.includes(view.kind);
+  const word = utilitiesOpen ? 'Close the utilities' : 'Open the utilities';
+  return `<button data-tool="utilities" class="b0 rb${showing ? ' on' : ''}" title="${word}" aria-label="${word}" aria-expanded="${utilitiesOpen}" onclick="nav.utilities()">${utilitiesOpen ? ICONS.up : ICONS.utilities}</button>`;
+}
+
+// System, Agenda, Launch, Prototypes, Files and Library, then zoom in and out.
+function utilities() {
   const on = k => view.kind === k ? ' on' : '';
   return `<button data-tool="system" class="b0 rb${on('system')}" title="System: the account order, band 00 and every other port" onclick="nav.tool('system')">${ICONS.system}</button>`
     + `<button data-tool="agenda" class="b0 rb${on('agenda')}" title="Agenda: what I want worked on, and what waits on what" onclick="nav.tool('agenda')">${ICONS.agenda}</button>`
     + `<button data-tool="launch" class="b0 rb${on('launch')}" title="Launch: a new session" onclick="nav.tool('launch')">${ICONS.launch}</button>`
     + `<button data-tool="prototypes" class="b0 rb${on('prototypes')}" title="Prototypes: every one locked in, and every one saved" onclick="nav.tool('prototypes')">${ICONS.prototype}</button>`
     + `<button data-tool="files" class="b0 rb${on('files')}" title="Files: every session's folder, lowest number first" onclick="nav.tool('files')">${ICONS.files}</button>`
-    + zoomTool(1) + zoomTool(-1)
+    + `<button data-tool="library" class="b0 rb${on('library')}" title="Library: what the words of our work mean" onclick="nav.tool('library')">${ICONS.library}</button>`
+    + zoomTool(1) + zoomTool(-1);
+}
+
+// The utilities' button, the utilities while open, then every hub, team by team.
+function tools() {
+  return utilitiesButton() + (utilitiesOpen ? utilities() : '')
     + M.rail.map(id => '<div class="cut"></div>' + number(id)).join('');
 }
 
@@ -892,29 +985,21 @@ addEventListener('resize', edges);
 
 // ---- main -------------------------------------------------------------------------
 
-function src(k) {
-  const p = M.pages[k];
-  return p.port ? `${location.protocol}//${location.hostname}:${p.port}${p.path || '/'}` : p.path;
-}
+// Every page shows from 1100's own origin, and 1100 draws each one. The
+// Claude app's browser panel refuses a frame from any other local port.
+const src = k => M.pages[k].path;
 
 // Each page is drawn once, in its side's pane, and kept, so what I typed
 // in it survives a tab, a team, or a trip home.
 function frame(k) {
   const p = M.pages[k], box = p.side === 'l' ? $('L') : $('R');
   let f = frames[k];
-  if (f && (f.dataset.up === 'true') !== p.up) { f.remove(); f = null; }
   if (!f) {
-    f = document.createElement(p.up ? 'iframe' : 'div');
+    f = document.createElement('iframe');
     f.dataset.k = k;
-    f.dataset.up = p.up;
-    if (p.up) {
-      f.src = src(k);
-      f.title = `${WORD[p.kind]} · ${M.sessions[p.nn].tag}`;
-      f.addEventListener('load', () => zoomed(f));
-    } else {
-      f.className = 'down';
-      f.textContent = `${p.port} is not answering, so this ${WORD[p.kind].toLowerCase()} cannot show.`;
-    }
+    f.src = src(k);
+    f.title = `${WORD[p.kind]} · ${M.sessions[p.nn].tag}`;
+    f.addEventListener('load', () => loaded(f));
     frames[k] = f;
   }
   if (f.parentNode !== box) box.appendChild(f);
@@ -964,7 +1049,7 @@ function drawMain() {
     let f = frames['tool:' + view.kind];
     if (!f) {
       f = frames['tool:' + view.kind] = document.createElement('iframe');
-      f.addEventListener('load', () => zoomed(f));
+      f.addEventListener('load', () => loaded(f));
       $('T').appendChild(f);
     }
     if (f.dataset.src !== want) f.src = f.dataset.src = want;
@@ -1015,8 +1100,7 @@ function drawMain() {
 
 // The hub on show opens its other tabs ahead, hidden, one at a time: each
 // once the one before has loaded and home has sat still a moment. A first
-// click on one is then instant. Only 1100's own pages open ahead: a
-// prototype, on its own port, waits for its click. Leaving the hub stops it.
+// click on one is then instant. Leaving the hub stops it.
 let warming = '';
 function warm(id) {
   if (warming === id) return;
@@ -1024,7 +1108,7 @@ function warm(id) {
   const next = () => {
     const hub = M.hubs[id];
     if (warming !== id || hubOn() !== id || !hub) { if (warming === id) warming = ''; return; }
-    const k = tabsOf(hub).find(k => !hidden(k) && !frames[k] && M.pages[k].up && !M.pages[k].port);
+    const k = tabsOf(hub).find(k => !hidden(k) && !frames[k]);
     if (!k) { warming = ''; return; }
     frame(k).addEventListener('load', () => setTimeout(next, 300), {once: true});
   };
@@ -1060,8 +1144,8 @@ function draw() {
 
 // One step a press, as a browser zooms. Two zooms move apart, each kept on
 // each device. The page's, by the rail's buttons under Files: the strip and every
-// page home frames, each by its own root, so nothing zooms twice. A page on
-// another port, as the prototypes app's, is told by a message. A press
+// page home frames, each by its own root, so nothing zooms twice. A page whose
+// root cannot be reached is told by a message. A press
 // never takes the cursor from the page I type in. The rail's own, by Rail
 // size on System, which keeps it as rail-zoom: home hears it change.
 const ZOOMS = %ZOOMS%;
@@ -1125,6 +1209,11 @@ const nav = {
   },
   // A rail arrow scrolls the numbers most of the rail's height that way.
   rail: way => { const l = $('tools'); l.scrollBy({top: way * l.clientHeight * 0.8, behavior: 'smooth'}); },
+  utilities: () => {
+    utilitiesOpen = !utilitiesOpen;
+    localStorage.setItem('home-utilities', utilitiesOpen ? 'open' : 'closed');
+    drawRail();
+  },
   fold: key => {
     fold(key, !folded.has(key));
     drawMain();
@@ -1143,13 +1232,59 @@ const nav = {
     if (sides === 1 && id) keep(id, {...pickOf(id), pane: 'right'});
     draw();
   },
-  // Skills, System, Agenda, Launch, Prototypes and Files open their page in main;
+  // Skills, System, Agenda, Launch, Prototypes, Files and Library open their page in main;
   // picked again, they return.
   tool: kind => {
     if (view.kind === kind) return go(back);
     if (view.kind === 'hub') back = view;
     go({kind});
   },
+};
+// An order lib/show.py wrote, as "agenda", "05" or "05:clarify". A tool
+// opens, never toggles back. A number opens its session, by nav.session; a
+// tab its session lacks opens its session instead. A place, as "#api-key",
+// "?run=…" or "/name", is added to the page's own address once it shows:
+// one item inside it. A draft fills a transcript tab's box, unsent: its
+// frame keeps it until the page says it took it, through a reload too.
+// A mark borders the spot the app chat just changed, for a moment: the
+// frame keeps it, like a draft, until the page says it drew it. An order
+// that stays moves nothing: a save or a draft lands in its page where it
+// stands, or waits for that page's first hello.
+const draft = f => {
+  if (!f || !f.contentWindow) return;
+  if (f.dataset.draft) f.contentWindow.postMessage({ws: 1, draft: f.dataset.draft}, '*');
+  if (f.dataset.mark) f.contentWindow.postMessage({ws: 1, mark: f.dataset.mark}, '*');
+};
+const unopened = {};
+nav.show = (to, place, words, mark, stay) => {
+  if (!stay) nav.place(to, place);
+  const k = TOOLS.includes(to) ? 'tool:' + to : to.split(':').reverse().join(':'), f = frames[k];
+  const put = {...(words && to.endsWith(':transcript') ? {draft: words} : {}), ...(mark ? {mark} : {})};
+  if (!f) { if (stay) unopened[k] = put; return; }
+  Object.assign(f.dataset, put);
+  if (words || mark) draft(f);
+};
+nav.place = (to, place) => {
+  let f, base;
+  if (TOOLS.includes(to)) {
+    if (view.kind !== to) nav.tool(to);
+    f = frames['tool:' + to];
+    base = f && f.dataset.src;
+  } else {
+    const [nn, kind] = to.split(':');
+    if (kind === 'assistant' && (M.hubs[nn] || {}).overview) return nav.team(nn);
+    const k = kind + ':' + nn, id = kind && Object.keys(M.hubs).find(h => M.hubs[h].tabs.includes(k));
+    if (id) open(id, k); else return nav.session(nn);
+    f = frames[k];
+    base = f && M.pages[k] && src(k);
+  }
+  if (!place || !f || !base) return;
+  // A page may write its own place into its address, as Clarify does. The
+  // place it already stands at changes no address, so the page is told too.
+  let now = '';
+  try { now = f.contentWindow.location.href; } catch (e) {}
+  f.src = base + place;
+  if (now === new URL(base + place, location.href).href) f.contentWindow.postMessage({ws: 1, place}, '*');
 };
 
 // A page inside main says hello, and home tells it whether to drop its
@@ -1166,7 +1301,12 @@ addEventListener('message', e => {
     zoomed(f);
     const left = f.parentNode === $('L');
     tell(f, left ? oneAtATime() && !!(M.hubs[hubOn()] || {tabs: []}).tabs.length : f.parentNode === $('R'));
+    const k = Object.keys(frames).find(x => frames[x] === f);
+    if (k && unopened[k]) { Object.assign(f.dataset, unopened[k]); delete unopened[k]; }
+    draft(f);
   }
+  if (d.drafted) delete f.dataset.draft;
+  if (d.marked) delete f.dataset.mark;
   if (d.open === 'launch') {
     const id = Object.keys(M.hubs).find(h => M.hubs[h].overview === f.dataset.k);
     const k = id && 'launch:' + M.hubs[id].nn;
@@ -1203,10 +1343,45 @@ addEventListener('click', e => {
 
 // ---- told when something moves ------------------------------------------------------
 
-// Home asks /model again, and redraws around the pages it keeps. A new 1100
-// may draw a new home, so a new pid reloads it whole.
+// Home's own code changed: it reloads once nothing was typed for three
+// seconds, here or in a page it frames, and once in fifteen at most.
+let renewing = false;
+async function renew() {
+  if (renewing) return;
+  renewing = true;
+  const nap = ms => new Promise(f => setTimeout(f, ms));
+  const typing = w => { try { return Date.now() - (w.typedAt || 0) < 3000; } catch (e) { return false; } };
+  while ([window, ...watched].some(typing)) await nap(500);
+  let at = [];
+  try { at = JSON.parse(sessionStorage.getItem('reloads:/') || '[]').filter(t => Date.now() - t < 60000); } catch (e) {}
+  const due = at.length ? at[at.length - 1] + Math.min(15000, 1000 * 2 ** (at.length - 1)) : 0;
+  if (due > Date.now()) await nap(due - Date.now());
+  try { sessionStorage.setItem('reloads:/', JSON.stringify([...at, Date.now()])); } catch (e) {}
+  location.reload();
+}
+// 1100 silent for five seconds: one line along the top says so, until it answers.
+let silentSince = 0;
+function silent(is) {
+  let p = $('away');
+  silentSince = is ? silentSince || Date.now() : 0;
+  if (!silentSince || Date.now() - silentSince < 5000) { if (p) p.hidden = true; return; }
+  if (!p) {
+    p = document.createElement('p');
+    p.id = 'away';
+    p.className = 'refusal';
+    p.style.cssText = 'top:12px;bottom:auto;z-index:9999';
+    p.setAttribute('role', 'status');
+    document.body.appendChild(p);
+  }
+  p.textContent = (location.port || '1100') + ' is not answering. What shows here may be old.';
+  p.hidden = false;
+}
+
+// Home asks /model again, and redraws around the pages it keeps. The model
+// carries the mark of home's own code, and home reloads once that mark
+// moves and I pause.
 function apply(next) {
-  if (next.pid !== M.pid) return location.reload();
+  if (next.code !== M.code) return renew();
   const had = new Set(M.waits);
   // The session on show and its tab: a hub that goes, as when its session
   // joins a team, takes me along into the hub holding that session now.
@@ -1237,8 +1412,7 @@ function apply(next) {
 
 // A browser holds six requests to one host at once, and each held watch is
 // one. So home holds one, for itself and for every page of 1100's own it
-// frames: each hands its watch up, through watchFor. The prototype page,
-// from 1400, asks its own server.
+// frames: each hands its watch up, through watchFor.
 const watched = new Set();
 let asking = null, soon = 0, showing = '';
 const rewatch = () => { clearTimeout(soon); soon = setTimeout(() => asking && asking.abort(), 50); };
@@ -1247,62 +1421,118 @@ window.watchFor = w => {
   rewatch();
 };
 // Only a page on show is asked about. A hidden one moves nothing I see, and
-// each page asked about is drawn again on every write 1100 hears. Shown
+// each page asked about is drawn again once a file it names is written. Shown
 // again, it is asked with the key it last wore, so one that moved while
 // hidden is told at once.
 const shown = w => w.frameElement.classList.contains('on');
+function loaded(f) {
+  zoomed(f);
+  rewatch();
+}
 function onShow() {
   const now = Object.keys(frames).filter(k => frames[k].classList.contains('on')).join();
   if (now !== showing) { showing = now; rewatch(); setTimeout(() => hand('holdCursor')); }
 }
 // A framed page's watch as it stands: its address, its key, and whether it
-// is saving. Nothing once its frame is gone, or its page took its watch
-// away. A removed frame's window still reads its last page, so the frame
-// itself is asked first. A page saving its own file is never reloaded, nor
-// one typed into in the last three seconds: it is, once I pause. A page
-// that draws its own news, as a transcript does, is told, never reloaded.
-// A reload put off while I type is owed: it comes once I pause, whatever
-// the page's key reads by then, since the page's own save takes up the key
-// the outside change left.
-function owe(w) {
-  if (w.owedReload) return;
-  w.owedReload = setInterval(() => {
-    const s = watchOf(w);
-    if (s && (s.typing || s.busy)) return;
-    clearInterval(w.owedReload);
-    if (s) w.location.reload();
-  }, 500);
-}
+// is busy putting a new picture in place. Nothing once its frame is gone,
+// or its page took its watch away. A removed frame's window still reads its
+// last page, so the frame itself is asked first. A page that moved is told,
+// and puts what moved in place itself: lib/live.py's live.js.
 function watchOf(w) {
   try {
     if (w.closed || !w.frameElement || !w.frameElement.isConnected) return null;
     const e = w.document.getElementById('watch');
     return e ? {w, path: w.location.pathname + w.location.search, key: e.dataset.key,
-                busy: 'busy' in e.dataset, typing: Date.now() - (w.typedAt || 0) < 3000} : null;
+                busy: 'busy' in e.dataset} : null;
   } catch (e) { return null; }
+}
+// The app home alone, opened as /?app inside my Claude app. Keys a wake
+// types while my cursor sits on this page land here, so it tells 1100 when
+// it holds my cursor; a focus change writes no file, so it rechecks.
+// lib/appwake.py then waits, and its line shows here until I click my
+// chat box, or Copy it to paste myself.
+const APP_HOME = new URLSearchParams(location.search).has('app');
+// Each app chat has its own view: /?app is view 1, /?app=2 is view 2. A
+// home follows only its own view's orders, lib/show.py's.
+// It names itself, anew at each load, so 1100 counts the panels open on a view.
+const VIEW = /^[1-9][0-9]?$/.test(new URLSearchParams(location.search).get('app') || '') ? new URLSearchParams(location.search).get('app') : '1';
+const SHOW = '/show?view=' + VIEW + (APP_HOME ? '&home=' + Math.random().toString(36).slice(2, 10) : '');
+let holds = null;
+function holding() {
+  const h = document.hasFocus();
+  if (h === holds) return;
+  holds = h;
+  fetch('/app', {method: 'POST', body: new URLSearchParams({held: h ? '1' : '0'})}).catch(() => {});
+}
+if (APP_HOME) {
+  setInterval(holding, 500);
+  addEventListener('pagehide', () => navigator.sendBeacon('/app', new URLSearchParams({held: '0'})));
+  holding();
+}
+function copied(text) {
+  const t = document.createElement('textarea');
+  t.value = text;
+  document.body.appendChild(t);
+  t.select();
+  document.execCommand('copy');
+  t.remove();
+}
+function waked(line) {
+  let b = document.getElementById('wake-line');
+  if (!line) { if (b) b.remove(); return; }
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'wake-line';
+    b.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;'
+      + 'gap:10px;align-items:center;max-width:92vw;padding:10px 14px;border-radius:10px;background:#f26b1f;'
+      + 'color:#fff;font:600 14px system-ui;box-shadow:0 4px 18px rgba(0,0,0,.35)';
+    b.innerHTML = '<span></span><button type="button" style="font:inherit;padding:4px 12px;border:0;'
+      + 'border-radius:6px;cursor:pointer">Copy</button>';
+    b.querySelector('button').onclick = () => {
+      copied(b.dataset.line);
+      fetch('/app', {method: 'POST', body: new URLSearchParams({taken: '1'})}).catch(() => {});
+      b.remove();
+    };
+    document.body.appendChild(b);
+  }
+  b.dataset.line = line;
+  b.querySelector('span').textContent = 'The app chat has news. Click your chat box, and it wakes. Or Copy, and paste it there.';
 }
 (async () => {
   const nap = ms => new Promise(f => setTimeout(f, ms));
   let seen = '%SEEN%';
+  // The show order's key as last asked, and the newest order acted on. Both
+  // start at the order standing when home was drawn, so none older acts.
+  let order = '%SHOWN%', acted = +order;
+  // The wake line's key as last asked: none yet, so the first answer shows it.
+  let line = '';
   for (;;) {
     const marks = [];
     for (const w of watched) { const m = watchOf(w); if (!m) watched.delete(w); else if (shown(w)) marks.push(m); }
-    const q = [['/model', seen], ...marks.map(m => [m.path, m.key])]
+    const q = [['/model', seen], [SHOW, order], ['/app', line], ...marks.map(m => [m.path, m.key])]
       .map(([p, k]) => 'path=' + encodeURIComponent(p) + '&key=' + encodeURIComponent(k)).join('&');
     const ask = asking = new AbortController();
     try {
       const r = await fetch('/heard?' + q, {signal: ask.signal});
       if (r.headers.get('X-Heard')) {
+        silent(false);
         const got = (await r.text()).split('\n');
         let moved = got[0] !== seen;
         if (moved) { seen = got[0]; apply(await (await fetch('/model')).json()); }
+        if (got[1] !== undefined && got[1] !== order) {
+          order = got[1];
+          const o = await (await fetch(SHOW)).json();
+          // Only a 1100 opened as /?app, an app chat's own, follows its view's orders.
+          if (+o.at > acted && o.target && APP_HOME) { acted = +o.at; nav.show(o.target, o.place, o.draft, o.mark, o.stay); moved = true; }
+        }
+        if (got[2] !== undefined && got[2] !== line) {
+          line = got[2];
+          if (APP_HOME) { waked((await (await fetch('/app')).json()).line); moved = true; }
+        }
         marks.forEach((m, i) => {
-          const now = got[i + 1], still = watchOf(m.w);
-          if (now !== undefined && now !== m.key && still && !still.busy && still.key === m.key) {
-            if (typeof m.w.told === 'function') { m.w.told(now); moved = true; }
-            else if (!still.typing) { m.w.location.reload(); moved = true; }
-            else owe(m.w);
-          }
+          const now = got[i + 3], still = watchOf(m.w);
+          if (now !== undefined && now !== m.key && still && !still.busy && still.key === m.key
+              && typeof m.w.told === 'function') { m.w.told(now); moved = true; }
         });
         // An answer that moved nothing here waits a second before the next
         // ask, so nothing is ever asked about without pause.
@@ -1310,9 +1540,17 @@ function watchOf(w) {
         continue;
       }
     } catch (e) { if (ask.signal.aborted) continue; }
-    await nap(3000);
+    // An unanswered ask waits one second, a quick ask then says whether 1100
+    // is back, and five seconds of silence show the line.
+    silent(true);
+    await nap(1000);
+    try { await fetch('/health'); silent(false); } catch (e) {}
   }
 })();
+// Home asks at once when it shows again, or is back on the network.
+for (const [target, event] of [[document, 'visibilitychange'], [window, 'pageshow'], [window, 'online']]) {
+  target.addEventListener(event, () => { if (!document.hidden) rewatch(); });
+}
 
 // ---- my phone ------------------------------------------------------------------------
 

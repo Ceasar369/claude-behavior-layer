@@ -28,7 +28,8 @@ reached their session.
 
 A mission, opened by its card's name or its id, shows its way back to its
 stage, its tag and state, the assistant's latest answer for it, its
-buttons, then the whole mission. A mission whose session stopped reads
+buttons, its objectives file when it has one, then the whole mission,
+each folded until a click. A mission whose session stopped reads
 completed, and carries no button, bar its words still to send to another
 session.
 
@@ -135,8 +136,9 @@ prints working. Any other finish prints its own word, finish.word's. One that fi
 nothing since its answer prints working or idle, and a mission with no
 session prints not started or stopped. An idle session with its answer
 unsent needs its send, once that answer holds a verdict of the assistant's
-own and its wave no draft of mine. A line moving an item to chat is no
-verdict. Otherwise it prints waiting on you: the wave waits for my Send.
+own, or its wave a draft of mine: my drafts stand as my answers. A line
+moving an item to chat is no verdict. Otherwise it prints waiting on you:
+the wave waits for my Send.
 
 A helper a mission's session started, through helper-session, shows under
 that mission: a line on its card, and one under its heading, each with
@@ -159,8 +161,8 @@ under that title is the mission's own.
 
 The page stores nothing. Every request reads the folder, and finds a
 launched mission's session the way the claim does. The match is
-lib/plans.py's, never a copy. 1100 imports this file for render and take,
-and serves them; nothing here runs a server.
+lib/plans.py's, never a copy. 1100 imports this file for LIVE, and serves
+it; nothing here runs a server.
 
   assistant-page.py queue  07 A1 A2    they launch next
   assistant-page.py states 07          each mission's id, need and session
@@ -189,6 +191,7 @@ sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 import drive  # noqa: E402
 import finish  # noqa: E402
+import live  # noqa: E402
 import page  # noqa: E402
 import panes  # noqa: E402
 import plans  # noqa: E402
@@ -274,7 +277,7 @@ def stranded(nn: str, p: dict, ids: list) -> list:
 
 
 def named(m: dict) -> str:
-    """The mission's own name until it launches, then its session's: 13-web-app."""
+    """The mission's own name until it launches, then its session's: 13-site."""
     return m.get("title") or m["name"]
 
 
@@ -711,11 +714,14 @@ def verdicts(text: str) -> list:
 
 
 def sendable(m: dict, text: str) -> bool:
-    """An answer the assistant sends itself: a verdict of its own, on a wave
-    holding no draft of mine. Moving an item to chat answers nothing."""
+    """An answer the assistant sends itself: a verdict of its own, or a draft
+    of mine on its wave, which stands as my answer. Moving an item to chat
+    answers nothing."""
     head, items = answered_wave(m, text)
-    if not head or any(clarify.answered(it) for it in items):
+    if not head:
         return False
+    if any(clarify.answered(it) and it.get("feedback") != clarify.MOVED for it in items):
+        return True
     return any(verdict == "agree" or (verdict == "feedback" and words != clarify.MOVED)
                for verdict, words in verdicts(text))
 
@@ -840,11 +846,16 @@ def still(m: dict, text: str, written: float, held: dict) -> str:
 
 def quiet(m: dict, held: dict) -> int:
     """When a mission's session last wrote: its turn's end, or its last
-    words before it went."""
+    words before it went. With no transcript left to read, when the mission
+    was queued, else 0: a time that stands still. The page and home's model
+    both wear it, and the current second drew both again every second."""
     try:
         return int(os.path.getmtime((held.get(m["session"]) or {}).get("transcript", "")))
     except OSError:
-        return int(time.time())
+        try:
+            return int(time.mktime(time.strptime(m.get("queued", ""), STAMP)))
+        except (TypeError, ValueError):
+            return 0
 
 
 def due(nn: str, held: dict, live: dict, open_ids) -> list:
@@ -928,8 +939,19 @@ def folded(label: str, marks: list) -> str:
             f'<span class="ok">{page.icon("check", 12)}{label}</span>{"".join(marks)}</button>')
 
 
-def render(nn: str) -> str:
-    p = plans.plan(nn)
+def fold(key: str, title: str, body: str) -> str:
+    """A mission's section, folded under its heading. A click unfolds it."""
+    return (f'<h2 class="sec fold" id="{page.esc(key)}" role="button" tabindex="0" aria-expanded="false" '
+            f'onclick="unfold(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \')'
+            f'{{event.preventDefault();unfold(this)}}">'
+            f'<span class="car">{page.icon("right", 12)}</span>{page.esc(title)}</h2>'
+            f'<div class="fb">{body}</div>')
+
+
+def drawing(nn: str, p: dict) -> dict:
+    """Plan P of assistant NN, drawn in its parts, as drawn() shows it:
+    whether it holds a stage, the tag, the views under #items, the team
+    bar's head, and the rail."""
     stages, opened = p.get("stages", []), plans.opened(p)
     held, live, open_ids = registry.entries(), registry.claude_records(), panes.ids(panes.FRESH)
     folder = registry.folder(nn)
@@ -998,6 +1020,9 @@ def render(nn: str) -> str:
                             + (f'<div class="sum">{summary}</div>' if summary else "")
                             + (acts(k, took) if running else "") + '</div>')
             mission = read(m.get("file", ""))
+            # Its objectives sit beside it, as assistant-mission writes them.
+            goals = os.path.join(os.path.dirname(m["file"]), f"{k}-objectives.md") if m.get("file") else ""
+            objectives = read(goals) if goals else ""
             items.append(
                 f'<section class="item" id="t-{k}" style="--c:var(--{colour})">'
                 f'<button class="back" onclick="tab(\'{at}\')">{page.icon("back", 12)}{name}</button>'
@@ -1015,9 +1040,11 @@ def render(nn: str) -> str:
                       else '<p class="kick">No answer yet.</p>'))
                 + (f'<h2 class="sec">Still to send</h2><div class="ans">{left}</div>' if left else "")
                 + (acts(k, took) if running else "")
-                + f'<h2 class="sec">Mission · {page.esc(os.path.basename(m.get("file", "")) or "none yet")}</h2>'
-                + (f'<pre class="doc">{page.esc(mission)}</pre>' if mission
-                   else '<p class="kick">Not written yet.</p>')
+                + (fold(f"o-{k}", f"Objectives · {os.path.basename(goals)}",
+                        f'<pre class="doc">{page.esc(objectives)}</pre>') if objectives else "")
+                + fold(f"m-{k}", f'Mission · {os.path.basename(m.get("file", "")) or "none yet"}',
+                       f'<pre class="doc">{page.esc(mission)}</pre>' if mission
+                       else '<p class="kick">Not written yet.</p>')
                 + "</section>")
         # A stage is done when every mission stopped, new when none started.
         # The first not done is the current one, and main opens on it.
@@ -1065,220 +1092,135 @@ def render(nn: str) -> str:
              f'{past}{"".join(r for _, r in rows)}</section>'] + views + items
 
     tag_ = plans.tag(nn, plans.owners(held))
-    if not stages:
-        return page.render(f"{nn}-assistant", [("", page.blank("No plan yet") + page.watch())],
-                           page.head("assistant", tag_), refresh=0)
+    return {"stages": bool(stages), "tag": tag_,
+            "items": f'<div id="items" data-first="{first or "all"}" data-due="{page.esc(owed_key)}">'
+                     f'{"".join(items)}</div>',
+            "head": page.head("assistant", tag_, "", bar(nn, driven, active)) if stages else "",
+            "rail": f'<nav class="nums" id="index">{"".join(rail)}</nav>\n'}
+
+
+# The page's own rules. explanation-page.py borrows its .back.
+STYLE = "<style>\n" + page.shared("assistant.css") + "</style>\n"
+
+
+# ---- the page on the contract --------------------------------------------------
+#
+# 1100 draws the page from drawing()'s parts, and lib/live.py puts each
+# change in place. The page's own script, .claude/pages/scripts/assistant.js,
+# keeps the view, the folds and the scroll I left, and sends each press.
+
+# Each assistant's plan as last read whole: a plan cut short, as one being
+# written, still shows every row it held.
+KEPT: dict = {}
+UNREADABLE = "The plan's file, stages.json, is unreadable now."
+KEPT_ROWS = " This is the plan as last read whole."
+# Each other file of the assistant's own the page reads, by what it holds.
+OTHERS = {AUTO: "Auto-send's switch", drive.FILE: "The drive", "launch.json": "The launch rows"}
+
+
+def unreadable(nn: str) -> list:
+    """Each file of OTHERS in assistant NN's folder that is there and is not
+    whole JSON now, as one sentence: the page draws as if it were missing."""
+    out = []
+    for name, what in OTHERS.items():
+        try:
+            with open(os.path.join(registry.folder(nn), name), "rb") as f:
+                json.loads(f.read().decode())
+        except OSError:
+            continue
+        except ValueError:
+            out.append(f"{what}'s file, {name}, is unreadable now.")
+    return out
+
+
+def planned(nn: str) -> tuple:
+    """Assistant NN's plan, and whether its file is unreadable now. No file
+    is no plan. A file that is not one whole plan, as one cut short, gives
+    the plan last read whole, or none."""
+    try:
+        with open(os.path.join(registry.folder(nn), plans.PLAN), "rb") as f:
+            raw = f.read()
+    except OSError:
+        return {"stages": []}, False
+    try:
+        p = json.loads(raw.decode())
+        if not isinstance(p, dict) or not isinstance(p.get("stages", []), list):
+            raise ValueError("no plan")
+    except ValueError:
+        return KEPT.get(nn, {"stages": []}), True
+    KEPT[nn] = p
+    return p, False
+
+
+def drawn(nn: str) -> str:
+    """Assistant NN's page, opened by its watch, and a line saying so while
+    its plan's file is unreadable."""
+    p, unread = planned(nn)
+    held = registry.entries()
+    drew: dict = {}
+
+    def views() -> str:
+        drew.update(drawing(nn, p))
+        return drew["items"] if drew["stages"] else page.blank("No plan yet")
+
+    shown = live.part("The plan", views)
+    said = ([UNREADABLE + (KEPT_ROWS if p.get("stages") else "")] if unread else []) + unreadable(nn)
+    note = "".join(f'<p class="note">{html.escape(line, quote=False)}</p>\n' for line in said)
+    style = PILLS + STYLE + drive.STYLE
+    scripts = page.TABS + page.COPY + f'<script src="{live.src("assistant.js")}"></script>\n'
+    head = (drew["head"] if drew.get("stages")
+            else page.head("assistant", drew.get("tag") or plans.tag(nn, plans.owners(held))))
     return page.render(f"{nn}-assistant",
-                       [("", f'<div id="items" data-first="{first or "all"}" data-due="{page.esc(owed_key)}">'
-                             f'{"".join(items)}</div>'
-                         + page.watch() + page.TYPING + page.COPY + PILLS + SCRIPT + drive.STYLE)],
-                       page.head("assistant", tag_, "", bar(nn, driven, active))
-                       + f'<nav class="nums" id="index">{"".join(rail)}</nav>\n', refresh=0)
+                       [("", live.watch((held.get(nn) or {}).get("session_id", "")) + note + shown + style + scripts)],
+                       head + (drew["rail"] if drew.get("stages") else ""), refresh=0)
 
 
-SCRIPT = """<style>
-  /* The team bar: one row across the whole head, the plan's label and
-     buttons, then the active stage's, left first. Every button is small,
-     the Launch page button's size, its colour where it goes. */
-  header.top.fam.assistant { display:block; padding:6px 10px; }
-  header.top.fam.assistant .mid { display:none; }
-  header.top.fam.assistant .acts { display:flex; flex-wrap:wrap; justify-self:stretch; }
-  .tb-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-height:28px; }
-  .tb-row h2 { margin:0 2px 0 0; }
-  .tb-row > h2:not(:first-child) { margin-left:2px; }
-  .tb-row .cut, .tb-stage::before { width:1px; height:16px; background:var(--line); margin:0 6px; }
-  .tb-stage::before { content:""; }
-  /* The active stage's own view names it in its heading: the bar's name goes. */
-  .tb-stage.here h2 { display:none; }
-  header.top.fam .btn { height:22px; padding:0 8px; font-size:11px; gap:5px; }
-  header.top.fam .btn.sq { width:22px; padding:0; }
-  #items h3.sub .mk { display:inline-block; width:1.4em; }
-  #items h3.sub .mk.ok { color:var(--green); }
-  #items h3.sub .mk.on { color:var(--blue); }
-  #items .stage { margin:0 0 20px; }
-  #items .cards { display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); }
-  #items .card { background:var(--panel); border:1px solid var(--line);
-    border-left:4px solid var(--c); border-radius:6px; padding:8px 10px; cursor:pointer; }
-  #items .card:hover { border-color:var(--text); border-left-color:var(--c); }
-  #items .card.done, #items .col.done, #items .card.dashed, #items .col.dashed { border-left-style:dashed; }
-  #items .card .hd, #items .col .hd, #items .item > .hd { display:flex; align-items:center; gap:8px; }
-  #items .card .st, #items .col .st { margin-left:auto; color:var(--c); font-size:11px; font-weight:700; }
-  #items .item > .hd { margin:0 0 6px; }
-  #items .item > .hd .st { color:var(--c); font-size:12px; }
-  #items .card .nm, #items .col .nm { font-size:14px; font-weight:700; margin:6px 0 0; overflow-wrap:anywhere; }
-  #items .card.done .nm, #items .col.done .nm { color:var(--dim); }
-  #items .col .nm { cursor:pointer; }
-  #items .col .nm:hover { text-decoration:underline; }
-  /* A stage's head: its name and count, then Drive the stage on the right. */
-  #items .shead { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; margin:0 0 10px; }
-  #items .shead h1.q { margin:0; }
-  #items .shead .group { margin-left:auto; }
-  /* Finished work, folded into one lighter line above what is still live. */
-  #items .finl { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; width:100%; margin:0 0 10px;
-    padding:6px 10px; font:inherit; font-size:12px; text-align:left; cursor:pointer; color:var(--dim);
-    background:var(--raised); border:1px solid var(--line); border-radius:6px; }
-  #items .finl:hover { background:var(--hover); }
-  #items .finl[aria-expanded="true"] .car { display:inline-block; transform:rotate(90deg); }
-  #items .finl .ok { display:inline-flex; align-items:center; gap:5px; color:var(--green); font-weight:700; }
-  #items .finl .one { display:inline-flex; align-items:center; gap:6px; }
-  #items .fins { display:none; gap:8px; margin:0 0 12px;
-    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); }
-  #items .fins.open { display:grid; }
-  #items .fins.rows.open { display:block; }
-  /* A stage's live missions, side by side: the card, what it asks, then its buttons at the foot. */
-  #items .cols { display:grid; gap:10px; align-items:start; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); }
-  #items .col { display:flex; flex-direction:column; min-width:0; background:var(--panel);
-    border:1px solid var(--line); border-left:4px solid var(--c); border-radius:6px; padding:10px 12px; }
-  #items .col .sum { margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
-  #items .item .col p { font-size:14px; line-height:1.5; margin:0 0 4px; }
-  #items .item .col p.hl { font-size:14px; font-weight:700; margin:0 0 6px; }
-  #items .hlrow { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin:0 0 6px; }
-  #items .hlrow p.hl { margin:0; }
-  #items .item .col p.none, #items .item p.none { color:var(--dim); }
-  #items .col .paste { margin:4px 0 8px; padding:8px 10px; }
-  #items .col .paste .txt { font-size:13px; }
-  #items .vs { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-  #items .vs .chip { cursor:pointer; min-width:28px; }
-  #items .vs .chip.g { cursor:default; }
-  /* Type, Send and Drive: one width each, in that order, never wider than they need. */
-  #items .acts3 { display:grid; grid-template-columns:repeat(3, minmax(0, 96px)); gap:6px;
-    margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
-  #items .acts3 .btn { min-width:0; padding:0 6px; }
-  #items .item > .acts3 { max-width:360px; border-top:0; padding-top:0; }
-  #items .hp { display:flex; align-items:center; gap:6px; margin-top:6px; color:var(--dim); font-size:12px; }
-  #items .fin { margin-top:10px; padding:8px 10px; border:1px solid var(--green); border-radius:4px;
-    display:flex; flex-direction:column; gap:2px; }
-  #items .fin b { color:var(--green); font-size:14px; }
-  #items .fin span { color:var(--dim); font-size:12px; }
-  #items .back { display:inline-flex; align-items:center; gap:5px; margin:0 0 8px; padding:0; border:0;
-    background:none; color:var(--blue); cursor:pointer; font:inherit; font-size:12px; font-weight:700; }
-  #items .ans.go { cursor:pointer; }
-  #items .ans.go:hover p.hl { text-decoration:underline; }
-  #items .ans h3.hit { outline:2px solid var(--text); outline-offset:6px; border-radius:2px; }
-  #items .ans p.hl { font-size:21px; font-weight:700; }
-  #items .ans h3 { display:flex; gap:10px; align-items:center; font-size:16px; margin:18px 0 6px; }
-  #items .ans ul { margin:0 0 10px; padding-left:20px; }
-  #items code { background:var(--panel); padding:0 4px; border-radius:3px; }
-  @media (max-width:520px) {
-    #items { padding:10px 10px 14px; }
-    #items .item h1.q { font-size:20px; }
-  }
-  /* A touch screen, as my phone, and never a Mac, however narrow its pane.
-     Every control takes a fingertip: 44 by 44 points, Apple's minimum. */
-  @media (hover:none) and (pointer:coarse) {
-    header.top button { min-height:44px; }
-    nav.nums .tab { width:44px; padding:0; line-height:44px; }
-    #items .btn { height:44px; }
-    #items .vs .chip { min-width:44px; height:44px; line-height:44px; }
-    #items .col .nm, #items h3.sub.go { display:flex; align-items:center; min-height:44px; }
-    #items .finl, #items .back { min-height:44px; }
-    #items .paste { min-height:60px; }
-    #items .paste > button { min-height:44px; }
-    /* The team bar packs as tight as it goes: no label but the stage's,
-       no icon on a worded button. Auto-send's pills sit beside See the
-       whole plan, the drive's two under them. The stage's sit as the
-       driven band does: edge to edge, raised, under the plan's. */
-    header.top.fam.assistant { padding:6px 8px; }
-    header.top.fam.assistant .acts { display:block; }
-    #auto { order:1; }
-    .tb-row > .btn.ask { order:2; }
-    .tb-stage { margin:6px -8px -6px; padding:6px 8px; background:var(--raised);
-      border-top:1px solid var(--line); }
-    .tb-stage::before { content:none; }
-    header.top.fam .btn, header.top.fam .pills button { height:44px; min-width:44px; padding:0 10px; }
-    header.top.fam .btn.sq { width:44px; padding:0; }
-    header.top.fam .btn:not(.sq) .i { display:none; }
-    .tb-row .tb-label, .tb-row .cut { display:none; }
-  }
-</style>
-<script>
-// Auto-send's pills: the one pressed shows at once, and the switch is kept.
-function autoSend(b) {
-  document.querySelectorAll('#auto button').forEach(x => x.classList.toggle('on', x === b));
-  typePost({act: 'auto', id: b.dataset.v});
-}
-function copy(b) {
-  navigator.clipboard.writeText(b.previousElementSibling.textContent).then(() => {
-    b.textContent = 'Copied'; b.classList.add('done');
-    setTimeout(() => { b.textContent = 'Copy'; b.classList.remove('done'); }, 1500);
-  });
-}
-// A button that types. Never named typeIn: home hands my typing anywhere to
-// a page's window.typeIn, page.py's ANYWHERE, and this page takes none.
-// Once Type typed a line, the Send beside it presses Return alone, so the
-// line goes with any words I added, never typed twice.
-async function pressType(b, k, send, key, act) {
-  act = act || (key ? 'paste' : 'type');
-  const pair = b.parentElement, mine = act + '|' + k + '|' + (key || '');
-  const only = send && pair.dataset.typed === mine ? 'return' : '';
-  const said = await pressed(b, {act, id: k, key: key || '', send: send ? 'yes' : '', only}, !send);
-  if (said !== '') return;
-  if (send) delete pair.dataset.typed;
-  else pair.dataset.typed = mine;
-}
-// A folded line opens what it holds, and closes it again.
-function unfold(b) {
-  const open = b.getAttribute('aria-expanded') !== 'true';
-  b.setAttribute('aria-expanded', open);
-  b.nextElementSibling.classList.toggle('open', open);
-}
-// A session whose wave waits on me opens its Clarify tab, in 1100's home,
-// or its clarify page when this page stands alone.
-function toClarify(nn) {
-  if (parent !== window) parent.postMessage({ws: 1, open: 'clarify', nn}, '*');
-  else location.href = '/p/clarify/' + nn;
-}
-// A chip opens its mission, and brings its item into view.
-function jump(k, n) {
-  tab(k);
-  const h = document.querySelectorAll('#t-' + CSS.escape(k) + ' .ans h3')[n];
-  if (!h) return;
-  h.scrollIntoView({block: 'center'});
-  h.classList.add('hit');
-  setTimeout(() => h.classList.remove('hit'), 1600);
-}
-const opening = document.getElementById('items').dataset.first;
-// A fact shows once: while the active stage's own view shows, its heading
-// names the stage, and the team bar's name goes.
-(() => {
-  const bar = document.querySelector('.tb-stage'), shown = tab;
-  if (bar) tab = k => { shown(k); bar.classList.toggle('here', String(k) === bar.dataset.at); };
-})();
-// 1100's team number and Team tab bring the page back to its current stage.
-addEventListener('ws-home', () => tab(opening));
-// Words newly waiting for my send open their stage once, whatever view I
-// left. After that, a reload keeps the view I pick.
-const due = document.getElementById('items').dataset.due, shown = 'due:' + location.pathname;
-// A view the plan no longer holds, as a mission gone with a new plan, opens
-// the current stage instead of a blank page.
-const asked = decodeURIComponent(location.hash.slice(1));
-if (due && sessionStorage.getItem(shown) !== due) {
-  sessionStorage.setItem(shown, due);
-  tab(opening);
-} else tab(asked && document.getElementById('t-' + asked) ? asked : opening);
-// A reload keeps my place while the view stays the one I left: each fold I
-// opened, and main's scroll. A hidden frame has no scroll to keep, so it
-// keeps the last, and takes it once it shows.
-(() => {
-  const main = document.querySelector('main'), K = 'place:' + location.pathname;
-  addEventListener('beforeunload', () => {
-    if (innerWidth) sessionStorage.setItem(K, JSON.stringify({view: location.hash, top: main.scrollTop,
-      open: [...document.querySelectorAll('#items .item > .finl[aria-expanded="true"]')].map(b => b.parentNode.id)}));
-  });
-  let was = null;
-  try { was = JSON.parse(sessionStorage.getItem(K) || 'null'); } catch (e) {}
-  if (!was || was.view !== location.hash) return;
-  was.open.forEach(id => { const b = document.querySelector('#' + CSS.escape(id) + ' > .finl'); if (b) unfold(b); });
-  const scroll = () => {
-    if (!innerWidth) return;
-    removeEventListener('resize', scroll);
-    main.scrollTop = was.top;
-  };
-  addEventListener('resize', scroll);
-  scroll();
-})();
-</script>
-"""
+def files(nn: str) -> list:
+    """Every file whose write can move assistant NN's page: every session's
+    record and newest wave, Claude Code's records, the plan and the
+    assistant's own files, each mission's file, objectives, answer and the
+    wave it answers, and the transcript of each session the page reads."""
+    held = registry.entries()
+    own = registry.folder(nn)
+    out = registry.watched(list(held)) + [
+        os.path.join(own, plans.PLAN), os.path.join(own, AUTO), drive.path(nn), os.path.join(own, "launch.json"),
+        os.path.join(own, "answers")]
+    heard = {nn}
+    for s in planned(nn)[0].get("stages", []):
+        for m in s.get("missions", []):
+            m = {**m, **plans.found(m, held, nn)}
+            path = os.path.join(own, "answers", f"{m['id']}.md")
+            out.append(path)
+            if m.get("file"):
+                mission = m["file"] if os.path.isabs(m["file"]) else os.path.join(registry.ROOT, m["file"])
+                out += [mission, os.path.join(os.path.dirname(mission), f"{m['id']}-objectives.md")]
+            if not m.get("session"):
+                continue
+            text, found = read(path), []
+            answer(text, m["id"], found)
+            heard |= {m["session"], *(to for to, _ in found)}
+            answered = ANSWERED.match(text)
+            if answered:
+                out.append(os.path.join(registry.folder(m["session"]), registry.WAVES,
+                                        f"wave-{answered.group(1)}.md"))
+    return out + [(held.get(n) or {}).get("transcript", "") for n in sorted(heard) if (held.get(n) or {}).get("transcript")]
+
+
+def panes_open():
+    """Every open pane, as 1100 last read iTerm: a pane closing moves a
+    session's state, and no file carries it."""
+    found = panes.LAST[1]
+    return None if found is None else sorted(found)
+
+
+def programs() -> list:
+    """Every session whose program runs, as 1100 last read the process
+    list: a program ending with no stop leaves its record behind."""
+    return sorted(registry.claude_records())
+
+
+# The page's contract, lib/live.py's: its address, its draw, its files, its looks, its take.
+LIVE = live.Page(serve.address("assistant", r"(\d{2})"), drawn, files=files, looks=(panes_open, programs), take=take)
 
 
 def main() -> None:

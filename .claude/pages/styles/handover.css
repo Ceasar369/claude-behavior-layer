@@ -1,0 +1,25 @@
+  header.top .acts button { display:inline-flex; align-items:center; gap:6px; }
+  .hp h2 { margin:14px 0 6px; }
+  .hp h2:first-child { margin-top:0; }
+  .hp .gauge { display:flex; align-items:center; gap:10px; margin:22px 0 4px; }
+  .hp .meter { position:relative; flex:1; min-width:60px; height:10px; border-radius:5px;
+    background:var(--bg); border:1px solid var(--line); }
+  .hp .meter .fill { position:absolute; left:0; top:0; bottom:0; border-radius:4px; background:var(--dim); }
+  .hp .meter .fill.hot { background:var(--red); }
+  .hp .meter .tick { position:absolute; top:-5px; bottom:-5px; width:2px; margin-left:-1px; background:var(--text); }
+  .hp .meter .mark { position:absolute; bottom:calc(100% + 7px); transform:translateX(-50%); color:var(--dim);
+    font-size:11px; font-weight:700; line-height:1; }
+  .hp .pct { flex:none; width:44px; text-align:right; font-size:15px; font-weight:700;
+    font-variant-numeric:tabular-nums; }
+  .hp .pct.hot { color:var(--red); }
+  /* The successor is one row, never picked. */
+  .hp .row { margin:0; cursor:default; }
+  .hp .line { margin:0; }
+  .hp .say { margin:10px 0 0; color:var(--dim); font-size:12px; }
+  .hp .say code { color:var(--text); }
+  /* A touch screen, as my phone, and never a Mac, however narrow its pane.
+     Every control takes a fingertip: 44 by 44 points, Apple's minimum. */
+  @media (hover:none) and (pointer:coarse) {
+    header.top button { min-height:44px; }
+    .hp .pills button { min-width:44px; height:44px; }
+  }

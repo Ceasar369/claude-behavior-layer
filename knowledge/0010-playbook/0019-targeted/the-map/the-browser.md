@@ -33,6 +33,14 @@ The directory is the identity. The label is what Chrome shows.
 
 ## Sites, by profile
 
-> **Stand-in.** Each site I sign into, and the profile holding its login.
+> **Stand-in.** Each site I sign into, its address, and the profile holding its login.
 
 A site holds its login in its profile alone.
+
+An address covers its subdomains: `github.com` covers `gist.github.com`.
+
+## A command that opens a page
+
+A command opening a page, like `cloudflared`'s sign-in, goes through `.claude/tools/page-opener/open`, which every session finds before macOS's own `open`.
+
+It opens each address in its row's profile. An address with no row opens nothing, and the command is told to ask me.

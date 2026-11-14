@@ -36,10 +36,11 @@ import transcripts
 # own timeout, 7200000 ms, never cuts it short.
 LIMIT = 50 * 60
 
-# A driven session still idle this long after its last turn ends the
-# wait, once per idle stretch: a session a driver holds never sits idle
-# unseen, nor wakes it again and again. A followed one never does.
-IDLE = 5 * 60
+# A driven or followed session still idle this long after its last turn
+# ends the wait, once at each of these seconds. The gaps grow, and the last
+# ends them: a session never sits idle unseen, nor wakes its watcher for good.
+# A followed one stops once I write to its follower after its last turn.
+IDLE = (2 * 60, 5 * 60, 10 * 60, 30 * 60, 60 * 60, 120 * 60)
 
 LOG = "wakes.log"
 
@@ -89,6 +90,10 @@ def table() -> list:
 
 
 def _ps() -> list:
+    """Inside 1100, the process list read in the background, ports.PROCESSES',
+    so a draw starts no program. Anywhere else, one ps call."""
+    if ports.PROCESSES.running():
+        return [(pid, parent, command) for pid, (parent, _, _, command) in ports.PROCESSES.last().items()]
     return [(pid, parent, command) for pid, (parent, command) in ports.table().items()]
 
 

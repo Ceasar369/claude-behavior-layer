@@ -22,8 +22,9 @@ how it ended. Every other tool call folds, a run of them into one line,
 and unfolds to each call. Any call unfolds to what went in and what came
 back, read from disk only then; an agent sent to the background, to what
 went in alone. Its last words are its reply, drawn as a card, its move
-marked. A table in it, or in an agent's report, draws as a grid, scrolling
-sideways when wider than the card. A list keeps the numbers the pane
+marked, and its Copy at the top right takes them whole. A table in it,
+or in an agent's report, draws as a grid, scrolling sideways when wider
+than the card. A list keeps the numbers the pane
 shows, across the blank lines between its items. Its thinking and the
 harness's notices never show.
 
@@ -48,18 +49,14 @@ arrived, and splits nothing.
 While anything it sent to the background runs, the foot counts and names
 each one. Once nothing runs, or the session is gone, the count goes.
 
-It opens at its newest turn, and moves as the session writes, told the
-way 1100's other pages are, never on a clock. Told, it asks again for its
-last turn, what came after, and every turn still showing something
-running, and draws again only the pieces of them that moved, in place, so
-what I unfolded, highlighted, where I scrolled and what I typed all stay.
-A call I unfolded while it ran shows what came back once it ends. Framed
-by home, home tells it; alone, it asks /heard itself. 1100 hears a
-transcript only while a page asks about it.
+It opens at its newest turn, and moves as the session writes, never on a
+clock: only the pieces that moved are put in place, so what I unfolded,
+highlighted, where I scrolled and what I typed all stay. A call I
+unfolded while it ran shows what came back once it ends.
 
 The advisor's alone wears the Advise tab at its top left, opening every
-session to advise on, follow or drive: advisor-page.py's panel, its rows
-drawn again each time the page is told, its presses taken there.
+session to advise on, follow or drive: advisor-page.py's panel, its
+presses taken there.
 
 On my Mac and my phone alike, the box I type into sits pinned beneath
 it: a menu, two arrows, the text and Send. On my phone, the text takes
@@ -115,12 +112,14 @@ a No carries. 1100 reads all of it off the pane's screen, through iTerm,
 only when the session's state moves, and never while its tab is hidden:
 a hidden tab reads it once it shows.
 
-  transcript-page.py draw NN    the page, printed, as 1100 draws it
+On the contract, lib/live.py's, 1100 draws the whole page, drawn(), each
+time a file files() names moves, and puts in place only what changed: its
+script is .claude/pages/scripts/transcript.js. My unsent words wait on my device,
+under the session's id, never its number.
 
-sessions-dashboard.py routes its addresses. Imported, or run to draw.
+sessions-dashboard.py routes its addresses. Imported, never run.
 """
 
-import argparse
 import base64
 import glob
 import hashlib
@@ -129,11 +128,11 @@ import os
 import re
 import sys
 import time
-import urllib.parse
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 import iterm  # noqa: E402
+import live  # noqa: E402
 import page  # noqa: E402
 import panes  # noqa: E402
 import plans  # noqa: E402
@@ -159,16 +158,11 @@ WORDS = {"command": ("command", "commands"), "read": ("read", "reads"), "search"
 # What went in and what came back shows this much, then is cut.
 SHOWN = 20_000
 
-# A transcript a page asked about this recently is one 1100 hears.
-LATELY = 60
-
-# Each session a page asked about, and when, so 1100 hears only those.
-ASKED: dict = {}
-
 # An ended session's transcript, found by its title, and when. Finding it
 # reads every transcript's title, seconds of work under 1100's lock, so only
-# opening its page looks, once a minute at most.
+# opening its page looks, once a minute at most: LATELY, in seconds.
 ENDED: dict = {}
+LATELY = 60
 
 
 def located(nn: str, look: bool = False) -> str:
@@ -186,8 +180,8 @@ def located(nn: str, look: bool = False) -> str:
 
 
 def status(nn: str) -> str:
-    """Claude Code's word for session NN, read from its record alone, so a
-    key can carry it: busy, idle, shell or waiting, else nothing."""
+    """Claude Code's word for session NN, read from its record alone:
+    busy, idle, shell or waiting, else nothing."""
     sid = (registry.entries().get(nn) or {}).get("session_id")
     for base in registry.LIVE if sid else ():
         for f in glob.glob(os.path.expanduser(f"{base}/sessions/*.json")):
@@ -199,25 +193,6 @@ def status(nn: str) -> str:
             if d.get("sessionId") == sid:
                 return str(d.get("status", ""))
     return ""
-
-
-def key(nn: str) -> str:
-    """The page's key, without drawing it: its transcript's size and time,
-    and the session's state, so a turn ending tells the page even when the
-    transcript stays still. The advisor's adds its panel's. Asked, 1100
-    hears that transcript for a while."""
-    ASKED[nn] = time.time()
-    try:
-        st = os.stat(located(nn))
-    except OSError:
-        return ""
-    return f"{st.st_size}-{st.st_mtime_ns}-{status(nn)}" + (f"-{advisor.key(nn)}" if advisor.seat(nn) else "")
-
-
-def heard() -> list:
-    """Every transcript a page asked about lately: a write to one moves it."""
-    now = time.time()
-    return [p for nn, at in list(ASKED.items()) if now - at < LATELY and (p := located(nn))]
 
 
 # ---- a reply's words, as the turn's shape writes them ---------------------------
@@ -540,13 +515,15 @@ def filed(path: str):
 
 def reply(text: str, own: str = "") -> str:
     """Its last words, as a card. "Your move" and what follows is boxed.
-    `own` is block()'s."""
+    Its Copy takes the words whole, as the session wrote them. `own` is
+    block()'s."""
     found = blocks(text)
     at = next((i for i, (k, t) in enumerate(found) if k == "label" and MOVE.match(t)), -1)
     body = "".join(block(*b, own=own) for b in (found if at < 0 else found[:at]))
     move = "" if at < 0 else ('<div class="move"><div class="lab">Your move</div>'
                               + "".join(block(*b, own=own) for b in found[at + 1:]) + "</div>")
-    return f'<div class="reply">{body}{move}</div>'
+    whole = f'<div class="whole"><div class="txt" hidden>{esc(text)}</div>{page.CP}</div>'
+    return f'<div class="reply">{whole}{body}{move}</div>'
 
 
 def sign(how: str, to: str, words: str) -> str:
@@ -645,12 +622,11 @@ def number(n: int) -> str:
 
 
 def mark(html: str) -> str:
-    """A piece's mark: a hash of what it draws. A told page sends back the
-    marks it shows, and a piece whose mark still holds goes as its mark alone."""
+    """A piece's mark: a hash of what it draws, worn as its data-h."""
     return hashlib.sha1(html.encode()).hexdigest()[:8]
 
 
-def yours(i: int, n: int, t: dict, nn: str, have: list | None = None) -> str:
+def yours(i: int, n: int, t: dict, nn: str) -> str:
     text = re.sub(r"\[Image #\d+\]\s*", "", t["text"]).strip()
     cmd = COMMAND.match(text)
     said = (f'<div class="said"><code class="cmd">{esc(text)}</code></div>' if t.get("shell")
@@ -665,10 +641,7 @@ def yours(i: int, n: int, t: dict, nn: str, have: list | None = None) -> str:
     cls = f'turn you{"" if t["from"] else " mine"}'
     inner = (f'<header><b class="by">{esc(who)}</b><span class="at">{esc(t["at"])}</span>{number(n)}</header>'
              f'{said}{out}' + (f'<div class="pics">{pics}</div>' if pics else ""))
-    h = mark(cls + inner)
-    if have == [h]:
-        return f'<section class="{cls}" data-i="{i}" data-h="{h}" data-same></section>'
-    return f'<section class="{cls}" data-i="{i}" data-h="{h}">{inner}</section>'
+    return f'<section class="{cls}" data-i="{i}" data-h="{mark(cls + inner)}">{inner}</section>'
 
 
 def row(s: dict) -> str:
@@ -789,10 +762,9 @@ def stretch(steps: list, own: str = "") -> list:
     return out
 
 
-def theirs(i: int, n: int, t: dict, tag: str, have: list | None = None, own: str = "") -> str:
-    """The session's turn, each piece of its thread wearing its mark: a
-    piece `have` already shows, unmoved at its place, goes as its mark alone.
-    `own` is the session's number, block()'s."""
+def theirs(i: int, n: int, t: dict, tag: str, own: str = "") -> str:
+    """The session's turn, each piece of its thread wearing its mark. `own`
+    is the session's number, block()'s."""
     steps, out, cut = t["steps"], [], 0
     for k, s in enumerate(steps + [None]):
         if s is None or s["k"] == "wake":
@@ -800,26 +772,19 @@ def theirs(i: int, n: int, t: dict, tag: str, have: list | None = None, own: str
             out += [woke(s)] if s else []
             cut = k + 1
     took = (t["end"] - t["start"]).total_seconds() if t["start"] and t["end"] else 0
-    have = have or []
-    pieces = "".join(f'<div class="pc" data-h="{h}" data-same></div>' if j < len(have) and have[j] == h
-                     else f'<div class="pc" data-h="{h}">{p}</div>'
-                     for j, (h, p) in enumerate((mark(p), p) for p in out))
+    pieces = "".join(f'<div class="pc" data-h="{mark(p)}">{p}</div>' for p in out)
     return (f'<section class="turn ses" data-i="{i}"><header><b class="by">{esc(tag)}</b>'
             f'<span class="at">{esc(t["at"])}</span>'
             + (f'<span class="at">· worked {worked(took)}</span>' if took >= 1 else "")
             + f'{number(n)}</header><div class="thread">{pieces}</div></section>')
 
 
-def drawn(nn: str, th, first: int = 0, have: dict | None = None) -> str:
-    """Every turn from `first` on, and each turn `have` names, numbered as
-    the copy numbers it. A prompt I took back is skipped, as the pane no
-    longer shows it. `have` holds the marks a told page shows, by turn."""
-    tag, out, idle = tag_of(nn), [], status(nn) == "idle"
-    for i, t, n in th.numbered(idle):
-        if i >= first or i in (have or {}):
-            out.append(yours(i, n, t, nn, (have or {}).get(i)) if t["who"] == "you"
-                       else theirs(i, n, t, tag, (have or {}).get(i), nn))
-    return "".join(out)
+def turned(nn: str, th) -> str:
+    """Every turn, numbered as the copy numbers it. A prompt I took back is
+    skipped, as the pane no longer shows it."""
+    tag, idle = tag_of(nn), status(nn) == "idle"
+    return "".join(yours(i, n, t, nn) if t["who"] == "you" else theirs(i, n, t, tag, nn)
+                   for i, t, n in th.numbered(idle))
 
 
 def queued(th) -> str:
@@ -865,32 +830,6 @@ COMMANDS = [("clear", "Start a new conversation with empty context."),
             ("compact", "Free up context by summarizing the conversation so far."),
             ("context", "Visualize current context usage as a colored grid.")]
 
-def render(nn: str) -> str:
-    path = located(nn, look=True)
-    th = transcripts.thread(path) if path else None
-    turns = drawn(nn, th) if th else ""
-    empty = f"Session {nn} has no transcript." if not path else "Nothing said yet."
-    now = state(nn)
-    menu = [(name, re.split(r"(?<=\.)\s", said, maxsplit=1)[0]) for name, said, _ in skills_page.heads()] + COMMANDS
-    # A hand-off's Send into this session wears its colour: steers, gold.
-    steers = " data-steers" if page.into(nn) == "btn ask" else ""
-    # The advisor's turns sit under its panel.
-    adv = advisor.seat(nn)
-    body = (STYLE + f'<div class="tx" id="tx" data-state="{esc(now)}" data-claude="{esc(status(nn))}"'
-            f' data-t="{esc(os.path.basename(path))}"{steers}>'
-            + (f'<div class="tp">{advisor.panel(nn)}' if adv else "") + '<div class="scroll" id="scroll">'
-            f'<div id="turns">{turns}</div>' + running(th, nn, now)
-            + (queued(th) if th else '<div id="queued"></div>') + f'{page.blank(empty)}</div>'
-            + ("</div>" if adv else "")
-            + BOX.format(nn=nn, clip=page.icon("clip", 16), play=page.icon("play", 16), more=page.icon("more", 20),
-                         up=page.icon("up", 20), down=page.icon("down", 20), meter=meter(nn)) + "</div>"
-            + f'<div class="viewer" id="viewer" hidden><img alt=""><button class="b0 shut" aria-label="Close">'
-            f'{page.icon("close", 20)}</button></div>' + page.ANYWHERE + page.COPY + page.TYPING + HAND
-            + SCRIPT.replace("%BASE%", json.dumps(serve.address("transcript", nn)))
-            .replace("%ICONS%", json.dumps({"file": page.icon("read", 18), "x": page.icon("close", 16)}))
-            .replace("%SKILLS%", json.dumps(menu).replace("</", "<\\/")) + page.watch(key(nn)))
-    return page.render(f"{nn}-transcript", [("", body)], refresh=0)
-
 
 def meter(nn: str) -> str:
     """What its status line last printed, atop the menu, whole. Nothing
@@ -901,27 +840,6 @@ def meter(nn: str) -> str:
     except OSError:
         lines = []
     return '<div class="meter" id="meter">' + "".join(f"<div>{esc(line)}</div>" for line in lines if line) + "</div>"
-
-
-def tail(nn: str, first: int, have: dict) -> str:
-    """The turns from `first` on, and each `have` names, what still runs,
-    what waits queued, and the session's state: what a told page draws
-    again. The advisor's adds its panel's rows."""
-    path, now = located(nn), state(nn)
-    th = transcripts.thread(path)
-    return (f'<div id="tail" data-state="{esc(now)}" data-claude="{esc(status(nn))}"'
-            f' data-t="{esc(os.path.basename(path))}">{drawn(nn, th, first, have)}</div>'
-            f'{running(th, nn, now)}{queued(th)}{meter(nn)}' + (advisor.rows(nn) if advisor.seat(nn) else ""))
-
-
-def marks(asked: str) -> dict:
-    """The marks a told page shows, by turn, as it asks: 4:a1b2c3d4~9:e5f6a7b8.c9d0e1f2."""
-    out = {}
-    for part in asked.split("~"):
-        i, _, got = part.partition(":")
-        if i.isdigit():
-            out[int(i)] = got.split(".") if got else []
-    return out
 
 
 def cut(text: str) -> str:
@@ -957,8 +875,8 @@ def detail(nn: str, uid: str) -> str:
     pics = [(step["out"], k, *transcripts.dimensions(s))
             for k, s in enumerate(transcripts.images(transcripts.record(path, step["out"])))] if step["pics"] else []
     said = back if back else "A picture." if pics else "Still running." if back is None else "Nothing."
-    # A call still running is read again by an open page each time it is
-    # told, never kept: data-live.
+    # A call still running is never kept: data-live. transcript.js reads it
+    # again, while unfolded, each time 1100 draws the page.
     live = '<i data-live hidden></i>' if back is None and not pics else ""
     return ((part("What went in", sent) if sent else "") + part("What came back", said) + live
             + (f'<div class="pics small">{"".join(thumb(nn, *p) for p in pics)}</div>' if pics else ""))
@@ -978,15 +896,9 @@ def picture(nn: str, at: str, k: str):
 
 
 def answer(nn: str, rest: str, query: str):
-    """The page, or one of its parts: /tail, /pane, /step/ID, /pic/AT/K."""
-    if not rest:
-        return render(nn)
+    """One of the page's parts: /pane, /step/ID, /pic/AT/K."""
     if rest == "/pane":
         return offer(nn)
-    if rest == "/tail":
-        q = urllib.parse.parse_qs(query)
-        first = (q.get("from") or ["0"])[0]
-        return tail(nn, int(first) if first.isdigit() else 0, marks((q.get("have") or [""])[0]))
     if m := re.fullmatch(r"/step/([\w-]+)", rest):
         return detail(nn, m.group(1))
     if m := re.fullmatch(r"/pic/(\d+)/(\d+)", rest):
@@ -1170,12 +1082,15 @@ def take(nn: str, form: dict) -> str:
     if get("act") == "close":
         return shut(nn)
     if get("act") != "send":
-        return ""
+        return f"This page takes no {get('act') or 'unnamed'} press. Nothing was typed."
     text, files = get("text").strip(), list(zip(form.get("name", []), form.get("data", [])))
     if not text and not files:
-        return ""
-    # A dialog waiting takes my words into its own field.
+        return "There were no words or files to send. Nothing was typed."
+    # A dialog waiting takes my words into its own field. A sender that
+    # cannot see it, as my app chat, says plain=yes, and is refused instead.
     asked = status(nn) == "waiting"
+    if asked and get("plain") == "yes":
+        return f"Session {nn} has a question open; answer it first."
     why, _, pane = page.typable(nn, ("waiting",) if asked else ("idle", "shell", "busy"))
     if why:
         return why
@@ -1223,7 +1138,7 @@ def answered(nn: str, n: str) -> str:
     """A dialog's choice, its number typed into the pane, as my keyboard
     would. Its dialog already closed, nothing is typed."""
     if not re.fullmatch(r"[1-9]", n):
-        return ""
+        return f"{n or 'A blank'} is not a choice from 1 to 9. Nothing was typed."
     if status(nn) != "waiting":
         return f"No dialog waits in session {nn}. Nothing was typed."
     why, _, pane = page.typable(nn, ("waiting",))
@@ -1247,795 +1162,75 @@ BOX = """<div class="box" id="box"><div class="menu" id="menu" hidden></div><div
 
 # ---- the look: page.py's tokens, then the transcript's own -----------------------------
 
-STYLE = """<style>
-  body > main { padding:0; overflow:hidden; display:flex; flex-direction:column; }
-  .b0 { font:inherit; color:inherit; background:none; border:0; margin:0; padding:0; border-radius:4px;
-    cursor:pointer; text-align:left; touch-action:manipulation; }
-  .b0:focus-visible { outline:2px solid var(--blue); outline-offset:1px; }
-
-  /* The transcript: it scrolls as one, the box beneath it stays (rule 18). */
-  .tx { flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; }
-  .tx .scroll { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:12px 14px 18px; }
-  .tx .empty { min-height:100%; }
-  #turns:not(:empty) ~ .empty, #queued:not(:empty) ~ .empty { display:none; }
-
-  /* A turn. Its edge says who: white, mine; grey, the session's. Its newest
-     turn, while nothing follows it, wears its state: green working, red
-     stopped, as on 1100's rail. */
-  .turn { margin:0 0 14px; padding:8px 12px 10px; border-left:3px solid var(--e); border-radius:2px 6px 6px 2px; }
-  #turns > .turn:last-child, #queued > .turn:last-child { margin-bottom:0; }
-  #turns:not(:empty) ~ #running:not(:empty), #turns:not(:empty) ~ #queued:not(:empty) { margin-top:14px; }
-  .turn.you { --e:#fff; background:var(--panel); }
-  .turn.ses { --e:var(--grey); padding-right:0; }
-  .tx[data-state="working"] #turns > .turn.ses:last-child { --e:var(--green); }
-  .tx[data-state="idle"] #turns > .turn.ses:last-child,
-  .tx[data-state="waiting"] #turns > .turn.ses:last-child { --e:var(--red); }
-  .turn > header { display:flex; align-items:baseline; gap:8px; min-width:0; margin-bottom:6px; white-space:nowrap; }
-  .turn > header .by { font-size:13px; color:var(--e); }
-  .turn > header .at { color:var(--dim); font-size:12px; }
-  .turn > header .n { margin-left:auto; color:var(--dim); font-size:12px; }
-  .turn.ses > header .n { padding-right:12px; }
-  .said { font-size:14px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
-  .said .cmd { padding:1px 6px; border-radius:4px; background:var(--raised); font-weight:700; }
-  /* What one of Claude Code's own commands answered, grey, beneath it. */
-  .out { margin-top:6px; padding:1px 0 1px 12px; border-left:1px solid var(--grey); color:var(--dim); }
-  .out pre { margin:0; font:inherit; font-size:12px; line-height:1.4; white-space:pre-wrap; overflow-wrap:anywhere; }
-  .pics { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
-  .pic { display:block; height:150px; overflow:hidden; border:1px solid var(--line); border-radius:6px;
-    background:var(--bg); }
-  .pic img { display:block; height:100%; width:auto; }
-  .pics.small .pic { height:96px; }
-
-  /* What the session said and did, in order. Each piece wears its mark on
-     a box that takes no room of its own. */
-  .thread { display:flex; flex-direction:column; }
-  .pc { display:contents; }
-  .nt { position:relative; padding:3px 12px 3px 16px; color:var(--dim); font-size:13px; line-height:1.5;
-    overflow-wrap:anywhere; }
-  .nt::before { content:""; position:absolute; left:4px; top:11px; width:5px; height:5px; border-radius:50%;
-    background:var(--blue); }
-  .nt code { padding:0 3px; border-radius:3px; background:var(--raised); font-size:.93em; }
-  .nt a { color:var(--blue); }
-  div.nt h3 { margin:0; font-size:14px; }
-  div.nt > :last-child { margin-bottom:0; }
-  .row { display:flex; align-items:center; gap:8px; width:100%; min-width:0; min-height:26px;
-    padding:2px 12px 2px 0; font-size:12.5px; white-space:nowrap; }
-  .row:hover { background:var(--hover); }
-  .row .what { flex:none; font-weight:700; }
-  .row .rest { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; color:var(--dim); }
-  .row .tail { flex:none; color:var(--dim); font-size:11px; }
-  .row.did { color:var(--text); }
-  .row.did svg.i { color:var(--blue); }
-  .row.call, .row.fold { color:var(--dim); }
-  .row .bad { flex:none; color:var(--red); font-size:11px; font-weight:700; }
-  /* A command and an agent: a line of its own, its kind named and tinted,
-     and what came back beneath it, as my terminal shows it. */
-  .row.loud { color:var(--text); }
-  .row.loud.command svg.i { color:var(--blue); }
-  .row.loud.agent svg.i { color:var(--gold); }
-  .peek { margin:0 12px 6px 7px; padding:1px 0 1px 15px; border-left:1px solid var(--grey); color:var(--dim);
-    font-size:12px; line-height:1.4; }
-  .peek pre { margin:0; font:inherit; white-space:pre-wrap; overflow-wrap:anywhere; }
-  .peek .more { display:block; font-size:11px; }
-  .peek.bad { color:var(--red); }
-  .peek.run { display:flex; align-items:center; gap:7px; color:var(--green); }
-  .peek.run i { flex:none; width:7px; height:7px; border-radius:50%; background:currentColor;
-    animation:beat 1.4s ease-in-out infinite; }
-  @keyframes beat { 50% { opacity:.25; } }
-  /* Unfolded, the whole of what came back replaces its first lines. */
-  .detail:not([hidden]) + .peek { display:none; }
-  .row.fold[aria-expanded="true"] .shut, .row.fold[aria-expanded="false"] .open { display:none; }
-  .sub { margin-left:7px; padding-left:10px; border-left:1px dashed var(--grey); }
-  .sub[hidden], .detail[hidden] { display:none; }
-  .detail { margin:2px 12px 8px 23px; display:flex; flex-direction:column; gap:4px; min-width:0; }
-  .detail .k { margin-top:4px; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--dim); font-weight:700; }
-  .detail pre { margin:0; padding:8px 10px; background:var(--panel); border:1px solid var(--line);
-    border-radius:5px; font:inherit; font-size:12px; line-height:1.4; white-space:pre-wrap; overflow-wrap:anywhere; }
-  .detail .reply { margin:2px 0 0; }
-
-  /* A wake: a line across the turn, its time and what woke it, then what
-     happened. Its words, when it brought some, unfold beneath. */
-  .wake { display:flex; align-items:center; gap:7px; min-width:0; margin:16px 12px 2px 0; color:var(--dim);
-    font-size:12px; white-space:nowrap; }
-  .wake::before { content:""; flex:0 0 10px; height:1px; background:var(--grey); }
-  .wake::after { content:""; flex:1 0 16px; height:1px; background:var(--grey); }
-  .wake b { flex:none; color:var(--text); }
-  .wake span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
-  .row.wk { color:var(--text); }
-  div.row.wk:hover { background:none; }
-  .row.wk.agent svg.i:first-child { color:var(--gold); }
-  .row.wk.command svg.i:first-child { color:var(--blue); }
-  .row.wk[aria-expanded="true"] .shut, .row.wk[aria-expanded="false"] .open { display:none; }
-  .wake + .row.wk + .detail:not([hidden]) { margin-bottom:10px; }
-
-  /* Everything still running, counted and named, at the transcript's foot. */
-  .running { padding:8px 12px 9px; background:var(--panel); border-left:3px solid var(--green);
-    border-radius:2px 6px 6px 2px; }
-  .running .rh { display:flex; align-items:center; gap:7px; color:var(--green); font-size:13px; font-weight:700; }
-  .running .rh i { flex:none; width:7px; height:7px; border-radius:50%; background:currentColor;
-    animation:beat 1.4s ease-in-out infinite; }
-  .running .rn { display:flex; align-items:center; gap:7px; min-width:0; margin-top:4px; padding-left:14px;
-    color:var(--dim); font-size:12.5px; white-space:nowrap; }
-  .running .rn svg.i { color:var(--gold); }
-  .running .rn span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
-
-  /* Its reply: a card, in the turn's own shape. */
-  .reply { margin:6px 12px 2px 0; padding:12px 14px; background:var(--panel); border:1px solid var(--line);
-    border-radius:6px; font-size:14px; line-height:1.55; overflow-wrap:anywhere; }
-  :is(.reply, .nt) h3 { margin:0 0 8px; font-size:17px; line-height:1.3; }
-  :is(.reply, .nt) p { margin:0 0 8px; }
-  .reply .lab { margin:14px 0 6px; font-size:11px; letter-spacing:.09em; text-transform:uppercase;
-    color:var(--dim); font-weight:700; }
-  :is(.reply, .nt) ul, :is(.reply, .nt) ol { margin:0 0 8px; padding-left:22px; }
-  :is(.reply, .nt) li { margin:0 0 3px; }
-  :is(.reply, .nt) li > ul, :is(.reply, .nt) li > ol { margin:3px 0 0; }
-  :is(.reply, .nt) li > :last-child, :is(.reply, .nt) blockquote > :last-child { margin-bottom:0; }
-  :is(.reply, .nt) blockquote { margin:0 0 8px; padding:0 0 0 12px; border-left:3px solid var(--line); color:var(--dim); }
-  :is(.reply, .nt) hr { margin:10px 0; border:0; border-top:1px solid var(--line); }
-  :is(.reply, .nt) .fence { position:relative; margin:4px 0 10px; }
-  :is(.reply, .nt) pre { margin:0; padding:8px 10px; background:var(--bg); border:1px solid var(--line);
-    border-radius:5px; font:inherit; font-size:12px; line-height:1.4; white-space:pre; overflow-x:auto;
-    overflow-wrap:normal; }
-  :is(.reply, .nt) .fence.more::after { content:""; position:absolute; top:1px; right:1px; bottom:1px; width:36px;
-    border-radius:0 5px 5px 0; background:linear-gradient(to right, rgba(15,17,21,0), var(--bg) 85%);
-    pointer-events:none; }
-  /* A table: a grid, as wide as its widest cells. Wider than its card, it
-     scrolls sideways and fades where more waits, as a fence does. */
-  :is(.reply, .nt) .grid { display:inline-block; max-width:100%; vertical-align:top; overflow-x:auto; background:var(--bg);
-    border:1px solid var(--line); border-radius:5px; }
-  :is(.reply, .nt) table { border-collapse:collapse; font-size:12.5px; line-height:1.4; }
-  :is(.reply, .nt) th, :is(.reply, .nt) td { padding:5px 10px; text-align:left; vertical-align:top; white-space:nowrap;
-    border-bottom:1px solid var(--line); }
-  :is(.reply, .nt) th + th, :is(.reply, .nt) td + td { border-left:1px solid var(--line); }
-  :is(.reply, .nt) th { color:var(--dim); font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
-  :is(.reply, .nt) tbody tr:last-child td { border-bottom:0; }
-  :is(.reply, .nt) code { padding:0 3px; border-radius:3px; background:var(--raised); font-size:.93em; }
-  :is(.reply, .nt) a { color:var(--blue); }
-  .reply > :last-child, .reply .move > :last-child { margin-bottom:0; }
-  .copy { position:relative; margin:6px 0 10px; padding:10px 96px 10px 12px; background:var(--bg);
-    border-left:3px solid var(--blue); border-radius:0 5px 5px 0; }
-  .copy .txt { white-space:pre-wrap; overflow-wrap:anywhere; }
-  .copy > .cp { position:absolute; top:6px; right:6px; }
-  /* A paste: Copy, Type and Send to 12 above its words, on the right, and
-     the words take the whole width. */
-  .copy.to { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; padding:6px 6px 10px 12px; }
-  .copy.to .txt { order:1; flex-basis:100%; padding-right:6px; }
-  /* A hand-off inside a paragraph: its group under it, on the right. */
-  .hand { display:flex; justify-content:flex-end; margin:4px 0 10px; }
-  .move { margin-top:14px; padding:10px 12px; background:var(--bg); border:1px solid var(--grey); border-radius:6px; }
-  .move .lab { margin:0 0 4px; color:var(--text); }
-  .move p { font-weight:700; }
-
-  /* A picture, opened over the page. A tap anywhere closes it. */
-  .viewer { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
-    padding:12px; background:#08090c; }
-  .viewer[hidden] { display:none; }
-  .viewer img { max-width:100%; max-height:100%; object-fit:contain; border-radius:6px; }
-  .viewer .shut { position:absolute; top:8px; right:8px; display:inline-flex; align-items:center;
-    justify-content:center; width:32px; height:32px; background:var(--raised); border-radius:6px; }
-
-  /* The box I type into, pinned beneath the transcript, on my Mac and my
-     phone alike. */
-  .box { position:relative; flex:none; display:flex; flex-direction:column; gap:6px;
-    padding:6px 8px calc(6px + var(--ib, 0px)); background:var(--panel); border-top:1px solid var(--line); }
-  .box .line { display:flex; align-items:flex-end; gap:6px; }
-  .box .more, .box .jump { flex:none; display:inline-flex; align-items:center; justify-content:center; width:36px;
-    height:36px; color:var(--text); border:1px solid var(--line); border-radius:6px; }
-  .box .jump:disabled { opacity:.35; cursor:default; }
-  .box textarea { flex:1; min-width:0; height:36px; min-height:36px; resize:none; font:inherit;
-    line-height:1.4; padding:7px 10px; border-radius:6px; background:var(--bg); color:var(--text);
-    border:2px solid var(--line); }
-  .box textarea:focus { outline:none; border-color:var(--blue); }
-  .box textarea::placeholder { color:var(--dim); }
-  .box .send { flex:none; height:36px; min-width:76px; padding:0 18px; font-size:14px; font-weight:700;
-    text-align:center; border-radius:6px; position:relative;
-    background:#fff; color:#000; --spin:#000; }
-  .box .send:disabled { background:var(--grey); color:var(--text); opacity:.6; cursor:default; }
-  /* While it types, its word gives way to a spinner. */
-  .box .send.busy:disabled { background:#fff; color:transparent; opacity:1; cursor:progress; }
-  .box .send.stop.busy:disabled { background:none; --spin:var(--red); }
-  .box .send.busy::after { content:""; position:absolute; inset:0; margin:auto; width:16px; height:16px;
-    border-radius:50%; border:2px solid transparent; border-top-color:var(--spin);
-    border-right-color:var(--spin); animation:spin .7s linear infinite; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  .box .send.done { background:var(--green); color:var(--bg); opacity:1; }
-  .box .send.gone { background:var(--red); color:var(--bg); opacity:1; }
-  .box .why { margin:0; color:var(--red); font-size:13px; }
-  .box .why[hidden], .box .att[hidden] { display:none; }
-  .box .att { display:flex; gap:6px; overflow-x:auto; }
-  .box .chipf { flex:none; display:inline-flex; align-items:center; gap:6px; max-width:220px; height:34px;
-    padding-left:6px; background:var(--bg); border:1px solid var(--line); border-radius:6px; }
-  .box .chipf img { width:24px; height:24px; object-fit:cover; border-radius:4px; }
-  .box .chipf .fi { display:inline-flex; color:var(--dim); }
-  .box .chipf .nm { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
-  .box .chipf .x { flex:none; display:inline-flex; align-items:center; justify-content:center; width:32px;
-    height:32px; color:var(--dim); }
-  /* The menu beside the text, opened above the line: what its status line
-     last printed, its mode, a tap moving it on, then the paperclip. As wide
-     as its longest line, so each status line keeps to one where it fits. */
-  .box .more[aria-expanded="true"] { border-color:var(--blue); }
-  .box .pop { position:absolute; left:8px; bottom:calc(100% + 6px); z-index:5; display:flex; flex-direction:column;
-    gap:2px; width:max-content; max-width:calc(100% - 16px); padding:6px; background:var(--panel); border:1px solid var(--line);
-    border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.45); }
-  .box .pop[hidden], .box .item[hidden] { display:none; }
-  .box .meter { margin-bottom:4px; padding:6px 8px 8px; border-bottom:1px solid var(--line); color:var(--dim);
-    font-size:13px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
-  .box .meter:empty { display:none; }
-  .box .item { display:flex; align-items:center; gap:8px; min-height:34px; padding:4px 8px; border-radius:6px;
-    font-size:13px; }
-  .box .item:hover { background:var(--hover); }
-  .box .item b { margin-left:auto; color:var(--dim); font-weight:400; }
-  /* Stop: Send, while the session works and the box is empty. */
-  .box .send.stop { background:none; color:var(--red); box-shadow:inset 0 0 0 1px var(--red); }
-
-  /* Every skill, under a / opening the box, narrowed as I type. Heights
-     share the glass by page.py's --vh, which holds at any zoom of home's. */
-  .box .menu { max-height:min(260px, calc(40 * var(--vh, 1vh))); overflow-y:auto; background:var(--bg); border:1px solid var(--line);
-    border-radius:6px; }
-  .box .menu[hidden] { display:none; }
-  .box .sk { display:flex; align-items:baseline; gap:10px; width:100%; min-width:0; padding:6px 10px;
-    white-space:nowrap; font-size:13px; }
-  .box .sk.on, .box .sk:hover { background:var(--hover); }
-  .box .sk b { flex:none; }
-  .box .sk span { min-width:0; overflow:hidden; text-overflow:ellipsis; color:var(--dim); font-size:12px; }
-
-  /* What only the pane shows: the reply it suggests, while the box is
-     empty, or a dialog waiting, each choice a button. */
-  #offer:empty, .box.typed .hint { display:none; }
-  .box .hint { display:flex; align-items:center; gap:8px; width:100%; min-width:0; min-height:32px;
-    padding:4px 10px; border:1px dashed var(--grey); border-radius:6px; color:var(--dim); font-size:13px; }
-  .box .hint span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .box .hint kbd { flex:none; padding:0 5px; border:1px solid var(--line); border-radius:4px; font:inherit;
-    font-size:11px; }
-  .box .ask { display:flex; flex-direction:column; gap:4px; padding:8px 10px; background:var(--bg);
-    border-left:3px solid var(--red); border-radius:2px 6px 6px 2px; }
-  .box .ask { max-height:calc(60 * var(--vh, 1vh)); overflow-y:auto; }
-  .box .ask .ctx { flex:none; max-height:calc(22 * var(--vh, 1vh)); overflow-y:auto; padding:6px 8px; background:var(--panel);
-    border-radius:4px; color:var(--dim); font-size:12px; line-height:1.4; white-space:pre-wrap; overflow-wrap:anywhere; }
-  .box .ask .q { margin:2px 0 4px; font-size:13px; font-weight:700; line-height:1.45; overflow-wrap:anywhere; }
-  .box .ch { display:flex; align-items:baseline; gap:8px; min-height:32px; padding:5px 10px; font-size:13px;
-    border:1px solid var(--line); border-radius:6px; }
-  .box .ch:hover { background:var(--hover); }
-  .box .ch b { flex:none; color:var(--dim); }
-  .box .ch span { min-width:0; overflow-wrap:anywhere; }
-  .box .ch small { display:block; color:var(--dim); font-size:12px; }
-
-  /* My phone, and never a Mac, however narrow its pane. Every control takes
-     a fingertip: 44 by 44, Apple's least touch size (rule 20). The text is
-     16px, so a tap into it zooms nothing. The home bar's band stays clear. */
-  @media (hover:none) and (pointer:coarse) {
-    .tx .scroll { padding:10px 10px 14px; }
-    .row { min-height:44px; }
-    .pic { height:120px; }
-    .reply { padding:10px 12px; }
-    .copy { min-height:56px; }
-    .copy .btn, .hand .btn { height:44px; }
-    .viewer .shut { width:44px; height:44px; }
-    .box .more, .box .jump { width:48px; height:48px; }
-    .box .item, .box .meter { font-size:15px; }
-    .box .item { min-height:44px; }
-    /* The text takes the whole width, two lines tall. The menu, the arrows
-       and Send wrap onto a line beneath it, Send at its end. */
-    .box .line { flex-wrap:wrap; }
-    .box textarea { order:-1; flex-basis:100%; height:72px; min-height:72px; font-size:16px; padding:11px 12px; }
-    .box .send { margin-left:auto; height:48px; min-width:84px; padding:0 20px; font-size:16px; }
-    .box .chipf { height:46px; }
-    .box .chipf img { width:32px; height:32px; }
-    .box .chipf .x { width:44px; height:44px; }
-    .box .sk { min-height:44px; align-items:center; font-size:15px; }
-    .box .hint, .box .ch { min-height:44px; font-size:15px; }
-    .box .hint kbd { display:none; }
-  }
-</style>
-"""
-
-# A hand-off's button, pressed: Type leaves
-# its words in its session's prompt, and its Send then presses Return
-# alone. Copy is the page's own click, copied().
-HAND = """<script>
-document.addEventListener('click', async e => {
-  const b = e.target.closest('.group[data-hand] > button:not(.cp)');
-  if (!b || b.disabled) return;
-  const pair = b.parentElement, send = !!b.dataset.send;
-  const only = send && pair.dataset.typed ? 'return' : '';
-  if (await pressed(b, {act: 'hand', key: pair.dataset.hand, send: send ? 'yes' : '', only}, !send) !== '') return;
-  if (send) delete pair.dataset.typed;
-  else pair.dataset.typed = '1';
-});
-</script>
-"""
-
-SCRIPT = r"""<script>
-(() => {
-  const BASE = %BASE%, ICONS = %ICONS%, SKILLS = %SKILLS%;
-  const $ = id => document.getElementById(id);
-  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-  const nap = ms => new Promise(f => setTimeout(f, ms));
-  const tx = $('tx'), scroll = $('scroll'), turns = $('turns');
-
-  // It opens at its newest turn, and stays there while I read there.
-  const pinned = () => scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 48;
-  const bottom = () => { scroll.scrollTop = scroll.scrollHeight; };
-  let stuck = true, share = 0;
-  scroll.addEventListener('scroll', () => {
-    stuck = pinned();
-    share = scroll.scrollTop / (scroll.scrollHeight || 1);
-  }, {passive: true});
-  new ResizeObserver(() => { if (stuck) bottom(); fences(); }).observe(scroll);
-  // Home's zoom reflows the transcript under the same scrollTop, and the
-  // scroll it causes would unpin it. Read at its newest turn, it stays
-  // there; read anywhere else, it keeps its share of the way down.
-  addEventListener('ws-zoom', () => {
-    const was = stuck, at = share;
-    requestAnimationFrame(() => {
-      if (was) bottom();
-      else scroll.scrollTop = at * scroll.scrollHeight;
-      stuck = was;
-    });
-  });
-
-  // A fence or a table wider than its card scrolls sideways, and fades where
-  // more waits.
-  const WIDE = '.fence pre, .fence .grid';
-  const fade = p => p.parentNode.classList.toggle('more', p.scrollLeft + p.clientWidth < p.scrollWidth - 2);
-  const fences = () => document.querySelectorAll(WIDE).forEach(fade);
-  document.addEventListener('scroll', e => { if (e.target.matches && e.target.matches(WIDE)) fade(e.target); }, true);
-
-  // What I unfolded, by id, so a turn drawn again keeps it open. A detail
-  // is read from disk once, bar a call still running: data-live. An open
-  // one is read again each time the page is told, until its call ends.
-  const open = new Set(), got = {};
-  async function unfold(b, on) {
-    const id = b.dataset.id, next = b.nextElementSibling;
-    const box = next && next.matches('.detail, .sub') ? next : null;
-    b.setAttribute('aria-expanded', on);
-    if (on) open.add(id); else open.delete(id);
-    if (box) box.hidden = !on;
-    if (!on || !box || !box.classList.contains('detail') || box.dataset.got) return;
-    await load(id, box);
-  }
-  async function load(id, box) {
-    box.dataset.got = '1';
-    try {
-      let html = got[id];
-      if (html === undefined) {
-        const r = await fetch(BASE + '/step/' + encodeURIComponent(id));
-        if (!r.ok) throw r;
-        html = await r.text();
-      }
-      box.innerHTML = html;
-      if (!box.querySelector('[data-live]')) got[id] = html;
-      fences();
-    } catch (e) { delete box.dataset.got; }
-  }
-  const relive = () => turns.querySelectorAll('.detail:not([hidden])').forEach(box => {
-    const b = box.previousElementSibling;
-    if (b && box.querySelector('[data-live]')) load(b.dataset.id, box);
-  });
-  function reopen() {
-    for (const id of open) {
-      const b = turns.querySelector(`.row[data-id="${CSS.escape(id)}"]`);
-      if (b && b.getAttribute('aria-expanded') !== 'true') unfold(b, true);
-    }
-  }
-
-  // A picture opens over the page; a tap anywhere closes it.
-  const viewer = $('viewer'), big = viewer.querySelector('img');
-  viewer.onclick = () => { viewer.hidden = true; big.removeAttribute('src'); };
-  scroll.addEventListener('click', e => {
-    const p = e.target.closest('.pic'), c = e.target.closest('.cp'), b = e.target.closest('button.row');
-    if (p) { big.src = p.dataset.src; viewer.hidden = false; }
-    else if (c) copied(c);
-    else if (b) unfold(b, b.getAttribute('aria-expanded') !== 'true');
-  });
-
-  // Told the transcript moved: its last turn, what came after, and every
-  // turn still showing something running are asked again, each with the
-  // marks of the pieces it shows. A piece unmoved comes back as its mark
-  // alone, and stays as it is, so what I highlighted, unfolded or scrolled
-  // to stays too. Told again meanwhile, it asks once more after. A new
-  // transcript, as /clear starts, is drawn whole.
-  const marks = s => s.classList.contains('ses')
-    ? [...s.querySelectorAll(':scope > .thread > .pc')].map(p => p.dataset.h) : [s.dataset.h];
-  function patch(old, s) {
-    if ('same' in s.dataset) return;
-    if (!old.classList.contains('ses') || !s.classList.contains('ses')) return old.replaceWith(s);
-    const oh = old.querySelector(':scope > header'), nh = s.querySelector(':scope > header');
-    if (oh.outerHTML !== nh.outerHTML) oh.replaceWith(nh);
-    const ot = old.querySelector(':scope > .thread'), was = [...ot.children];
-    const now = [...s.querySelector(':scope > .thread').children];
-    now.forEach((p, j) => {
-      if ('same' in p.dataset && was[j]) return;
-      if (was[j]) was[j].replaceWith(p); else ot.append(p);
-    });
-    was.slice(now.length).forEach(p => p.remove());
-  }
-  let drawing = false, again = false, whole = false;
-  async function told(now) {
-    const w = $('watch');
-    if (w && now !== undefined) w.dataset.key = now;
-    if (drawing) { again = true; return; }
-    drawing = true;
-    try {
-      do {
-        again = false;
-        const last = whole ? null : turns.lastElementChild, from = last ? +last.dataset.i : 0;
-        const asked = last ? [...new Set([...turns.querySelectorAll('.peek.run')]
-          .map(p => p.closest('.turn')).concat(last))] : [];
-        const have = asked.map(s => s.dataset.i + ':' + marks(s).join('.')).join('~');
-        const r = await fetch(BASE + '/tail?from=' + from + '&have=' + encodeURIComponent(have));
-        if (!r.ok) break;
-        const t = document.createElement('template');
-        t.innerHTML = await r.text();
-        const stay = pinned(), tail = t.content.getElementById('tail');
-        // A session gone names no transcript for a while: what shows stays.
-        if (!tail.dataset.t && tx.dataset.t) break;
-        if (tail.dataset.t !== tx.dataset.t) { tx.dataset.t = tail.dataset.t; whole = again = true; continue; }
-        if (whole) turns.replaceChildren();
-        whole = false;
-        const was = tx.dataset.claude;
-        tx.dataset.state = tail.dataset.state;
-        tx.dataset.claude = tail.dataset.claude;
-        if (was !== tx.dataset.claude || tx.dataset.claude === 'waiting') looking();
-        ready();
-        const got = [...tail.children], kept = new Set(got.map(s => s.dataset.i));
-        // A turn asked for and not sent back is one the pane no longer shows.
-        asked.forEach(s => { if (!kept.has(s.dataset.i)) s.remove(); });
-        for (const s of got) {
-          const old = turns.querySelector(`:scope > .turn[data-i="${s.dataset.i}"]`);
-          if (old) { patch(old, s); continue; }
-          turns.insertBefore(s, [...turns.children].find(o => +o.dataset.i > +s.dataset.i) || null);
-        }
-        $('running').replaceWith(t.content.getElementById('running'));
-        $('queued').replaceWith(t.content.getElementById('queued'));
-        $('meter').replaceWith(t.content.getElementById('meter'));
-        if (window.advRows) advRows(t.content.getElementById('advrows'));
-        relive();
-        reopen();
-        fences();
-        if (stay) bottom();
-        jumps();
-      } while (again);
-    } catch (e) {}
-    drawing = false;
-  }
-  window.told = told;
-
-  // ---- the box I type into ----
-
-  const words = $('words'), send = $('send'), pick = $('pick'), att = $('att'), why = $('why');
-  const box = $('box'), menu = $('menu');
-  let held = [], busy = false;
-  // While the session works, an empty box's Send reads Stop.
-  const stopping = () => tx.dataset.claude === 'busy' && !words.value.trim() && !held.length;
-  function ready() {
-    const stop = stopping();
-    send.textContent = stop ? 'Stop' : 'Send';
-    send.classList.toggle('stop', stop);
-    send.classList.toggle('busy', busy);
-    send.disabled = busy || !(stop || words.value.trim() || held.length);
-    box.classList.toggle('typed', !!words.value);
-  }
-  const say = s => { why.textContent = s; why.hidden = !s; };
-  // The box grows with its text, up to two fifths of the transcript's height.
-  function grow() {
-    const cap = Math.max(parseFloat(getComputedStyle(words).minHeight) || 44, Math.round(tx.clientHeight * 0.4));
-    words.style.height = 'auto';
-    words.style.height = Math.min(words.scrollHeight + 4, cap) + 'px';
-  }
-  function chips() {
-    att.hidden = !held.length;
-    att.innerHTML = held.map((h, i) => `<span class="chipf">${h.file.type.startsWith('image/')
-      ? `<img src="${h.url}" alt="">` : `<span class="fi">${ICONS.file}</span>`}<span class="nm">${esc(h.file.name)}</span>`
-      + `<button class="b0 x" data-i="${i}" aria-label="Remove ${esc(h.file.name)}">${ICONS.x}</button></span>`).join('');
-  }
-  // A / opening the box lists every skill, those starting with what I
-  // typed first, then those holding it. Esc shuts the list until I type.
-  let rows = [], at = 0, shut = false;
-  function slash() {
-    const m = /^\/([\w:-]*)$/.exec(words.value), q = m ? m[1].toLowerCase() : '';
-    rows = !m || shut ? [] : SKILLS.filter(s => s[0].startsWith(q))
-      .concat(SKILLS.filter(s => !s[0].startsWith(q) && s[0].includes(q)));
-    at = 0;
-    list();
-  }
-  function list() {
-    menu.hidden = !rows.length;
-    menu.innerHTML = rows.map((s, i) => `<button class="b0 sk${i === at ? ' on' : ''}" data-i="${i}" tabindex="-1">`
-      + `<b>/${esc(s[0])}</b><span>${esc(s[1])}</span></button>`).join('');
-    menu.querySelector('.on')?.scrollIntoView({block: 'nearest'});
-  }
-  function fill(text) {
-    words.value = text;
-    rows = [];
-    list();
-    grow();
-    ready();
-    words.focus();
-    words.setSelectionRange(text.length, text.length);
-  }
-  menu.addEventListener('pointerdown', e => e.preventDefault());
-  menu.onclick = e => {
-    const s = e.target.closest('.sk');
-    if (s) fill('/' + rows[+s.dataset.i][0] + ' ');
-  };
-
-  // On my Mac, the up arrow in an empty box brings back my last line, again
-  // the one before; the down arrow returns. Only an untouched line moves on.
-  let back = -1;
-  const mine = () => [...turns.querySelectorAll('.turn.mine .said')].map(s => s.textContent.trim())
-    .filter((s, i, all) => s && s !== all[i - 1]);
-  function recall(up) {
-    const lines = mine(), now = back < 0 ? '' : lines[lines.length - 1 - back];
-    const next = back + (up ? 1 : -1);
-    if (words.value !== now || next < -1 || next >= lines.length) return false;
-    back = next;
-    shut = true;
-    fill(back < 0 ? '' : lines[lines.length - 1 - back]);
-    return true;
-  }
-
-  words.addEventListener('input', () => {
-    back = -1;
-    shut = false;
-    slash();
-    grow(); ready(); say(''); send.classList.remove('gone');
-  });
-  // On my Mac, Return sends, as Send does; Shift+Return adds a line. My
-  // phone sends only from Send. Neither ever stops: only Stop, pressed, does.
-  const PHONE = matchMedia('(hover: none) and (pointer: coarse)').matches;
-  words.addEventListener('keydown', e => {
-    if (e.isComposing) return;
-    const plain = !(e.shiftKey || e.metaKey || e.altKey || e.ctrlKey);
-    if (rows.length && plain && /^(ArrowUp|ArrowDown|Tab|Enter|Escape)$/.test(e.key)) {
-      e.preventDefault();
-      if (e.key === 'Escape') { shut = true; slash(); }
-      else if (e.key.startsWith('Arrow')) { at = (at + (e.key === 'ArrowUp' ? -1 : 1) + rows.length) % rows.length; list(); }
-      else fill('/' + rows[at][0] + ' ');
-      return;
-    }
-    if (PHONE) return;
-    const tip = $('offer').querySelector('.hint');
-    if (tip && !words.value && plain && (e.key === 'Tab' || e.key === 'ArrowRight')) {
-      e.preventDefault();
-      fill(tip.dataset.text);
-      return;
-    }
-    if (plain && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-      if (recall(e.key === 'ArrowUp')) e.preventDefault();
-      return;
-    }
-    if (e.key !== 'Enter' || e.shiftKey || e.altKey || e.ctrlKey) return;
-    e.preventDefault();
-    if (!stopping()) send.click();
-  });
-
-  // What only the pane shows, read each time the session's state moves:
-  // its mode, and a dialog while it waits, else the reply it suggests once
-  // its turn ends. The suggestion lands a moment after the turn, so a miss
-  // is read again, twice. A mode hidden under a dialog keeps the last. A
-  // page in a hidden frame has no width, and reads nothing until it shows:
-  // home opens every tab of a hub ahead, hidden.
-  const mode = $('mode');
-  let reading = 0, unread = false;
-  // A dialog waiting takes my words into its own field.
-  // On my phone, its hint is short.
-  const asking = () => {
-    const ask = !!$('offer').querySelector('.ask');
-    words.placeholder = PHONE ? (ask ? 'Or answer' : 'Type') : ask ? 'Or answer in your own words' : 'Type or dictate';
-  };
-  mode.onclick = async () => {
-    mode.disabled = true;
-    try {
-      const r = await fetch(location.pathname, {method: 'POST', redirect: 'manual', body: new URLSearchParams({act: 'mode'})});
-      if (r.status === 409) say(await r.text());
-      else { await nap(500); await looking(); }
-    } catch (e) { say('1100 did not answer.'); }
-    mode.disabled = false;
-  };
-  async function looking() {
-    if (!innerWidth) { unread = true; return; }
-    const ticket = ++reading, now = tx.dataset.claude;
-    if (!now) { $('offer').innerHTML = ''; asking(); return; }
-    for (const wait of now === 'idle' || now === 'waiting' ? [0, 1500, 4000] : [0]) {
-      if (wait) await nap(wait);
-      if (ticket !== reading) return;
-      try {
-        const r = await fetch(BASE + '/pane');
-        if (!r.ok || ticket !== reading) return;
-        const t = document.createElement('template');
-        t.innerHTML = await r.text();
-        $('offer').replaceWith(t.content.getElementById('offer'));
-        const m = t.content.getElementById('mode');
-        if (m) { $('modev').textContent = m.textContent; mode.hidden = false; }
-        asking();
-        // A panel's Close may show before its dialog draws: read again.
-        if ($('offer').querySelector('.hint, .ch[data-n]')) return;
-      } catch (e) { return; }
-    }
-  }
-  box.addEventListener('click', async e => {
-    const tip = e.target.closest('.hint'), ch = e.target.closest('.ch');
-    if (tip) fill(tip.dataset.text);
-    if (!ch) return;
-    ch.parentNode.querySelectorAll('.ch').forEach(b => { b.disabled = true; });
-    try {
-      const r = await fetch(location.pathname, {method: 'POST', redirect: 'manual',
-        body: new URLSearchParams(ch.dataset.n ? {act: 'answer', n: ch.dataset.n} : {act: 'close'})});
-      if (r.status === 409) { say(await r.text()); looking(); }
-      else $('offer').innerHTML = '';
-    } catch (e) { say('1100 did not answer.'); }
-  });
-  // A picture pasted, on my Mac or my phone, is held as the paperclip holds it.
-  addEventListener('paste', e => {
-    const pics = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
-    if (pics.length) { e.preventDefault(); hold(pics); }
-  });
-  // On my Mac, a letter or a paste anywhere on the page lands in the box,
-  // with no click. Home hands it one landing on home itself, through
-  // typeIn. Tab outside the box, or on home around it, fills the empty box
-  // with the reply Claude Code suggests, as Tab in the box does.
-  anywhere(text => {
-    words.focus();
-    words.setRangeText(text, words.value.length, words.value.length, 'end');
-    words.dispatchEvent(new Event('input'));
-    return true;
-  }, () => {
-    const tip = $('offer').querySelector('.hint');
-    if (!tip || words.value) return false;
-    fill(tip.dataset.text);
-    return true;
-  });
-  // On my Mac, the box holds the cursor, so a dictation tool always finds a
-  // field to paste into. It takes it when the page opens, and back half a
-  // second after a click on the page, the Mac's double-click time, so a
-  // double or triple click highlights first. Home hands it back, through
-  // holdCursor, when the page comes on show and after a click on home
-  // itself. Text left highlighted keeps it out, and so does another field
-  // holding it, or another page beside it.
-  const field = el => !!el && el.matches('input, textarea, select, [contenteditable]');
-  function holdCursor() {
-    if (!innerWidth || field(document.activeElement)) return document.activeElement === words;
-    const s = getSelection();
-    if (s && !s.isCollapsed) return false;
-    try {
-      const at = parent !== window && parent.document.activeElement;
-      if (at && (field(at) || (at.tagName === 'IFRAME' && at !== frameElement))) return false;
-      words.focus({preventScroll: true});
-    } catch (e) { return false; }
-    return true;
-  }
-  if (!PHONE) {
-    window.holdCursor = holdCursor;
-    let settle = 0;
-    addEventListener('click', () => { clearTimeout(settle); settle = setTimeout(holdCursor, 500); });
-    holdCursor();
-  }
-  // iOS's paperclip menu comes from a file input with no accept: Photo
-  // Library, Take Photo or Video, Choose Files.
-  // The menu beside the text opens above the line, and shuts on a tap
-  // anywhere else, on Esc, or once the paperclip is chosen.
-  const more = $('more'), pop = $('pop');
-  const popped = on => { pop.hidden = !on; more.setAttribute('aria-expanded', on); };
-  more.onclick = () => popped(pop.hidden);
-  addEventListener('pointerdown', e => {
-    if (!pop.hidden && !pop.contains(e.target) && !more.contains(e.target)) popped(false);
-  });
-  addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) popped(false); });
-  $('clip').onclick = () => { popped(false); pick.click(); };
-  // Two arrows step through my turns, landing each at the top: up, the
-  // nearest starting above the top edge; down, the nearest below it, and
-  // past my last, the foot. With none that way, an arrow greys. A turn's
-  // place is read from offsetTop, in scrollTop's own pixels: the zoom from
-  // home's rail scales getBoundingClientRect, and never those two.
-  const prev = $('prev'), next = $('next');
-  function aims() {
-    const now = scroll.scrollTop, max = scroll.scrollHeight - scroll.clientHeight;
-    const top = scroll.offsetTop + (parseFloat(getComputedStyle(scroll).paddingTop) || 0);
-    const all = [...scroll.querySelectorAll('.turn.you')]
-      .map(s => Math.min(max, Math.max(0, s.offsetTop - top))).concat(max);
-    return [all.filter(a => a < now - 2).pop(), all.find(a => a > now + 2)];
-  }
-  function jumps() {
-    const [up, down] = aims();
-    prev.disabled = up === undefined;
-    next.disabled = down === undefined;
-  }
-  prev.onclick = () => { const a = aims()[0]; if (a !== undefined) scroll.scrollTop = a; };
-  next.onclick = () => { const a = aims()[1]; if (a !== undefined) scroll.scrollTop = a; };
-  scroll.addEventListener('scroll', jumps, {passive: true});
-  const sized = new ResizeObserver(jumps);
-  sized.observe(scroll);
-  sized.observe(turns);
-  function hold(files) {
-    for (const file of files) held.push({file, url: URL.createObjectURL(file)});
-    chips();
-    ready();
-  }
-  pick.onchange = () => { hold([...pick.files]); pick.value = ''; };
-  att.onclick = e => {
-    const x = e.target.closest('.x');
-    if (!x) return;
-    URL.revokeObjectURL(held.splice(+x.dataset.i, 1)[0].url);
-    chips();
-    ready();
-  };
-  const b64 = f => new Promise((ok, no) => {
-    const r = new FileReader();
-    r.onload = () => ok(String(r.result).split(',')[1] || '');
-    r.onerror = no;
-    r.readAsDataURL(f);
-  });
-  // It spins while it types, then flashes green. Refused, it turns red, and
-  // the one sentence why shows above the line; my words stay. Sent, only
-  // what went leaves the box: words typed and files added meanwhile stay.
-  send.onclick = async () => {
-    if (send.disabled) return;
-    const stop = send.classList.contains('stop');
-    const text = stop ? '' : words.value, went = stop ? [] : [...held];
-    busy = true;
-    ready();
-    send.classList.remove('gone', 'done');
-    say('');
-    try {
-      const data = new URLSearchParams(stop ? {act: 'stop'} : {act: 'send', text});
-      for (const h of went) { data.append('name', h.file.name); data.append('data', await b64(h.file)); }
-      const r = await fetch(location.pathname, {method: 'POST', redirect: 'manual', body: data});
-      if (r.status === 409) {
-        say(await r.text());
-        send.classList.add('gone');
-      } else {
-        if (words.value.startsWith(text)) words.value = words.value.slice(text.length).trimStart();
-        slash();
-        went.forEach(h => URL.revokeObjectURL(h.url));
-        held = held.filter(h => !went.includes(h));
-        chips();
-        grow();
-        send.classList.add('done');
-        setTimeout(() => send.classList.remove('done'), 1500);
-      }
-    } catch (e) { say('1100 did not answer.'); }
-    busy = false;
-    ready();
-  };
-  // iOS gives a framed page no home-bar band, so the home's own is measured.
-  // It is the glass's pixels, and this page's own are home's zoom of them.
-  function inset() {
-    let band = 0;
-    try {
-      const doc = parent !== window ? parent.document : document, probe = doc.createElement('div');
-      probe.style.cssText = 'position:fixed;left:0;bottom:0;width:0;visibility:hidden;'
-        + 'height:env(safe-area-inset-bottom, 0px)';
-      doc.body.appendChild(probe);
-      band = probe.offsetHeight;
-      probe.remove();
-    } catch (e) {}
-    const zoom = parseFloat(document.documentElement.style.zoom) || 1;
-    document.documentElement.style.setProperty('--ib', band / zoom + 'px');
-  }
-  addEventListener('resize', inset);
-  addEventListener('ws-zoom', inset);
-  addEventListener('resize', () => { if (unread && innerWidth) { unread = false; looking(); } });
-  addEventListener('orientationchange', inset);
-  inset();
-
-  requestAnimationFrame(() => { bottom(); fences(); });
-  ready();
-  asking();
-  looking();
-})();
-</script>
-"""
+STYLE = "<style>\n" + page.shared("transcript.css") + "</style>\n"
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("verb", choices=["draw"])
-    ap.add_argument("number")
-    args = ap.parse_args()
-    print(render(f"{int(args.number):02d}"))
+# ---- the page on the contract --------------------------------------------------
+#
+# 1100 draws the whole page each time a file it names moves, and lib/live.py
+# puts in place only what changed, so a turn growing lands piece by piece,
+# and what I unfolded, highlighted, scrolled to and typed stays. The page's
+# own script, .claude/pages/scripts/transcript.js, then only works the box, unfolds
+# a call, reads what only the pane shows, and sends each press. The
+# advisor's panel rides inside: .claude/pages/scripts/advisor.js.
+
+def drawn(nn: str) -> str:
+    """Session NN's Transcript tab, whole: its turns drawn by 1100, the
+    data its script reads in a JSON script."""
+    path = located(nn, look=nn not in ENDED)
+    th = transcripts.thread(path) if path else None
+    empty = f"Session {nn} has no transcript." if not path else "Nothing said yet."
+    now = state(nn)
+    menu = [(name, re.split(r"(?<=\.)\s", said, maxsplit=1)[0]) for name, said, _ in skills_page.heads()] + COMMANDS
+    steers = " data-steers" if page.into(nn) == "btn ask" else ""
+    adv = advisor.seat(nn)
+    mine = (registry.entries().get(nn) or {}).get("session_id", "")
+    data = json.dumps({"base": serve.address("transcript", nn), "skills": menu,
+                       "icons": {"file": page.icon("read", 18), "x": page.icon("close", 16)}}).replace("</", "<\\/")
+    # Its scripts load before anything they draw on: the box never paints
+    # while one is still on the way, so it takes the cursor before it
+    # first paints.
+    body = (live.watch(mine)
+            + f'<script src="{live.src("transcript.js")}"></script>\n<script src="{live.src("advisor.js")}"></script>\n'
+            + STYLE
+            + f'<div class="tx" id="tx" data-state="{esc(now)}" data-claude="{esc(status(nn))}"'
+            f' data-t="{esc(os.path.basename(path))}"{steers}>'
+            + (f'<div class="tp">{live.part("The panel", advisor.drawn, nn)}' if adv else "")
+            + '<div class="scroll" id="scroll">'
+            + f'<div id="turns">{live.part("The turns", turned, nn, th) if th else ""}</div>' + running(th, nn, now)
+            + (queued(th) if th else '<div id="queued"></div>') + f'{page.blank(empty)}</div>'
+            + ("</div>" if adv else "")
+            + BOX.format(nn=nn, clip=page.icon("clip", 16), play=page.icon("play", 16), more=page.icon("more", 20),
+                         up=page.icon("up", 20), down=page.icon("down", 20), meter=meter(nn)) + "</div>"
+            + f'<div class="viewer" id="viewer" hidden><img alt=""><button class="b0 shut" aria-label="Close">'
+            f'{page.icon("close", 20)}</button></div>' + page.ANYWHERE + page.COPY
+            + f'<script type="application/json" id="tdata">{data}</script>\n')
+    return page.render(f"{nn}-transcript", [("", body)], refresh=0)
 
 
-if __name__ == "__main__":
-    main()
+def files(nn: str) -> list:
+    """Every file whose write can move session NN's tab: its transcript,
+    its folder while it has none yet, every session's record, waves and
+    plan, Claude Code's records, its status line, every skill's head, and
+    the advisor's panel's own."""
+    held = registry.entries()
+    path = located(nn)
+    out = registry.watched(list(held))
+    if path:
+        out += [path] if os.path.exists(path) else [os.path.dirname(path)]
+    out.append(os.path.join(registry.folder(nn), registry.STATUSLINE))
+    out += [os.path.join(registry.folder(n), plans.PLAN) for n in held]
+    out += [skills_page.SKILLS] + [os.path.join(skills_page.SKILLS, s, "SKILL.md")
+                                   for s in registry.listing(skills_page.SKILLS)]
+    return out + (advisor.files(nn) if advisor.seat(nn) else [])
+
+
+def panes_open():
+    """Every open pane, as 1100 last read iTerm: a pane closing moves the
+    newest turn's edge, and no file carries it."""
+    found = panes.LAST[1]
+    return None if found is None else sorted(found)
+
+
+# The page's contract, lib/live.py's: its address, its draw, its files, its look, its take.
+LIVE = live.Page(serve.address("transcript", r"(\d{2})"), drawn, files=files, looks=[panes_open], take=take)

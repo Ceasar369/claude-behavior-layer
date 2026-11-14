@@ -1,0 +1,38 @@
+  body > main { padding:0; }
+  header.top.skills .mid { justify-self:stretch; color:var(--dim); font-weight:400; font-size:13px; }
+  .find { max-width:560px; }
+  .hm { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--dim); white-space:nowrap; }
+  .hm b { color:var(--text); }
+  .first { padding:12px 12px 0; }
+  .first .skf { margin:0; }
+  .across { display:grid; grid-template-columns:repeat(auto-fit, minmax(max(220px, calc((100% - 72px) / 5)), 1fr)); column-gap:18px; }
+  .across .sr { border-top:1px solid var(--line); }
+  .sk { columns:360px; column-gap:12px; padding:12px; }
+  .skf { break-inside:avoid; margin:0 0 12px; padding:6px 12px; background:var(--panel);
+    border:1px solid var(--line); border-radius:6px; }
+  .skf.none { display:none; }
+  .skh { display:flex; align-items:center; gap:8px; margin:0 0 4px; padding:2px 0 6px; border-bottom:1px solid var(--line); }
+  .skh b { font-size:13px; }
+  .dg { flex:none; min-width:20px; padding:0 4px; border-radius:4px; text-align:center; font-size:11px;
+    font-weight:700; background:var(--raised); color:var(--text); }
+  .sr { padding:6px 0; }
+  .sr.none { display:none; }
+  .sr + .sr { border-top:1px solid var(--line); }
+  .cmd { max-width:100%; display:inline-flex; align-items:center; gap:7px; padding:0; font:inherit;
+    font-size:13px; font-weight:700; line-height:20px; color:var(--text); background:none; border:0; cursor:pointer; }
+  .cmd .t { min-width:0; overflow-wrap:anywhere; text-align:left; }
+  .cmd svg { color:var(--blue); }
+  .cmd:hover .t { color:var(--blue); }
+  .cmd.ok .t, .cmd.ok svg { color:var(--green); }
+  .args { margin:2px 0 0; padding-left:8px; border-left:2px solid var(--blue); font-size:12px; line-height:17px;
+    color:var(--text); overflow-wrap:anywhere; }
+  .args .mn { color:var(--dim); }
+  .int { margin:3px 0 0; font-size:12px; line-height:18px; }
+  mark { background:var(--hover); color:var(--text); border-radius:2px; box-shadow:0 0 0 1px var(--grey); }
+  .nomatch { padding:12px; color:var(--dim); display:none; }
+  @media (max-width:520px) { .first { padding:8px 8px 0; } .sk { padding:8px; } }
+  /* A touch screen, as my phone, and never a Mac, however narrow its pane.
+     Every control takes a fingertip: 44 by 44 points, Apple's minimum. */
+  @media (hover:none) and (pointer:coarse) {
+    .cmd { min-height:44px; }
+  }

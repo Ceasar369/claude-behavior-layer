@@ -13,7 +13,7 @@ Only this router combines the children. A child never calls another.
 
 ## Step 1 — Know my number
 
-My number, as `CLAUDE.md` defines it. My page is the prototypes app, on the port `python3 .claude/tools/prototype.py status NN` prints. 1100 frames it in my hub while I hold a subject not locked in. Every other one shows on the app's library, at `/`.
+My number, as `CLAUDE.md` defines it. My page is 1100's, at `/proto/`, framed in my hub while I hold a subject not locked in. Its variations come from the prototypes app, on the port `python3 .claude/tools/prototype.py status NN` prints. Every other subject shows on 1100's library, at `/proto/` with no subject.
 
 No number → run the skill `0-session-start` first.
 

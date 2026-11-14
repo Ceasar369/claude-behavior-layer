@@ -139,6 +139,16 @@ def mark(nn: str, back: int = 0) -> str:
     return said[-1 - back][3] if len(said) > back else ""
 
 
+def answered(mm: str, r: dict, mark: str) -> bool:
+    """Whether I wrote to seat MM after its followed session's last turn
+    read, `mark`, and after the follow was taken: I saw what it waits on,
+    so its idle wakes stop. Its new turns still wake MM."""
+    path = (registry.entries().get(mm) or {}).get("transcript", "")
+    said = transcripts.turns(path, mm) if os.path.isfile(path) else []
+    after = max(mark, r.get("taken", ""))
+    return any(t[0] == "User" and t[3] > after for t in said)
+
+
 def identity(nn: str) -> dict:
     """What a record keeps of session NN, so a reused number never passes for it."""
     rec = registry.entries().get(nn) or {}

@@ -1,0 +1,119 @@
+  /* The team bar: one row across the whole head, the plan's label and
+     buttons, then the active stage's, left first. Every button is small,
+     the Launch page button's size, its colour where it goes. */
+  header.top.fam.assistant { display:block; padding:6px 10px; }
+  header.top.fam.assistant .mid { display:none; }
+  header.top.fam.assistant .acts { display:flex; flex-wrap:wrap; justify-self:stretch; }
+  .tb-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-height:28px; }
+  .tb-row h2 { margin:0 2px 0 0; }
+  .tb-row > h2:not(:first-child) { margin-left:2px; }
+  .tb-row .cut, .tb-stage::before { width:1px; height:16px; background:var(--line); margin:0 6px; }
+  .tb-stage::before { content:""; }
+  /* The active stage's own view names it in its heading: the bar's name goes. */
+  .tb-stage.here h2 { display:none; }
+  header.top.fam .btn { height:22px; padding:0 8px; font-size:11px; gap:5px; }
+  header.top.fam .btn.sq { width:22px; padding:0; }
+  #items h3.sub .mk { display:inline-block; width:1.4em; }
+  #items h3.sub .mk.ok { color:var(--green); }
+  #items h3.sub .mk.on { color:var(--blue); }
+  #items .stage { margin:0 0 20px; }
+  #items .cards { display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); }
+  #items .card { background:var(--panel); border:1px solid var(--line);
+    border-left:4px solid var(--c); border-radius:6px; padding:8px 10px; cursor:pointer; }
+  #items .card:hover { border-color:var(--text); border-left-color:var(--c); }
+  #items .card.done, #items .col.done, #items .card.dashed, #items .col.dashed { border-left-style:dashed; }
+  #items .card .hd, #items .col .hd, #items .item > .hd { display:flex; align-items:center; gap:8px; }
+  #items .card .st, #items .col .st { margin-left:auto; color:var(--c); font-size:11px; font-weight:700; }
+  #items .item > .hd { margin:0 0 6px; }
+  #items .item > .hd .st { color:var(--c); font-size:12px; }
+  #items .card .nm, #items .col .nm { font-size:14px; font-weight:700; margin:6px 0 0; overflow-wrap:anywhere; }
+  #items .card.done .nm, #items .col.done .nm { color:var(--dim); }
+  #items .col .nm { cursor:pointer; }
+  #items .col .nm:hover { text-decoration:underline; }
+  /* A stage's head: its name and count, then Drive the stage on the right. */
+  #items .shead { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; margin:0 0 10px; }
+  #items .shead h1.q { margin:0; }
+  #items .shead .group { margin-left:auto; }
+  /* Finished work, folded into one lighter line above what is still live. */
+  #items .finl { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; width:100%; margin:0 0 10px;
+    padding:6px 10px; font:inherit; font-size:12px; text-align:left; cursor:pointer; color:var(--dim);
+    background:var(--raised); border:1px solid var(--line); border-radius:6px; }
+  #items .finl:hover { background:var(--hover); }
+  #items .finl[aria-expanded="true"] .car { display:inline-block; transform:rotate(90deg); }
+  #items .finl .ok { display:inline-flex; align-items:center; gap:5px; color:var(--green); font-weight:700; }
+  #items .finl .one { display:inline-flex; align-items:center; gap:6px; }
+  #items .fins { display:none; gap:8px; margin:0 0 12px;
+    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); }
+  #items .fins.open { display:grid; }
+  #items .fins.rows.open { display:block; }
+  /* A mission's objectives and its mission, each folded under its heading. */
+  #items h2.fold { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  #items h2.fold:hover { color:var(--text); }
+  #items h2.fold[aria-expanded="true"] .car { transform:rotate(90deg); }
+  #items .fb { display:none; }
+  #items .fb.open { display:block; }
+  /* A stage's live missions, side by side: the card, what it asks, then its buttons at the foot. */
+  #items .cols { display:grid; gap:10px; align-items:start; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); }
+  #items .col { display:flex; flex-direction:column; min-width:0; background:var(--panel);
+    border:1px solid var(--line); border-left:4px solid var(--c); border-radius:6px; padding:10px 12px; }
+  #items .col .sum { margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
+  #items .item .col p { font-size:14px; line-height:1.5; margin:0 0 4px; }
+  #items .item .col p.hl { font-size:14px; font-weight:700; margin:0 0 6px; }
+  #items .hlrow { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin:0 0 6px; }
+  #items .hlrow p.hl { margin:0; }
+  #items .item .col p.none, #items .item p.none { color:var(--dim); }
+  #items .col .paste { margin:4px 0 8px; padding:8px 10px; }
+  #items .col .paste .txt { font-size:13px; }
+  #items .vs { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  #items .vs .chip { cursor:pointer; min-width:28px; }
+  #items .vs .chip.g { cursor:default; }
+  /* Type, Send and Drive: one width each, in that order, never wider than they need. */
+  #items .acts3 { display:grid; grid-template-columns:repeat(3, minmax(0, 96px)); gap:6px;
+    margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
+  #items .acts3 .btn { min-width:0; padding:0 6px; }
+  #items .item > .acts3 { max-width:360px; border-top:0; padding-top:0; }
+  #items .hp { display:flex; align-items:center; gap:6px; margin-top:6px; color:var(--dim); font-size:12px; }
+  #items .fin { margin-top:10px; padding:8px 10px; border:1px solid var(--green); border-radius:4px;
+    display:flex; flex-direction:column; gap:2px; }
+  #items .fin b { color:var(--green); font-size:14px; }
+  #items .fin span { color:var(--dim); font-size:12px; }
+  #items .back { display:inline-flex; align-items:center; gap:5px; margin:0 0 8px; padding:0; border:0;
+    background:none; color:var(--blue); cursor:pointer; font:inherit; font-size:12px; font-weight:700; }
+  #items .ans.go { cursor:pointer; }
+  #items .ans.go:hover p.hl { text-decoration:underline; }
+  #items .ans h3.hit { outline:2px solid var(--text); outline-offset:6px; border-radius:2px; }
+  #items .ans p.hl { font-size:21px; font-weight:700; }
+  #items .ans h3 { display:flex; gap:10px; align-items:center; font-size:16px; margin:18px 0 6px; }
+  #items .ans ul { margin:0 0 10px; padding-left:20px; }
+  #items code { background:var(--panel); padding:0 4px; border-radius:3px; }
+  @media (max-width:520px) {
+    #items { padding:10px 10px 14px; }
+    #items .item h1.q { font-size:20px; }
+  }
+  /* A touch screen, as my phone, and never a Mac, however narrow its pane.
+     Every control takes a fingertip: 44 by 44 points, Apple's minimum. */
+  @media (hover:none) and (pointer:coarse) {
+    header.top button { min-height:44px; }
+    nav.nums .tab { width:44px; padding:0; line-height:44px; }
+    #items .btn { height:44px; }
+    #items .vs .chip { min-width:44px; height:44px; line-height:44px; }
+    #items .col .nm, #items h3.sub.go { display:flex; align-items:center; min-height:44px; }
+    #items .finl, #items .back, #items h2.fold { min-height:44px; }
+    #items .paste { min-height:60px; }
+    #items .paste > button { min-height:44px; }
+    /* The team bar packs as tight as it goes: no label but the stage's,
+       no icon on a worded button. Auto-send's pills sit beside See the
+       whole plan, the drive's two under them. The stage's sit as the
+       driven band does: edge to edge, raised, under the plan's. */
+    header.top.fam.assistant { padding:6px 8px; }
+    header.top.fam.assistant .acts { display:block; }
+    #auto { order:1; }
+    .tb-row > .btn.ask { order:2; }
+    .tb-stage { margin:6px -8px -6px; padding:6px 8px; background:var(--raised);
+      border-top:1px solid var(--line); }
+    .tb-stage::before { content:none; }
+    header.top.fam .btn, header.top.fam .pills button { height:44px; min-width:44px; padding:0 10px; }
+    header.top.fam .btn.sq { width:44px; padding:0; }
+    header.top.fam .btn:not(.sq) .i { display:none; }
+    .tb-row .tb-label, .tb-row .cut { display:none; }
+  }

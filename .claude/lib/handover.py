@@ -15,8 +15,9 @@ it saved, it types /handover-resume NN with the successor's settings, and
 waits for the successor to take the seat. Both are hooks, so no model
 turn runs. Nothing is typed into a session working, nor at a dialog,
 whose Return would approve its first option. Each step goes into the
-seat's handover.json, which the Handover page draws. 1100 runs the press
-when I press Hand over. A driver runs it through hand(), and handover.json
+seat's handover.json, which the Handover page draws. When I press Hand
+over, the press runs as a program of its own, handover-page.py's press,
+so it outlives 1100. A driver runs it through hand(), and handover.json
 names it, so the successor knows its driver.
 
 Every successor launches on the same settings, whichever way it comes:
@@ -202,7 +203,7 @@ def progress(nn: str) -> dict:
     if got.get("step") in STEPS and not ports.alive(got.get("pid", 0)):
         if got["step"] == "done":
             return {}
-        cut = (f"press was cut short when {'session ' + got['by'] if got.get('by') else '1100'} "
+        cut = (f"press was cut short when {'session ' + got['by'] if got.get('by') else 'its program'} "
                f"stopped. Hand over again.")
         return {"step": "failed", "said": failure(got.get("copy", ""), "Then its " + cut)
                 if got["step"] == "launching" else "Its " + cut}

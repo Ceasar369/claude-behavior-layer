@@ -5,8 +5,10 @@ and the wrap-up threshold, past which a working session is told to wrap up.
 
 A session's context is its transcript's last usage: input, cache reads and
 cache writes, over its model's window, rounded, as its status line's ctx:
-reads it. A <synthetic> record, from a resumed or failed turn, carries no
-usage, and is skipped. Right after /compact the status line reads 0 until
+reads it. An answer that calls the advisor runs the model more than once,
+and its usage adds every pass; its iterations list each pass, and only the
+last is the context. A <synthetic> record, from a resumed or failed turn,
+carries no usage, and is skipped. Right after /compact the status line reads 0 until
 the next call, so a compact boundary newer than every usage counts its
 postTokens. A session whose process is gone has no context.
 
@@ -68,7 +70,10 @@ def point(line: bytes):
     usage = message.get("usage") if isinstance(message, dict) else None
     if not isinstance(usage, dict) or message.get("model") == "<synthetic>":
         return None
-    tokens = sum(usage.get(k) or 0 for k in
+    passes = [p for p in usage.get("iterations") or () if isinstance(p, dict)
+              and p.get("type") == "message"]
+    last = passes[-1] if passes else usage
+    tokens = sum(last.get(k) or 0 for k in
                  ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"))
     return tokens, message.get("model") or "", when
 

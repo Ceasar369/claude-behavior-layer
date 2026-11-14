@@ -30,7 +30,7 @@ An area is one folder of `walks/`, as `walks/walks-MOC.md` lists them.
 1. A subject the standard gives its own file, like a vendor's → that file. Its "Walked" line names each step that shows it.
 2. A feature → each journey and step of the places its line names.
 3. Any other subject → search the journey files of `walks/<area>/*/` for its words, and each cover step's head naming it.
-4. Return each step: its section's folder, then its name, like `app/authentication · Sign up 2`, in the sections' order. A feature's → its counters first, then stage by stage, as Walks stage by stage rules: each journey opening a stage whole, then each other place's step showing that stage.
+4. Return each step: its section's folder, then its name, like `site/authentication · Sign up 2`, in the sections' order. A feature's → its counters first, then stage by stage, as Walks stage by stage rules: each journey opening a stage whole, then each other place's step showing that stage.
 
 ## Step 4 — One thing
 

@@ -34,10 +34,10 @@ A drive's wait adds --awake: the Mac stays awake on power until it ends.
 It wakes when a session's transcript or its Claude Code status file is
 written, or its process ends, never polled. It returns once one session's
 finish is new since its bookmark, as lib/finish.py reads it, or once a
-cap's reset or an error's one more try falls due. A driven session still
-idle lib/wake.py's IDLE after its last turn ends it too, once: an idle
-stretch never wakes it twice. A followed one never does. At its limit,
-lib/wake.py's, it returns with no finish. Several
+cap's reset or an error's one more try falls due. A driven or followed
+session still idle ends it too, at each of lib/wake.py's IDLE after its
+last turn. A followed one stops once I write to the waiting seat after
+that turn, lib/follow.py's answered(). At its limit, lib/wake.py's, it returns with no finish. Several
 sessions take one bookmark each, in their order, so none waits on another.
 
 Its words open with one line naming each session that woke it: by its
@@ -97,15 +97,16 @@ def fresh(title: str, said: list, since: str, then: str = "") -> None:
     print(f"Bookmark: {then or (said[-1][3] if said else since)}")
 
 
-def idle_at(mark: str, start: float = 0) -> float:
-    """When a driven session sitting idle wakes its driver: IDLE after its
-    last turn, its bookmark. The named wait keeps no record of that wake,
-    so it counts it once only by `start`: 0 when it came before the wait
-    began. The one wait passes no start: its record keeps the wake."""
+def idle_at(mark: str, after: float = 0) -> float:
+    """When a session sitting idle next wakes its watcher: the first of
+    wake.IDLE past its last turn, its bookmark, later than `after`. 0 when
+    none is left. The named wait passes when it began. The one wait passes
+    when its record last woke on this stretch, or 0, so a time that came
+    while no wait ran wakes it at once."""
     if not mark:
         return 0
-    at = time.mktime(time.strptime(mark, STAMP)) + wake.IDLE
-    return at if at > start else 0
+    base = time.mktime(time.strptime(mark, STAMP))
+    return next((base + t for t in wake.IDLE if base + t > after), 0)
 
 
 def idled(ats: dict, got: dict, now: float) -> list:
@@ -206,10 +207,10 @@ def seat_wait(me: str, limit: int) -> tuple:
     drives, each on its record's bookmark. A take or a release while it
     runs is heard, and joins or leaves it. A session stopped or reused
     wakes it, and a gone one too, once gone GRACE seconds and never told
-    before. A driven session sitting idle wakes it once, idle_at()'s, at
-    once when that came while no wait ran: its record's idled names the
-    bookmark it already woke on. A followed one never does: its follower
-    has nothing to send it. Returns (its sessions, their bookmarks, their
+    before. A session sitting idle wakes it at each of idle_at()'s times,
+    at once when one came while no wait ran: its record's idled names the
+    bookmark it woke on, and idled_at when. A followed one I answered
+    its follower after, follow.answered()'s, wakes it idle no more. Returns (its sessions, their bookmarks, their
     finishes, those that woke it, whether no finish ended it, the idle)."""
     old = dict(successor.waited(me))
     start, gone, logged = time.time(), {}, False
@@ -218,8 +219,8 @@ def seat_wait(me: str, limit: int) -> tuple:
         if not on:
             return {}, {}, {}, [], False, []
         marks = {n: r.get("bookmark", old.get(n, "")) for n, (_, r) in on.items()}
-        idle_by = {n: 0 if file.endswith(follow.FILE) or r.get("idled") == marks[n] else idle_at(marks[n])
-                   for n, (file, r) in on.items()}
+        idle_by = {n: idle_at(marks[n], r.get("idled_at", 0) if r.get("idled") == marks[n] else 0)
+                   for n, (_, r) in on.items()}
         if not logged:
             wake.log(me, "armed · seat · " + " · ".join(f"{n} since {marks[n] or 'the start'}" for n in on)
                      + f" · limit {limit} s")
@@ -265,6 +266,12 @@ def seat_wait(me: str, limit: int) -> tuple:
             # at once: it came while no wait ran.
             now = time.time()
             idle = idled(idle_by, got, now)
+            # A followed session idle wakes this seat no more once I wrote
+            # here after its last turn: I saw what it waits on.
+            quiet = [n for n in idle if on[n][0].endswith(follow.FILE) and follow.answered(me, on[n][1], marks[n])]
+            for n in quiet:
+                idle_by[n] = 0
+            idle = [n for n in idle if n not in quiet]
             if idle or now >= start + limit:
                 return on, marks, got, woke, True, idle
             # A gone session's grace ends once. Told before, it sets no
@@ -372,9 +379,9 @@ def seat_run(me: str, sid: str, limit: int) -> None:
         follow.read(me, file, marks_read, sid)
     for file, n, gone_sid in gone:
         follow.update(me, file, lambda d, n=n, s=gone_sid: d.get(n, {}).update({"gone": s}))
-    # Each idle stretch woken on, by its bookmark: it never wakes the seat again.
+    # Each idle stretch woken on, by its bookmark and when: its next time comes later.
     for n in idle:
-        follow.update(me, on[n][0], lambda d, n=n: d.get(n, {}).update({"idled": marks[n]}))
+        follow.update(me, on[n][0], lambda d, n=n: d.get(n, {}).update({"idled": marks[n], "idled_at": time.time()}))
     print("Wait again." if seat(me) else "Following and driving nothing.")
     sys.stdout.flush()
     wake.log(me, f"woke {why} · " + " · ".join(f"{n} {state(got[n], marks[n])}" for n in on))

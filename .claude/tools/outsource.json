@@ -3,10 +3,6 @@
     "codex": {
       "model": "gpt-6-astra",
       "effort": "max"
-    },
-    "grok": {
-      "model": "grok-4.7",
-      "effort": "xhigh"
     }
   },
   "default": "codex",

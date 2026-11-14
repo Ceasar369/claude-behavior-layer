@@ -12,7 +12,8 @@ role, never typing into it, and arms the same wait again.
   follow.py 10                                this seat follows 10, then waits
 
 take writes the follow into the follower's folder, lib/follow.py's FILE,
-and says one line. The running wait hears it, so a press never stops it.
+and says one line, then the session's state and how to read its newest
+turn, since it may already wait on someone. The running wait hears it, so a press never stops it.
 A follow taken again takes the new words and keeps its place. A session
 the seat drives is refused: the drive already wakes it on every turn.
 So is the seat itself, and a number no session holds.
@@ -32,6 +33,7 @@ import sys
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import finish  # noqa: E402
 import follow  # noqa: E402
 import registry  # noqa: E402
 import successor  # noqa: E402
@@ -96,6 +98,9 @@ def main() -> None:
     got = follow.take(mm, nn, args.why, args.ends)
     print(f"{'Following' if not again else 'Still following'} {nn}, {got['title']}: for {got['for']}. "
           f"It ends when {got['ends']}.")
+    before = follow.mark(nn, 1)
+    print(f"Its state: {finish.word(finish.read(nn, before))}. Read its newest turn: "
+          f"python3 .claude/tools/transcript.py new {nn}" + (f" --since {before}" if before else ""))
 
 
 if __name__ == "__main__":

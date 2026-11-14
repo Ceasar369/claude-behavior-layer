@@ -7,7 +7,7 @@ Read [[standard|Standard]] before writing any document here.
 ## Children
 
 - [[standard|Standard]] — the only standard for a vault document.
-- [[playbook-MOC|Playbook]] — how the work is run, for me and my agents.
+- [[playbook-MOC|Playbook]] — what every session follows, on both sides, with the laws and policies binding the company.
 
 > **Stand-in.** This project's own areas, `0020` to `0090`, one line each.
 
@@ -16,3 +16,5 @@ Read [[standard|Standard]] before writing any document here.
 It holds the few key concepts, and where to look.
 
 Understanding is its only job. Nothing else enters.
+
+A session reads the playbook and its own side's area. Nothing else.

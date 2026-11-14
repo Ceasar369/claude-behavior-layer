@@ -24,6 +24,8 @@ Every turn takes one shape. Never break it.
 
 `walks/` holds my walks of the app, under its own `walks/walks-standard.md`. It is not the vault.
 
+`library/` holds what our words mean, for me to study, under `library/library-MOC.md`. It is not the vault.
+
 ## Other sessions
 
 Several sessions always work together on the `work` branch.

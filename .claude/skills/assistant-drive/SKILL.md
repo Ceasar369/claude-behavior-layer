@@ -37,7 +37,7 @@ A session I hand you while you drive joins the same wait: take it. The running w
 
 ## Step 4 — What reaches me
 
-Only these: an item my rulings cannot answer, a wave holding my drafts or no answer of yours, a blocked session, a gone session, an error three times in a row, a launch row failing three times, a failed handover, new work that does not fit my goal.
+Only these: an item my rulings cannot answer, a wave whose only answers move to chat, steps a finished session leaves my hands, a blocked session, a gone session, an error three times in a row, a launch row failing three times, a failed handover, new work that does not fit my goal, a red finish line no mission can turn green.
 
 Reach me three ways at once, at every such moment:
 
@@ -45,7 +45,7 @@ Reach me three ways at once, at every such moment:
 2. Call the PushNotification tool, `status: "proactive"`, with one line naming it. Your tools may hold it deferred: load it first through ToolSearch, `select:PushNotification`. Call it each time, even after one came back "Not sent".
 3. Drive on for every other session.
 
-Until I answer, every turn you end shows each thing still waiting on me, whole, and its move names it.
+Until I answer, your turn shows each thing waiting on me whole the first time; an open wave is named after, as talking.md sets.
 
 My answer comes in your chat. Type it into its session yourself, through `session-control` Step 2.
 
@@ -59,7 +59,7 @@ Your own `Hand over` → your successor takes your seat, and drives on.
 
 In an open plan, a stage closes only when I close it: then this step runs for it.
 
-Say its short summary in your chat: what each session did, and what it taught. Name who answered each thing: you, or me.
+Say its short summary in your chat: what each session did, what it taught, and how many finish lines are green. Name who answered each thing: you, or me.
 
 Then keep the same words:
 
@@ -79,6 +79,8 @@ In an open plan, no launch page. Each mission I rule goes out at once, and each 
 
 "Pause the drive." → end the step you are on. Run `python3 .claude/tools/drive.py pause NN`, then TaskStop the wait. Your move is "Ruling: resume the drive when you choose. Say 'Resume the drive.'" While paused, arm no wait, and act on no session.
 
+A `drive.py` verb exits with `lib/drive.py`'s PAUSED code → the drive is paused at a point I named. End the step its `Next:` names, then TaskStop the wait. Your turn says what finished, and where to look, as it printed. Your move is the same Ruling as above.
+
 "Resume the drive." → run `python3 .claude/tools/drive.py resume NN`. Then arm the one wait, unless one runs: it returns at once on every finish that came while paused. Its `Next:` line says the rest.
 
 ## Step 9 — The end
@@ -89,6 +91,6 @@ Every session the drive holds has stopped. In an open plan, only once I end it, 
 python3 .claude/tools/drive.py end NN
 ```
 
-It ends → say so in one line, with no merged report. Your move is "Action: stop this session. Type `/9-session-stop`.", unless the plan holds more. Arm no wait.
+It ends → write your report, through `session-report`. Say the plan is done, and name the report's path. Your move is "Action: stop this session. Type `/9-session-stop`.", unless the plan holds more. Arm no wait.
 
-It names what holds the end → settle each, then run it again.
+It names what holds the end → settle each, then run it again. A red finish line reaches me as Step 4 says, once no mission can turn it green. Only my words rule it out: `python3 .claude/tools/drive.py out NN <its number>`, those words on stdin.

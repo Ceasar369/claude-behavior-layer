@@ -8,7 +8,7 @@ prints. Run alone, it is a status line of its own.
   Line 1 — identity: who, which session, which model, what effort.
   Line 2 — meters: context, quotas, spend.
 
-  [cesar] 91-accounts-and-paths · Opus 5.5 max
+  [main] 91-accounts-and-paths · Opus 5.5 max
   ctx:12%  5h:36%(9:30PM)  7d:10%(Mon 11:00PM)  $4.21
 
 Who is the session's account, by its name in this Mac's list,

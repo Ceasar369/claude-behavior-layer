@@ -20,4 +20,4 @@ Behaviour. [[the-behaviour-axioms|The Behaviour Axioms]] are the floor it measur
 
 - Understand before proposing.
 - No skill is safe by default.
-- Paused means dropped.
+- A skill I paused, or no longer use, goes: the audit proposes its deletion, as one item I rule. Unused, it only confuses.

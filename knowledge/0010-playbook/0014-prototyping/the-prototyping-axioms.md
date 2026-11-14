@@ -28,7 +28,7 @@ Where a banner sits on a page shows the page. Its place is the unknown.
 
 A generation is one round of my instructions. As many rounds as I want.
 
-## 5. Its level sets its cost
+## 5. A generation agents write shows whole
 
 A generation agents write shows once, when every agent has reported. No turn says one has landed.
 
@@ -45,7 +45,7 @@ It never imports another subject's files. A lock-in or removal deletes them. One
 It reads its frontend's look file whole, as text. It applies it only while its route is on screen, so no other subject's route wears it.
 
 A generation is one file.
-It names each variation's route, its direction, the variation it grew from, and the looks it draws: a number, a title, and for a look that competes, its group.
+It names each variation's route, its direction, the variation it grew from, and the looks it draws, as [[protocol-glance|Glance]] defines them: a number, a title, and for a look that competes, its group.
 
 Band 00 serves them all, with their page. No session serves its own.
 
@@ -73,7 +73,7 @@ A later stage's mission names the winner under "Read first". The stack wins ever
 
 ## 10. It enters git when I ship
 
-The prototypes are committed like the rest. They run no lint and no typecheck.
+The prototypes are committed like the rest.
 
 ## 11. My taste is written down
 

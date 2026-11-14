@@ -81,6 +81,8 @@ One line per step, plus its why or its check.
    Done when a search finds no stale line.
 ```
 
+A step with something I type or paste carries it right under it, between markers.
+
 Nothing is on me → one line above the list: "Nothing is on you."
 
 A change that reaches other sessions ends on one step of mine: "**You** — tell the sessions you choose. A blurb, if you ask." It names the sessions it reaches. It never sends a word.

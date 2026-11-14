@@ -27,16 +27,13 @@ its file's path in dim. Under each, what the walker also reads.
 The walker reads the same rows here, through `rows`, and nothing else:
 
   walk-list-page.py rows NN        the walk's rows and reading list, as text
-  walk-list-page.py try FILE [--port 1114]   the tab, drawn from a fixture file alone
 
-A fixture holds nn, tag and walk, the file's text.
-
-1100 imports this file for render, key, tab and heard: the tab shows
-while a session holds walk-list.md, and never waits on me.
+1100 imports this file for tab and heard: the tab shows while a session
+holds walk-list.md, and never waits on me. On the contract, lib/live.py's,
+it draws through drawn, files and LIVE.
 """
 
 import argparse
-import hashlib
 import itertools
 import os
 import re
@@ -45,6 +42,7 @@ import sys
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 import checklists  # noqa: E402
+import live  # noqa: E402
 import page  # noqa: E402
 import plans  # noqa: E402
 import registry  # noqa: E402
@@ -141,39 +139,10 @@ def world(nn: str) -> dict:
     return {"nn": nn, "tag": plans.tag(nn, plans.owners(registry.entries())), "walk": text}
 
 
-def key(nn: str) -> str:
-    """What the tab reloads on: the walk's file, and each checklist it
-    borrows from."""
-    d, words = world(nn), []
-    words.append(d["walk"])
-    for section in sorted({m.group(1) for ln in d["walk"].splitlines() if (m := LINE.match(ln))}):
-        try:
-            words.append(str(os.path.getmtime(os.path.join(WALKS, listed(section)))))
-        except OSError:
-            pass
-    return hashlib.sha1("\0".join(words).encode()).hexdigest()[:12]
-
-
 # ---- the tab ---------------------------------------------------------------------
 
 # Obsidian's look, its default dark theme: the locked prototype custom-walk g3/v1. Page rule 37.
-CSS = """<style>
-  .ob { background:#1e1e1e; color:#dadada; padding:18px 22px; min-height:100%;
-    font:14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
-  main:has(> .ob) { padding:0; }
-  .ob-block { width:fit-content; max-width:100%; margin:0 0 22px; }
-  .ob-block:last-child { margin-bottom:0; }
-  .ob-h { display:flex; align-items:baseline; flex-wrap:wrap; gap:12px; margin:0 0 8px; text-transform:none;
-    letter-spacing:0; font-size:16px; font-weight:700; color:#dadada; }
-  .ob-link { color:#a78bfa; text-decoration:underline; }
-  .ob-path { font:12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight:400; }
-  .ob table { border-collapse:collapse; width:fit-content; max-width:100%; }
-  .ob th, .ob td { border:1px solid #363636; padding:4px 10px; text-align:left; vertical-align:top; }
-  .ob th { font-weight:600; }
-  .ob td.ob-what { max-width:56ch; }
-  .ob .ob-mark { text-align:center; }
-  .ob-reads { margin:8px 0 0; }
-</style>"""
+CSS = "<style>\n" + page.shared("walk-list.css") + "</style>"
 
 
 def table(rows: list) -> str:
@@ -200,10 +169,6 @@ def draw(d: dict, tail: str = "") -> str:
         + '</div>' for b in got)
     top = page.head("walk", d["tag"], f"{e(name)} · {count} check{'' if count == 1 else 's'}")
     return page.render(f"{nn}-walk", [("", CSS + f'<div class="ob">{body}</div>' + tail)], top, refresh=0)
-
-
-def render(nn: str) -> str:
-    return draw(world(nn), page.watch(key(nn)))
 
 
 def tab(nn: str):
@@ -240,25 +205,47 @@ def rows(text: str) -> str:
     return "\n".join(out)
 
 
+# ---- the page on the contract --------------------------------------------------
+#
+# The tab as draw() draws it, opened by live.watch() in place of the older
+# watch: it holds no box and runs no script of its own, so live.js alone
+# puts each change in place.
+
+def drawn(nn: str) -> str:
+    """Session NN's Walk tab, on the contract."""
+    return draw(world(nn), live.watch((registry.entries().get(nn) or {}).get("session_id", "")))
+
+
+def files(nn: str) -> list:
+    """Every file and folder whose write can move session NN's tab: its
+    folder, where walk-list.md comes later, the file itself, each
+    checklist it borrows from and that checklist's folder, where a row's
+    own file comes later, and each session's record and plan, which name
+    the tag."""
+    out = [registry.WORK, registry.folder(nn), path(nn)]
+    for ln in world(nn)["walk"].splitlines():
+        if m := LINE.match(ln):
+            out += [os.path.join(WALKS, listed(m.group(1))), os.path.join(WALKS, m.group(1))]
+    for n in registry.entries():
+        own = registry.folder(n)
+        out += [os.path.join(own, registry.RECORD), os.path.join(own, plans.PLAN)]
+    return list(dict.fromkeys(out))
+
+
+# The tab's contract, lib/live.py's: its address, its draw, its files. It takes no press.
+LIVE = live.Page(serve.address("walk", r"(\d{2})"), drawn, files=files)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="verb", required=True)
     sub.add_parser("rows").add_argument("nn")
-    tried = sub.add_parser("try")
-    tried.add_argument("file")
-    tried.add_argument("--port", type=int, default=1114)
     args = ap.parse_args()
-    if args.verb == "rows":
-        try:
-            with open(path(args.nn)) as f:
-                print(rows(f.read()))
-        except OSError:
-            sys.exit(f"Session {args.nn} holds no {FILE}.")
-        return
-    file = os.path.abspath(args.file)
-    load, mark = serve.fixture(file)
-    serve.run(f"walk-list-page-{args.port % 100:02d}", args.port, lambda: draw(load(), page.watch(mark())),
-              keyof=mark, hears=lambda: [file])
+    try:
+        with open(path(args.nn)) as f:
+            print(rows(f.read()))
+    except OSError:
+        sys.exit(f"Session {args.nn} holds no {FILE}.")
 
 
 if __name__ == "__main__":

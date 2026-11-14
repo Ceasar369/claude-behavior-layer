@@ -27,7 +27,7 @@ NN is your number, as `CLAUDE.md` defines it.
 
 ## Step 3 — Write the case
 
-1. Write `.claude/state/walk-case/WW-<area>-<section>-<journey file's name>-<its first check's #>.md`, like `11-app-training-coordinate-19.md`. The first check is the first this pass walked: a journey split across stages gets one case per part. The same part walked again after a fix adds `-2`, then `-3`. Never overwrite a case.
+1. Write `.claude/state/walk-case/WW-<area>-<section>-<journey file's name>-<its first check's #>.md`, like `11-admin-orders-order-19.md`. The first check is the first this pass walked: a journey split across stages gets one case per part. The same part walked again after a fix adds `-2`, then `-3`. Never overwrite a case.
 
 ```text
 # <the journey> · walker WW · <date, time>
@@ -55,8 +55,8 @@ Then each section the standard adds to a case, from the analyzers' answers.
 2. Once the last one reports, list first every journey judged since my last ruling: its checks that hold, and each issue, in one line. Then each page I read since, and each of its findings, in one line.
 3. Each issue, one per turn, first: the check, what it should show, what shows instead, its screenshot on WW's Screenshots tab, or a docs check's page text, quoted, the trace, and what the standard adds to an issue. Ask nothing about it.
 4. My ruling on it → Step 6. My word to move on → the next issue.
-5. No issue left → what the standard brings once the issues are dealt with. Then ask, alone on the last line: "Approve the <h> checks that hold? Type yes, or say which you don't." Its <h> leaves out docs rows: my read marks them, Step 7.
-6. My yes → `--mark <the checklist> you` with each holding row ✅. Then each line the standard's "Keeping it current" gives the lead at a journey's end.
+5. No issue left → what the standard brings once the issues are dealt with. Then ask, alone on the last line: "Approve the <h> checks that hold? Type yes, or say which you don't." Its <h> leaves out docs rows: my read marks them, Step 7. It leaves out rows whose "You" mark reads —: the tester's pass settles them.
+6. My yes → `--mark <the checklist> you` with each holding row ✅, its — rows left as they are. Then each line the standard's "Keeping it current" gives the lead at a journey's end.
 
 ## Step 5 — The next journey
 

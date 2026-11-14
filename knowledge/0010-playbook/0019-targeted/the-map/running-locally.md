@@ -31,9 +31,9 @@ A server started before a flip keeps the port it bound.
 
 Each folder under `code/` that runs a server holds one first digit.
 
-A layer's is its vault folder's: the third digit of its vault number.
+> **Stand-in.** This project's digits: each one, its folder, and what it is.
 
-> **Stand-in.** This project's digits: each one, its vault folder, and what it is.
+No tool turns a digit into a vault folder.
 
 Digit `0` is unassigned.
 
@@ -90,9 +90,9 @@ The code never changes. Only the environment does.
 
 ## The behaviour band
 
-Layer `1` is the behaviour layer. It holds band `00`, and each session's copy of a band-00 server: session 08 tries `1100` on `1108`.
+First digit `1` is the behaviour's, never a layer. It holds band `00`, and each session's copy of a band-00 server: session 08 tries `1100` on `1108`.
 
-`1100` is the one page server, `00-sessions-dashboard`'s. It draws every session's clarify, assistant, launch, handover and jury page itself.
+`1100` is the one page server, `00-sessions-dashboard`'s. It draws every session's pages itself.
 
 ## Blocked ports
 

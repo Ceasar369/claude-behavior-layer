@@ -92,16 +92,33 @@ I named the plan open, when the team started or since → `"kind": "open"` befor
 
 `file` is `missions/<id>-<name, dashed>.md` in my folder. It need not exist yet.
 
-The file exists → read it first. Keep every mission already queued or launched, exactly as it is.
+The file exists → read it first. Keep every mission already queued or launched, and its `finish` list, exactly as they are.
 
-## Step 8 — Say it
+## Step 8 — Propose the finish list
+
+`python3 .claude/tools/drive.py show NN` prints it. It holds lines → Step 9.
+
+None → it is what is true once this team is done, one line each. A result I can check, never a step.
+
+- ❌ "The credit backend mission has stopped."
+- ✅ "A member signs up on band 00, and the admin page shows it."
+
+Its last line is "Implemented and verified.", unless my words stop the team earlier.
+
+A team never ends on a walk with me. A walk with me joins a plan only when I ask for one.
+
+My want is not stated yet → propose no lines. The discovery mission's objective is my agree on them.
+
+## Step 9 — Say it
 
 Lay the plan out in chat: one line per stage, its letter, then each mission's id and name.
 
 The page carries the same.
 
+Then each proposed line of the finish list. My ruling on the plan rules them too.
+
 ## Never
 
-Never write a wait into the plan. A mission names the step it meets another at, through `assistant-mission`.
+Never write a wait into the plan. A mission that would wait on another of its stage goes to a later stage.
 
 Never give two missions one name.

@@ -53,7 +53,7 @@ The session proves it, never me. A fresh pane, Playwright, the transcript.
 
 What a session can run, it runs. When only my hands can, it gives me an exact matrix.
 
-A running session is never borrowed. A pane opened for a test closes when the test ends, with its record.
+A running session is never borrowed, nor named in a test. A pane opened for a test closes when the test ends, with its record.
 
 The session drives its test sessions itself, through `session-control`. I am never asked to.
 
@@ -73,7 +73,7 @@ Testing is never mine to ask for. The plan always holds it.
 
 A build moves in order: try it, write it, test it whole, wire it.
 
-A page is tried first. Its tool draws a fixture file, alone, until I lock it.
+A page is tried first, on a made-up sessions folder, until I lock it.
 It reuses what exists, and changes none of it.
 
 The documents, skills and hooks are then written around what was tried.
@@ -94,6 +94,6 @@ Each folder in `.claude/state/` is named for what owns it. Nothing sits loose.
 
 A folder in `.claude/` whose layout is ours stays flat until it passes nine files. Only then does it take subfolders. `.claude/skills/` is Claude Code's: one folder per skill. So is `.claude/agents/`: one file per agent a session sends, its model, effort and tools fixed in it. So is `.claude/mods/`: one plugin per mod.
 
-Python 3 and its standard library, and two packages.
+Python 3 and its standard library, and two packages: iterm2 and cryptography.
 
 AppleScript writes the dock launcher. TypeScript writes a mod, and a mod only calls Python.

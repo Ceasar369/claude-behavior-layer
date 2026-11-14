@@ -6,7 +6,7 @@ When the subject is a skill or hook that failed when it ran.
 
 ## The parts it touches
 
-Behaviour. `skill-creator` holds the contract every skill and its hook honours. `.claude/lib/hook.py` holds a hook's with no skill.
+Behaviour. `skill-creator` holds what every skill holds. `.claude/lib/hook.py` holds the contract every hook honours, with a skill or without.
 
 [[the-behaviour-axioms|The Behaviour Axioms]] hold the floor.
 

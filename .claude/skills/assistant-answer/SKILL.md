@@ -32,7 +32,7 @@ What I sent there, and what I said in its pane, are rulings. Your old answer was
 
 A mark of mine on a wave still `waiting on you` is my draft. It is mine, only not sent yet.
 
-In a drive, you sent there yourself. Only my words in your chat are rulings.
+In a drive, my marks you sent are rulings. Your own verdicts are not.
 
 A turn marked `Session NN · report` is a helper's report, never my ruling.
 
@@ -54,7 +54,9 @@ Judge it against my rulings and its mission. Never against its phrasing.
 
 Right and complete → agree. Anything else → the exact feedback.
 
-An item holding my draft → weigh my draft, never the item afresh.
+A feedback names what is wrong or missing, in one or two lines. The session that owns the item reworks it, never its design here. It cannot find the fix alone → name the fix too, in one line.
+
+An item holding my draft → weigh my draft, never the item afresh. In a session I handed you, my draft stands as my answer.
 
 - It holds → holds.
 - It asks a question, or says Explain → answer it, in plain words.
@@ -121,15 +123,13 @@ A `> ` line goes to the session word for word, the same words its proposal carri
 
 Lay the answer out in chat: its moves, and each item's verdict with its words. Its headline stays in the file. The page carries the same.
 
-In chat, a chat move's words sit in a copy block, under its "Send to session NN.", as `.claude/rules/talking.md` shapes a hand-off.
+A session you drive, through `1-assistant` drive or `session-control`, is yours to send. Its words are typed, never handed, as `.claude/rules/talking.md` sets under Your move. My drafts on its wave stand as my answers. Moving an item to chat answers nothing. Send it yourself, the whole wave at once, through `session-control` Step 2, with no yes of mine.
 
-I asked for your help, never your hands. Outside a drive, I send each answer myself, from 1100.
+Outside a drive, I asked for your help, never your hands. I send each answer myself, from 1100. You send nothing.
+
+There, a chat move's words sit in a copy block, under its "Send to session NN.", as `.claude/rules/talking.md` shapes a hand-off.
 
 Your move is an Action naming each send, in order: "Action: on 1100, send A1's answer, then A2's. It rules each verdict." With no mission, it is the wave's own move: "Action: send my verdicts on session 02's page."
-
-A session I handed you through `1-assistant` drive is yours to send only when its wave holds an answer of yours, and no draft of mine. Moving an item to chat answers nothing. Send it yourself, the whole wave at once, through `session-control` Step 2, with no yes of mine.
-
-Any other wave waits for my Send, drive or not. You send nothing.
 
 ## Never
 

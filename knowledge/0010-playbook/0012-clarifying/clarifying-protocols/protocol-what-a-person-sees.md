@@ -12,7 +12,7 @@ When the exchange decides what a person sees.
 
 1. Does the ruling change what a person sees? A screen, a page, its layout or its words.
 2. Is there a picture of it I can open? None → make it first. The item waits for it.
-3. Does the item rule on the picture? It names where I open it, and what agree keeps.
+3. Does the item rule on the picture? It names where I open it, and what my agree keeps.
 4. Did I ask to see it? Then the picture comes next, before any more words.
 
 ## The lessons

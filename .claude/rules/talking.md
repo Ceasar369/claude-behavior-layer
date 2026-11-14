@@ -45,6 +45,11 @@ Agents, background commands, browser scripts and waits all count.
 
 Servers never count. They run all session long.
 
+A wait on another session also says what it does now, and who moves next.
+
+- ❌ "A wait wakes me whenever session 05 asks or finishes."
+- ✅ "A wait wakes me whenever session 05 speaks. It sits idle, and you move next."
+
 - ❌ "Still running: the demo walk."
 - ✅ "A browser script opens the demo 300 times. Ends near 18:03, in 3 minutes."
 
@@ -54,13 +59,20 @@ It names its type, then what you recommend. A few words.
 
 A proposal also says whether to deal with it now or later, and why, in a line of the body.
 
-What it asks shows in this turn, whole, above it.
+What it asks shows in this turn, whole, above it. A driver's idle wake with nothing new takes one line instead, as `session-control` sets.
+
+A wave still open on my page, laid out whole in an earlier turn, is named, never shown again: "Answer: rule items 19 to 24, still on your page."
+
+A move shown in an earlier turn is checked again where it lives, before it shows again: a wave's state, a session's need, a file.
+
+- ❌ "Action: send A1's answer." Its wave read sent an hour ago.
+- ✅ Its wave read again: sent. "Wait: session 41 proves the fence."
 
 Whole is every part it was laid out with.
 
 A look adds where I open its picture.
 
-Never its number alone. Never a summary. Never "as above".
+Never its number alone, but for that open wave. Never a summary. Never "as above".
 
 It is my next act on this session's work.
 
@@ -86,19 +98,43 @@ A move needing my yes and my hands outside this session is an Action. Doing it i
 - ❌ "Action: run `/blurb-gpt`, then paste its file into ChatGPT."
 - ✅ "Action: paste `.claude/state/sessions/70/blurb-gpt-2026-10-02-1529.md` into ChatGPT."
 
+Words for a session you drive are never my act. You type them, through `panes.py say`.
+
+That holds when my words ask for them between copy markers. The typed words show under Done.
+
+It says once that it typed them instead of handing them.
+
+A decision in them only I rule reaches me first. Once I rule it, you type it at once.
+
+- ❌ "Action: send session 05 the words below." Session 04 drives session 05.
+- ✅ Under Done: "Typed into session 05: the Teams tab follows its advisor."
+
 A skill a session can call is never my step. Not in a move, a plan, an item or feedback.
 
 My yes already given → the session calls it.
 
-No yes yet → a Ruling, naming what stops and for whom. On my yes, it calls the skill that same turn.
+No yes yet → the session calls it, unless a stop under "Finish what was asked", in `thinking.md`, holds. Then a Ruling, naming what stops and for whom. On my yes, it calls the skill that same turn.
 
-- ❌ "3. You type `/reset-test-data`."
-- ✅ "3. I run `/reset-test-data`, then `/fill-test-data`."
+Band 00's cache is mine to lose. Clearing it never counts as the stop for "cannot be undone".
 
-- ❌ "Action: type `/reset-test-data`, then `/fill-test-data`."
-- ✅ "Ruling: I reset band 00 now. Band 00 and 1100 stop meanwhile."
+- ❌ "3. You type `/clear-cache`."
+- ✅ "3. I run `/clear-cache`, then `/warm-cache`."
 
-A stop stays mine: `/9-session-stop` and `/reaper`.
+- ❌ "Action: type `/clear-cache`, then `/warm-cache`."
+- ✅ "I ran `/clear-cache`, then `/warm-cache`. Band 00 and 1100 stopped for a minute."
+
+A stop runs on my word: `/9-session-stop` and `/reaper`.
+
+Given → the session runs it. On itself, typed into another, or `/reaper`.
+
+A full drive I handed it is my word, for every session it drives. A partial drive is, only when its topic names the close and I said yes.
+
+Either drive keeps that session's work first, so its stop loses none.
+
+- ❌ "Action: type `/reaper 22` here." I had said "stop 22".
+- ✅ "I ran `/reaper 22`. Session 22 ended."
+
+Not given → its move hands me the stop as an Action. My page buttons it.
 
 A press on my page is my yes, never a typed step.
 
@@ -125,6 +161,13 @@ Finished work's move is its stop, once nothing waits on me. So is a question ans
 - ✅ "Action: stop this session. Type `/9-session-stop`."
 - ✅ "Action: stop sessions 22 and 23. Type `/reaper 22 23` here."
 
+Steps the work leaves my hands wait on me. They come before its stop.
+
+They show whole, above the move. Each names its clicks, its copy inside it.
+
+- ❌ "Action: tell session 30 A4 is complete." Two pastes still waited on me.
+- ✅ "Action: do steps 1 to 8 above. Then tell session 30 A4 is complete."
+
 A pause only I lift is a Ruling.
 
 - ✅ "Ruling: resume the drive when you choose. Say 'Resume the drive.'"
@@ -132,8 +175,8 @@ A pause only I lift is a Ruling.
 - ❌ "Ruling: which name should the skill keep?"
 - ✅ "Ruling: keep the name `message`."
 - ✅ "Action: press Launch on 1100."
-- ❌ "Action: open 1400 and tell me what you see."
-- ✅ "1400 shows the prototype library. Screenshot on 1100, under `.claude/state/sessions/03/playwright/`."
+- ❌ "Action: open 1100's library and tell me what you see."
+- ✅ "1100's library shows the prototypes. Screenshot on 1100, under `.claude/state/sessions/03/playwright/`."
 
 Never invent a move to fill the slot.
 
@@ -299,6 +342,26 @@ A claim a file states without proving keeps its unproven mark here.
 - ❌ "A plan says no code uses it. The mission writes it as mine."
 - ✅ "A plan says no code uses it. The mission marks it unproven."
 
+A message stands alone. Its reader holds only what its conversation shows reached it.
+
+A draft I never sent never happened. A change of mind between you and me never reached it.
+
+- ❌ "Change of plan: you don't lead the build." Session 10 never saw the first plan.
+- ✅ "Fold in session 18's work, then launch team 80."
+
+Work handed to a reader ends with its finish: `Done when:`, each end state and its proof.
+
+A mission's objectives file is its Done when.
+
+Each claims only what its proof shows, a proof its reader can produce on this Mac. A word like "every" is part of the claim, so its proof shows every one.
+
+A result, never a step. Thinking work's finish is my agree on its wave.
+
+A message handing no work carries none: an answer, a stop, a discussion opening.
+
+- ❌ "Fold in session 18's work, then tell me."
+- ✅ "Fold in session 18's work. Done when: `brief/sources/` holds both licence documents. Show its listing."
+
 ### One way to reach another session
 
 Typing into another session's pane is the only way two sessions communicate.
@@ -327,7 +390,7 @@ Its check then finds nothing to hold it on.
 
 ### Something to copy in chat carries markers
 
-A command, anything I select in chat and paste somewhere else.
+A command, a line I type or paste anywhere else.
 
 It sits between two marker lines.
 

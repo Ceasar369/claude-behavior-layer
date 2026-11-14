@@ -1,0 +1,53 @@
+  /* A touch screen, as my phone, and never a Mac, however narrow its pane.
+     A box's text is 16px, WebKit's standard size: smaller, a tap into it
+     zooms the page. */
+  @media (hover:none) and (pointer:coarse) {
+    .row input[type=text], .row textarea { font-size:16px; touch-action:manipulation; }
+  }
+  /* My phone, upright: every box, pill and button takes a fingertip, 44
+     by 44 at least, as held sideways, and each line wraps to fit. A row
+     keeps its own arrows, 44 pixels each. */
+  @media (hover:none) and (pointer:coarse) and (orientation:portrait) {
+    header.top .acts button { min-height:44px; }
+    .grp, .pills, .pad { gap:4px; }
+    .row input[type=text], .pills button, .pad button, .x { height:44px; min-width:44px;
+      touch-action:manipulation; }
+    .pills button { padding:0 10px; font-size:12px; }
+    .pad button { width:44px; font-size:17px; }
+    .x { font-size:17px; }
+    .words { width:154px; }
+    .site { width:176px; }
+  }
+  /* My phone, held sideways. The map fills the first screen. Beside it sit
+     the picked row's lands line and its four arrows, 44 pixels each. The
+     rows follow, without arrows of their own. Every box, pill and button
+     takes a fingertip: 44 by 44 at least, Apple's least touch size. */
+  @media (hover:none) and (pointer:coarse) and (orientation:landscape) {
+    header.top .acts button { min-height:44px; }
+    .grp, .pills { gap:4px; }
+    .row input[type=text], .pills button, .x { height:44px; min-width:44px; touch-action:manipulation; }
+    .pills button { padding:0 10px; font-size:12px; }
+    .x { font-size:17px; }
+    #map { display:flex; flex-wrap:wrap; align-items:flex-start; gap:0 14px; }
+    #map > .mhead, #map > .note { flex:0 0 100%; }
+    #map > .tabmap { flex:none; max-width:calc(100% - 176px); }
+    #map > .side { flex:1 1 162px; min-width:162px; display:flex; flex-direction:column; gap:6px; }
+    .side .spot { color:var(--blue); font-size:13px; font-weight:700; line-height:1.35; overflow-wrap:anywhere; }
+    .pad.big { display:grid; grid-template-columns:repeat(3, 44px); grid-template-rows:repeat(3, 44px); gap:4px;
+      grid-template-areas:". up ." "left . right" ". down ."; margin-top:6px; }
+    .pad.big button { width:44px; height:44px; font-size:20px; border-radius:8px; touch-action:manipulation; }
+    .pad.big [data-d=up] { grid-area:up; }
+    .pad.big [data-d=left] { grid-area:left; }
+    .pad.big [data-d=right] { grid-area:right; }
+    .pad.big [data-d=down] { grid-area:down; }
+    .row .grp.move { display:none; }
+  }
+  /* Half my phone held sideways: the map takes the whole width, and the
+     lands line and the four arrows, in one row, sit under it. */
+  @media (hover:none) and (pointer:coarse) and (orientation:landscape) and (max-width:600px) {
+    #map > .tabmap { max-width:100%; }
+    #map > .side { flex:1 1 100%; flex-direction:row; flex-wrap:wrap; align-items:center; gap:4px 10px;
+      margin-top:8px; }
+    .pad.big { grid-template-columns:repeat(4, 44px); grid-template-rows:44px; grid-template-areas:"left up down right";
+      margin-top:0; }
+  }

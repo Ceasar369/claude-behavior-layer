@@ -1,0 +1,111 @@
+  body > main { padding:0; overflow:hidden; }
+  /* The top rail. Its middle holds the counts, each a button opening its
+     list, then the orders, a chip for each and All. Its tools sit together
+     at its right. */
+  header.top.agenda .mid { display:flex; align-items:center; justify-self:stretch; justify-content:center;
+    gap:4px; font-size:13px; font-weight:400; color:var(--text); }
+  header.top.agenda .cts, header.top.agenda .ord { display:flex; align-items:center; gap:4px; min-width:0; }
+  header.top.agenda .cts, header.top.agenda .ord > .ct { flex:none; }
+  header.top.agenda .ct { display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 8px;
+    border:1px solid transparent; border-radius:4px; background:none; color:var(--dim); font-size:13px;
+    font-weight:400; white-space:nowrap; }
+  header.top.agenda .ct b { font-size:13px; color:var(--text); }
+  header.top.agenda button.ct:hover { border-color:var(--line); }
+  header.top.agenda .ct.on { background:var(--bg); border-color:var(--dim); }
+  /* The Mine count wears the mark it counts, its number red too. */
+  header.top.agenda .ct .mk { flex:none; width:7px; height:7px; border-radius:50%; background:var(--red); }
+  header.top.agenda .ct b.rd { color:var(--red); }
+  /* A chip shows one order alone, or All. The chips wear the launch page's
+     pills, in its window and tab pills' shade. A row of chips too long for
+     its space scrolls sideways. */
+  header.top.agenda .sl { display:flex; min-width:0; overflow-x:auto; }
+  header.top.agenda .sl .pills { flex:none; --g:var(--blue); }
+  header.top.agenda .sl .group { gap:3px; }
+  header.top.agenda .acts, header.top.agenda .tl { display:flex; align-items:center; gap:8px; }
+  header.top.agenda .find { flex:0 1 220px; min-width:120px; }
+  header.top.agenda .acts button { display:inline-flex; align-items:center; justify-content:center; height:28px;
+    min-width:28px; padding:0 8px; border:1px solid var(--dim); border-radius:4px; background:var(--bg);
+    color:var(--text); font-size:13px; font-weight:700; line-height:1; }
+  header.top.agenda .acts button:hover:not(:disabled) { border-color:var(--text); }
+  header.top.agenda .acts button:disabled { background:var(--bg); color:var(--dim); border-color:var(--line);
+    cursor:default; }
+  header.top.agenda .pct { font-size:12px; color:var(--dim); }
+  /* Narrow, the counts lead the first line, then the search and the zoom
+     tools at its right, each as long as it fits. What does not fit takes
+     the next line, at the right. The orders and their chips take a row of
+     their own, under them. */
+  @media (max-width:1060px) {
+    header.top.agenda { display:flex; flex-wrap:wrap; justify-content:flex-end; row-gap:6px; column-gap:8px; }
+    header.top.agenda .mid, header.top.agenda .acts { display:contents; }
+    header.top.agenda .find { flex:1 1 120px; min-width:120px; max-width:220px; margin-left:auto; }
+    header.top.agenda .find input { width:0; }
+    header.top.agenda .ord { order:1; flex-basis:100%; }
+  }
+  .ag { position:relative; display:flex; height:100%; }
+  /* The chart's own window. Its bars hide, as every page's do: a swipe,
+     the wheel, or a drag moves it, and a pinch zooms it. Smaller than its
+     window, the chart sits in its middle. */
+  .sc { flex:1; min-width:0; display:flex; overflow:auto; overscroll-behavior:contain; cursor:grab; }
+  .sc.drag { cursor:grabbing; user-select:none; -webkit-user-select:none; }
+  .map { display:block; flex:none; margin:auto; }
+  .map text { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .line { fill:none; stroke-width:2; }
+  /* A topic's rectangle, outlined in its topic's colour. */
+  .root rect { fill:var(--raised); stroke-width:1.5; }
+  .rn { fill:var(--text); font-size:14px; font-weight:600; }
+  /* A phase's heading, above its chart, and the rule between two phases. */
+  .ph { fill:var(--text); font-size:18px; font-weight:700; }
+  .split { stroke:var(--line); stroke-width:1; }
+  .node { cursor:pointer; }
+  .hit { fill:transparent; }
+  .name { fill:var(--text); font-size:13px; }
+  .node:hover .name { text-decoration:underline; }
+  .ring { fill:none; stroke:var(--text); stroke-width:1.5; }
+  /* An item whose next step is mine: a small red dot at its top right,
+     edged in the page's dark. */
+  .mine { fill:var(--red); stroke:var(--bg); stroke-width:1.5; }
+  /* A chip hides every item of the other orders, its name and its marks
+     with it. Every line stays. */
+  .node.off { display:none; }
+  .note { position:relative; flex:none; width:360px; overflow-y:auto; padding:18px 22px;
+    background:var(--panel); border-left:1px solid var(--line); }
+  .note[hidden] { display:none; }
+  /* Its close button, the shell's, at its top right. */
+  .note .close { position:absolute; top:10px; right:10px; }
+  .nh { display:flex; align-items:center; gap:10px; margin:0 40px 12px 0; }
+  .nh h3 { margin:0; font-size:17px; line-height:1.3; }
+  .badge { position:relative; flex:none; width:22px; height:22px; border:2px solid var(--line);
+    border-radius:50%; overflow:hidden; }
+  .nt { margin:0 0 16px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+  /* Start, under the title: it opens a session on the item. */
+  .note .st { margin:0 0 14px; }
+  .note h4 { margin:0 0 5px; font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--dim); }
+  .note ul { margin:0 0 14px; padding-left:16px; }
+  .note li { margin:0 0 2px; }
+  /* A list, where a note opens: an item a row, its title. It opens straight
+     on its rows, its first lines clear of the close button. */
+  .note ul.rows { padding:0; list-style:none; }
+  .note > .close + .rows > li:first-child, .note > .close + h4, .note > .close + h4 + .rows > li:first-child,
+  .note > .close + .nt { margin-right:40px; }
+  .rows button { display:block; width:100%; padding:5px 8px; border:0; border-radius:4px; background:none;
+    color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+  .rows button:hover { background:var(--raised); }
+  /* An item in a list leads with a small dot in its colour. A note's
+     lists of items drop their bullets for it. */
+  .cd { display:inline-block; width:9px; height:9px; margin-right:8px; border-radius:50%; vertical-align:middle; }
+  .note ul.items { padding:0; list-style:none; }
+  .bad { position:absolute; left:8px; bottom:8px; z-index:1; margin:0; font-size:12px; color:var(--dim); }
+  .bad[hidden] { display:none; }
+  /* Narrow, the note covers the chart, its close button over it. */
+  @media (max-width:699px) {
+    .note { position:absolute; inset:0; z-index:2; width:auto; border-left:0; }
+  }
+  /* A touch screen, as my phone, and never a Mac, however narrow its pane.
+     Every control takes a fingertip: 44 by 44 points, Apple's minimum. */
+  @media (hover:none) and (pointer:coarse) {
+    .note .st .btn { min-width:44px; height:44px; }
+    header.top.agenda .acts button, header.top.agenda .ct, header.top.agenda .pills button { min-width:44px;
+      height:44px; }
+    .rows button { min-height:44px; }
+  }

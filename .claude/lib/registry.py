@@ -270,6 +270,9 @@ LIVE = accounts.FOLDERS
 # second read one process table.
 PUBLISHED: list = [0.0, None]
 A_SECOND = 1.0
+# Inside 1100, what that answer was read from: the process list's read, and
+# each record file's size and time.
+READ_FROM: list = [None]
 
 
 def watched(numbers) -> list:
@@ -317,13 +320,30 @@ def claude_records(fresh: bool = False) -> dict:
     draw of that second, however many sessions and pages ask. A press that
     types into a pane asks `fresh`, page.typable's, so a dialog that just
     opened is never typed into.
+
+    Inside 1100 the process list is read in the background, and costs a
+    draw nothing. There the answer is kept only while that read and every
+    record file's size and time hold, so a page drawn right after a status
+    moved never keeps the older one.
     """
-    if not fresh and PUBLISHED[1] is not None and time.time() - PUBLISHED[0] < A_SECOND:
+    kept = not fresh and ports.PROCESSES.running()
+    if not fresh and not kept and PUBLISHED[1] is not None and time.time() - PUBLISHED[0] < A_SECOND:
         return PUBLISHED[1]
     paths = {}
     for base in LIVE:
         for f in glob.glob(os.path.expanduser(f"{base}/sessions/*.json")):
             paths.setdefault(os.path.realpath(f), f)
+    if kept:
+        def mark(f: str):
+            try:
+                st = os.stat(f)
+            except OSError:
+                return None
+            return st.st_size, st.st_mtime_ns
+        read_from = (ports.PROCESSES.at, tuple(sorted((f, mark(f)) for f in paths)))
+        if READ_FROM[0] == read_from and PUBLISHED[1] is not None:
+            return PUBLISHED[1]
+        READ_FROM[0] = read_from
     found = []
     for f in paths:
         try:
@@ -333,7 +353,7 @@ def claude_records(fresh: bool = False) -> dict:
             continue
         if d.get("sessionId") and d.get("pid"):
             found.append(d)
-    running = ports.started(d["pid"] for d in found)
+    running = ports.started((d["pid"] for d in found), fresh)
     best = {}
     for d in found:
         began = running.get(int(d["pid"]))
@@ -469,6 +489,21 @@ def write_whole(path: str, text: str) -> None:
     with open(hidden, "w", encoding="utf-8") as f:
         f.write(text)
     os.replace(hidden, path)
+
+
+def rewrite(path: str, text: str) -> None:
+    """write_whole, for a file a page waits on: the new file takes the old
+    one's birth back. The swap makes a file born now, and home reads how
+    long a page has waited from its file's birth. A time set before a
+    file's birth moves its birth."""
+    try:
+        born = os.stat(path).st_birthtime
+    except OSError:
+        born = 0
+    write_whole(path, text)
+    if born:
+        os.utime(path, (born, born))
+        os.utime(path)
 
 
 def repane(number: str, pane: str) -> None:

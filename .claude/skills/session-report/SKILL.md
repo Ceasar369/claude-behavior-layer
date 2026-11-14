@@ -27,6 +27,14 @@ Find my mission: `grep -l '"title": "<my name>"' .claude/state/sessions/*/stages
 
 Read every file the work names. Never state a fact from memory.
 
+## Step 3b — Check my objectives
+
+A mission found → its objectives file sits beside it, `missions/<id>-objectives.md` in the same folder. Read it whole.
+
+Any line still `- [ ]`, or with no `Shown:` line under it → write no report. Say in chat which lines are unmarked. An unmarked `Run:` line → go back to the work. Only `Yours:` lines left → bring me all of them together, in one `/2-clarify` wave, then wait.
+
+No mission, or no objectives file → go on.
+
 ## Step 4 — Write the report
 
 Write `.claude/state/sessions/NN/report.md` with the Write tool. It replaces any report before it.
@@ -55,6 +63,8 @@ An empty section → one line saying so.
 Say the report's Agreed, To do and Still open in chat, in `clarify-summary`'s shape. Name the report under Done. Then wait.
 
 A mission → the turn's Done line reads "`.claude/state/sessions/NN/report.md`: my final report. <id> is complete." Its move reads "Action: tell session MM <id> is complete. Its report: `.claude/state/sessions/NN/report.md`.", MM being my plan's folder.
+
+To do holds steps for my hands → lay them out whole first, above the move. Each names its clicks, its copy block inside it. The move then reads "Action: do steps 1 to N above. Then tell session MM <id> is complete. Its report: `.claude/state/sessions/NN/report.md`."
 
 No mission → its move follows `.claude/rules/talking.md`.
 

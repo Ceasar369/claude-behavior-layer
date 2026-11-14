@@ -81,7 +81,7 @@ def main():
     nn, what = sys.argv[1:] if len(sys.argv) == 3 else ("", "")
     parts = what.strip("/").split("/")
     if not nn.isdigit() or (what != "keep" and (len(parts) != 3 or not all(NAME.fullmatch(p) for p in parts))):
-        sys.exit("walk-clear.py NN AREA/SECTION/JOURNEY, like: walk-clear.py 11 web-app/authentication/sign-up"
+        sys.exit("walk-clear.py NN AREA/SECTION/JOURNEY, like: walk-clear.py 11 site/authentication/sign-up"
                  "\nwalk-clear.py NN keep, at a walk's end")
     to = keep(nn)
     kept = (f"Kept walk/ in {os.path.relpath(to, registry.ROOT)}/." if to else

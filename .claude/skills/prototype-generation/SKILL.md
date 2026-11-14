@@ -9,7 +9,7 @@ argument-hint: "the subject, its level, its unknowns, then each variation's dire
 
 ## Step 1 — Know my number
 
-My number, as `CLAUDE.md` defines it. My page is the prototypes app, on the port `python3 .claude/tools/prototype.py status NN` prints. 1100 frames it in my hub while I hold a subject not locked in.
+My number, as `CLAUDE.md` defines it. My page is 1100's, at `/proto/`, framed in my hub while I hold a subject not locked in. Its variations come from the prototypes app, on the port `python3 .claude/tools/prototype.py status NN` prints.
 
 ## Step 2 — Take the round
 
@@ -29,9 +29,13 @@ Whoever writes a variation reads every file it builds on. Name each one by path.
 
 - Each source's file, `code/prototypes/src/routes/<subject>/g<N>/v<M>.tsx`.
 - The real parts, styles and fixtures each variation reuses, under `code/`. Glob and Grep find them.
-- A page 1100 draws: `.claude/lib/page.py`'s shell, `SHELL`, and the CSS of each page it borrows from.
+- A page 1100 draws: `.claude/lib/page.py`'s shell, `SHELL`, its style in `.claude/pages/styles/shell.css`, and the CSS of each page it borrows from.
 
-Each variation names every look it uses: borrowed, with its page, or new. A new look is my item before the build.
+Each variation names every look it uses: borrowed, with its page, or new.
+
+Before calling a look new, check what is already ruled: the page rules atop `.claude/lib/page.py`, the protocols in `knowledge/0010-playbook/0014-prototyping/prototyping-protocols/`, and the looks I already agreed. A look ruled there is followed, with no question.
+
+A look nobody has ruled stops the build. It comes to me as a `clarify-items` item, and the build waits for my answer.
 
 ## Step 4 — Write each variation
 
@@ -48,7 +52,7 @@ Each brief holds:
 5. The parts, styles and fixtures to import, by relative path, from any frontend under `code/`. Its frontend's look file, `src/base/styles.css`, comes whole, as text: `import look from "<relative path>/src/base/styles.css?inline"`. The route draws it as `<style>{look}</style>`, so it lives only while the route is on screen. The variation's own new rules follow it, and nothing else is copied. A source file's copied rules leave. A real rule it changes is rewritten among its own.
 6. Its data is typed in. No backend call, no login, no database.
 7. It never edits a file it imports.
-8. Its subject's own rules. A product screen's are The Screen, in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`. A variation that draws a whole screen obeys The Screen and the frame, in `knowledge/0010-playbook/0015-coding/the-stack/the-look.md`. A page 1100 draws obeys the page rules, atop `.claude/lib/page.py`. Its direction outranks them.
+8. Its subject's own rules. A product screen's are The Screen, in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`, then its side's screens, as `prototype-rules` Step 3 names them. A variation that draws a whole screen obeys The Screen and the frame, in `knowledge/0010-playbook/0015-coding/the-stack/the-look.md`. A page 1100 draws obeys the page rules, atop `.claude/lib/page.py`. Its direction outranks them.
 9. Its opening comment names its direction, numbers and stand-ins, and every look it uses: borrowed, with its page, or new. Each stand-in is also marked where it sits.
 
 ## Step 5 — Check the files

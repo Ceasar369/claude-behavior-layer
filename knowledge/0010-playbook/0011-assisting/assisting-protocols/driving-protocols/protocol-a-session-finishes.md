@@ -11,7 +11,7 @@ When a session you drive answers, asks, or stops working.
 3. **Only a real blocker stops you.** `.claude/rules/thinking.md` lists every stop, under "Finish what was asked". Bring me what blocks you: [[protocol-stuck|Stuck]]. Skill: `session-control`.
 4. **Check it.** Skill: `assistant-check`, then `session-control`.
 5. **Keep its work.** Copy the session's folder, without its screenshots, and its transcript, into your folder. One folder per mission, so a number used again never overwrites one. Skill: `session-control`.
-6. **Stop it.** Skill: `session-control`.
+6. **Stop it.** Its work leaves steps for my hands → its stop waits for my word that they are done. Skill: `session-control`.
 7. **Capped: wait for its reset.** When the capped account is your own, "Resume the drive." is typed into you at the reset, and you go on from step 1. A drive I paused stays paused. Skill: `session-control`.
 8. **Error: three tries, each after a pause.** Skill: `session-control`.
 9. **Blocked: type nothing into it.** A permission prompt or a dialog holds it, and a Return there picks option 1. Only my hand answers it. Bring it to me: [[protocol-stuck|Stuck]]. Skill: `1-assistant`.
@@ -21,4 +21,4 @@ When a session you drive answers, asks, or stops working.
 
 ## What reaches me
 
-Only what reaches me through [[protocol-stuck|Stuck]]. You settle everything else, and every other session goes on.
+Only what reaches me through [[protocol-stuck|Stuck]], and steps a finished session leaves my hands. You settle everything else, and every other session goes on.

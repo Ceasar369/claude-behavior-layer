@@ -35,6 +35,8 @@ Re-run only the test files its report names, read-only. Never a whole folder, ne
 
 Every other claim its report makes is read on disk: its files, and the output it pastes.
 
+Its objectives file sits beside its mission, `missions/<id>-objectives.md`. Run each `Run:` line's command again, as the line writes it. It prints anything other than what the line says, or its `Shown:` quotes what it never printed → that line is not done. A command that writes is never run: that line is not done. A `Yours:` line holds once the wave its `Shown:` names reads my agree on that item, or my feedback asking a proof, and that proof holds on disk. Its mark is never proof. One line not holding → not done.
+
 A session that ran a helper holds only once its helper's checks pass too, and the helper is stopped.
 
 A prototype mission holds once `code/prototypes/<subject>/` keeps one generation with one variation, and its route renders on the prototypes app, on the port `python3 .claude/tools/prototype.py status NN` prints.
@@ -56,7 +58,7 @@ Write `.claude/state/sessions/MM/answers/<id>.md` with the Write tool.
 
 Line one is the verdict, "Holds: stop session 21" or "Not done: " and what is missing, then `read to` and the bookmark `new` printed.
 
-`## Your moves` comes first. It holds → its one move types `/9-session-stop now` into its pane. Not done → its move sends the exact fixes to its session, as `> ` lines.
+`## Your moves` comes first. It holds → its one move types `/9-session-stop now` into its pane. Its work leaves steps for my hands → those steps come first under Your moves, then the stop. Not done → its move sends the exact fixes to its session, as `> ` lines.
 
 One bullet per check, with its proof. A check not run says "unproven".
 
@@ -68,15 +70,27 @@ A `> ` line goes to the session word for word. I never paste it. `.claude/rules/
 
 Its report hands a later mission something → add it to that mission's notes, one bullet.
 
+It holds → read my plan's finish list: `python3 .claude/tools/drive.py show MM`. Your proof shows a line holding → turn it green, that proof on stdin:
+
+```
+python3 .claude/tools/drive.py green MM <its number> <<'EOF'
+<the proof>
+EOF
+```
+
+Say how many are green.
+
 ## Step 6 — Say it
 
 Lay the answer out in chat: its verdict, each check with its proof, and its moves. The page carries the same.
 
-I asked for your help, never your hands. Outside a drive, I send each move myself, from 1100.
+In a drive, your verdict returns to `1-assistant` Step 8. It stops the session, or sends the fixes. Never ask my yes. Steps left to my hands reach me first, by `assistant-drive` Step 4. Its stop waits for my word that they are done. A session you drive gets its words typed, never handed, as `.claude/rules/talking.md` sets under Your move.
 
-Your move is "Action: on 1100, send session NN its stop." when it holds, or "Action: on 1100, send session NN the fixes." when it does not. It rules the verdict.
+Outside a drive, I asked for your help, never your hands. I send each move myself, from 1100.
 
-In a drive, your verdict returns to `1-assistant` Step 8. It stops the session, or sends the fixes. Never ask my yes.
+There, your move is "Action: on 1100, send session NN its stop." when it holds, or "Action: on 1100, send session NN the fixes." when it does not. It rules the verdict.
+
+It holds, and its work leaves steps for my hands → lay them out whole first, each with its clicks, its copy block inside it. Your move then reads "Action: do steps 1 to N above. Then, on 1100, send session NN its stop."
 
 ## Never
 

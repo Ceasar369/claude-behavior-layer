@@ -1,6 +1,6 @@
 ---
 name: prototype-continue
-description: Moves a prototype into this session, from 1400's Saved list or another session.
+description: Moves a prototype into this session, from the library's Saved list or another session.
 allowed-tools: Read
 argument-hint: "[the prototype's exact name] — omit to hear every saved one"
 ---

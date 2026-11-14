@@ -15,6 +15,13 @@ seat drives and follows. One naming sessions covers those alone. A
 session gone, its process ended, needs no wait: the one wait already
 told it.
 
+A turn ending on a Wait line naming a running session nothing watches,
+and the seat's own next step after it, "I then launch stage B", is held
+too, and the seat told to follow it: else nothing wakes it for that step.
+A Wait with no step of the seat's own, as "session 01 stops me", passes:
+an idle seat needs no wake. An advisor passes: it ends on a Wait, and I
+press Advise.
+
 A paused drive arms no wait, and neither does a seat handing itself over:
 its successor waits instead. Both pass. A seat hands itself over by a
 press, or by session-handover, whose copy for its successor is saved in
@@ -30,12 +37,26 @@ sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 import drive  # noqa: E402
 import handover  # noqa: E402
+import page  # noqa: E402
 import ports  # noqa: E402
 import registry  # noqa: E402
 import successor  # noqa: E402
 import transcripts  # noqa: E402
 
 WAIT = "transcript.py wait"
+# The sessions a turn's Wait line names: "Wait: sessions 22, 23 and 31 answer."
+WAIT_LINE = re.compile(r"^\W*Wait\b.*?\bsessions?\s+(\d{2}(?:(?:,\s*and\s+|,\s*|\s+and\s+|\s+to\s+)\d{2})*).*$", re.M)
+# The seat's own step once they move: "I then export the layer."
+MY_STEP = re.compile(r"\bI then\b|\bthen I\b", re.I)
+
+
+def waited_on(said: str) -> list:
+    """The sessions named by the last Wait line of what a turn said, when
+    that line names the seat's own next step. None otherwise."""
+    found = list(WAIT_LINE.finditer(said))
+    if not found or not MY_STEP.search(found[-1].group(0)):
+        return []
+    return re.findall(r"\d{2}", found[-1].group(1))
 
 
 def waits(pid: int) -> list:
@@ -97,21 +118,31 @@ def main() -> None:
     if not me or drive.state(me) == "paused" or handover.progress(me).get("step") in handover.STEPS:
         sys.exit(0)
     live = registry.claude_records()
-    running = [n for n in successor.watching(me, held) if held[n].get("session_id") in live]
+    watched = successor.watching(me, held)
+    running = [n for n in watched if held[n].get("session_id") in live]
     mine = live.get(held[me].get("session_id")) or {}
-    if not running or not mine.get("pid"):
+    if not mine.get("pid"):
         sys.exit(0)
     covers = waits(int(mine["pid"]))
-    if None in covers:
+    named = {c for got in covers if got for c in got}
+    uncovered = [] if None in covers else [n for n in running if n not in named]
+    ignored = [n for n in waited_on(event.get("last_assistant_message") or "")
+               if n != me and n not in watched and n not in named and (held.get(n) or {}).get("session_id") in live]
+    if ignored and page.tool("advisor-page").seated(mine.get("name") or held[me].get("title", "")):
+        ignored = []
+    if (not uncovered and not ignored) or handing_over(me, event.get("transcript_path") or held[me].get("transcript", "")):
         sys.exit(0)
-    running = [n for n in running if not any(n in c for c in covers)]
-    if not running or handing_over(me, event.get("transcript_path") or held[me].get("transcript", "")):
-        sys.exit(0)
-    them = " and ".join(running)
-    print(json.dumps({"decision": "block", "reason": (
-        f"You drive or follow session{'s' if len(running) > 1 else ''} {them}, and no wait covers "
-        f"{'them' if len(running) > 1 else 'it'}. Arm your one wait now, in the background: "
-        f"`{successor.WAIT}`. Then end your turn.")}))
+    told = []
+    if uncovered:
+        them = " and ".join(uncovered)
+        told.append(f"You drive or follow session{'s' if len(uncovered) > 1 else ''} {them}, and no wait covers "
+                    f"{'them' if len(uncovered) > 1 else 'it'}. Arm your one wait now, in the background: "
+                    f"`{successor.WAIT}`. Then end your turn.")
+    if ignored:
+        told.append(f"Your Wait names session{'s' if len(ignored) > 1 else ''} {' and '.join(ignored)}, and nothing "
+                    "wakes you when it speaks. Run the `follow` skill on each, with your Wait as its task. "
+                    "Then end your turn.")
+    print(json.dumps({"decision": "block", "reason": " ".join(told)}))
 
 
 if __name__ == "__main__":

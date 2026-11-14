@@ -21,3 +21,7 @@ It returns one pick, its reason, and its quote with its place.
 1. What are the claims? Each is one fact, in the words' own wording, in their order.
 2. Which source does each claim name? Else the file it is about. None found leaves it empty.
 3. Does every counted answer agree? Apart, the claim is checked again, then shown split.
+
+## The lessons
+
+Nothing sits here.

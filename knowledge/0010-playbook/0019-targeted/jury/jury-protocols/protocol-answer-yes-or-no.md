@@ -20,3 +20,7 @@ It returns yes, no or can't tell, its reason, and its quote with its place.
 
 1. Is it one question, answered yes or no? Two questions are two juries.
 2. Does every counted answer agree? Apart, it is asked again, then shown split.
+
+## The lessons
+
+Nothing sits here.

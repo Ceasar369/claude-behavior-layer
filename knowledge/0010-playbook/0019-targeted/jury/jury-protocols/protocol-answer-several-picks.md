@@ -20,3 +20,7 @@ It returns every option that applies, or can't tell, its reason, and its quote w
 
 1. Are the options a known set? A file names them, or I do.
 2. Does every counted answer name the same picks? Apart, it is asked again, then shown split.
+
+## The lessons
+
+Nothing sits here.

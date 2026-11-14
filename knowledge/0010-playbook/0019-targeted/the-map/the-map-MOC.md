@@ -6,10 +6,11 @@ Where things are. Every document here answers that one question.
 
 ## Children
 
-- [[outside-the-project|Outside the Project]] — the archives and the references, beside the live project.
+- [[outside-the-project|Outside The Project]] — the archives and the references, beside the live project.
 - [[the-repository|The Repository]] — which `code/` folder holds which layer, and where sessions meet.
 - [[running-locally|Running Locally]] — how a port is derived, and how a session reaches another layer.
 - [[the-browser|The Browser]] — which Chrome profile holds which login, and which session reaches it.
+- [[the-claude-app|The Claude App]] — where my Claude app's skills, settings and connector live, and the pages about them.
 
 ## Admission rule
 

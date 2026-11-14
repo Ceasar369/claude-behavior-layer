@@ -58,17 +58,17 @@ Line one is the title. Line two is blank. Line three is `Up:`, linking its folde
 
 ## Marks
 
-✅ passed. ⬜ not passed yet. — not mine: a page only developers see is the tester's alone.
+✅ passed. ⬜ not passed yet. — not mine: a journey's lettered detail, or a page only developers see, is the tester's alone. A detail the tester fails reaches me as an issue.
 
 The tester is the walker and the analyzer together. The walker walks; the analyzer's verdict is the "Tester" mark.
 
-A check passes once the tester and I both pass it. On a docs row, my pass is my own read of its page. A failed check reads ⬜. A step that changes goes back to ⬜, each mark it held, its details' too.
+A check passes once the tester and I both pass it. On a docs row, my pass is my own read of its page. A failed check reads ⬜. A step that changes goes back to ⬜, each mark it held, its details' Tester marks too.
 
 Marks live in each checklist alone.
 
 ## A journey file
 
-It opens with its Start, its Prep and its End. Then its steps.
+It opens with its Start, its Prep and its End, then its Angles line, as "The search" rules. Then its steps.
 
 The Start names the state the steps need, and the logins, by email. No password is written. A question for me stands in the Start, after "Ask". Once I answer, its steps take my answer, and the Ask goes.
 
@@ -78,7 +78,7 @@ A step is one thing I do, then what I see. Its head names the screen, its addres
 
 Other ways and edge cases fold under the step, lettered, in "Details the tester checks". Each opens with its letter and a short title, which its checklist row shows.
 
-A step the walker readies carries "Prep". A Prep names its exact change: the database and its SQL, the call and its body, the command, or the log line it reads. A walker on its own login never resets the test data: a Prep needs no reset. A Prep acts on the walker's own login and company, never on a seeded one's. A step on a page only developers see is the tester's alone.
+A step the walker readies carries "Prep". A Prep names its exact change: the database and its SQL, the call and its body, the command, or the log line it reads. A walker on its own login never resets the test data: a Prep needs no reset. A Prep acts on the walker's own login and company, never on a seeded one's. A Prep logs in with the password the walker's own login was made with, and names no settings file: a walker never opens one. A step on a page only developers see is the tester's alone.
 
 ```text
 ### Sign up 3 · Type the code from the email
@@ -102,11 +102,52 @@ A mark follows a step's title.
 - **Server only**: runs only on a deployed server, never on this laptop. My walker walks it there. "See" quotes what the laptop shows instead.
 - **Real**: tests the real channel itself, which nothing seeded proves: an email arriving from the mail company, the Mac's Touch ID, a phone's authenticator app. It is my hands: the walker hands it to me, and I do it in my own Chrome.
 
-**Not designed** stands in `before-you-start.md` alone, never as a step. No mark exists for code still changing.
+**Not designed** stands in `before-you-start.md` alone, never as a step. An Angles line names only the word. No mark exists for code still changing.
 
 Where the vault and the screen disagree, the step quotes both, as "Vault:" and "Screen:", and my word says which is right.
 
 A sweep step is a table: one row per state or width, its words quoted.
+
+## The search
+
+Right before a journey walks, `walk-write` lists each case its screens' code checks that no detail walks, each with its proposed detail. Values sharing one refusal share one detail. It also asks each screen seven angles:
+
+- Empty.
+- A wrong shape.
+- Limits: zero, negative, longest, most.
+- Twice: a double press, two tabs.
+- Cut short: offline, reload, Back.
+- Someone else: another role, another company.
+- Time: past, expired.
+
+An angle no code decides comes to me. I design it, or it is listed Not designed. An angle I design is a build, never a line first: a fixer builds it, then its journey walks it.
+
+Each journey's Angles line follows its End. It names each angle, then the details walking it, "none" with why, or "Not designed". A detail of its own journey is its step and letter; another journey's carries its name.
+
+```text
+**Angles** · Empty: 1a · Wrong shape: 1b, 2a · Limits: 1c · Twice: none, Forgot 2b walks two tabs · Cut short: 3a · Someone else: none, nobody is signed in yet · Time: Not designed
+```
+
+`walk-write` writes it with each search, and rewrites it before each walk. `.claude/tools/walk-checklists.py` shows it under the journey's heading.
+
+Right before a docs page walks, `walk-write` lists each case its calls' code checks that the page never states, each with its proposed line for the page and its detail. It also asks each page six angles:
+
+- Each error code.
+- Each limit.
+- A retry with the same key.
+- Each event it writes.
+- Sandbox and live.
+- A wrong or missing key.
+
+An angle the page cannot answer comes to me, as a screen's does.
+
+Each docs step's Angles line follows its italic line, and names each angle, as a journey's does. `.claude/tools/walk-checklists.py` shows it under the heading holding its step, below the journey's own line, opening with its step's name: `**Docs 1 · Angles** · …`.
+
+```text
+**Angles** · Error codes: c · Limits: d · Retry: e · Events: none, the call writes none · Sandbox and live: f · Wrong key: none, its link to the shared codes
+```
+
+The codes every call shares sit on one docs page alone, and each page links it instead. That link answers a wrong or missing key, and no search proposes a shared code for a page.
 
 ## Keeping it current
 

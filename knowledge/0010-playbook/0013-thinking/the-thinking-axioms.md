@@ -13,7 +13,7 @@ Before an idea settles, follow it to everything it changes.
 
 ## 2. Answer the five Ws
 
-Every subject answers five questions. Each unanswered one is carried as `.claude/rules/thinking.md` rules, under "Carry an edge case only while the round has room".
+Every subject answers five questions. Each unanswered one is carried the way `.claude/rules/thinking.md` rules, under "Carry an edge case only while the round has room".
 
 Take the clarify page.
 
@@ -73,9 +73,6 @@ Only a stop `.claude/rules/thinking.md` lists, under "Finish what was asked", st
 A rule that needs an exception is wrong, or misread.
 
 Find which, and fix that. Never write the exception.
-
-- ❌ "The Sandbox's line gains one exception: the demo."
-- ✅ "The demo holds fixtures. The Sandbox's line stays."
 
 A definition is a rule. A clear case that fails it tests the definition too.
 

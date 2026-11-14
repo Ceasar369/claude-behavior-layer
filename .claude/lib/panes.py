@@ -21,15 +21,21 @@ layout, and a split renumbers it, so a position cannot be addressed.
 Imported, never run. The command line is .claude/tools/panes.py.
 """
 
+import collections
 import io
 import json
 import os
 import re
 import shlex
 import subprocess
+import sys
+import threading
 import time
+import traceback
 
 import accounts
+import ports
+import reader
 import registry
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -65,6 +71,9 @@ CONFIG = {a: named(accounts.ACCOUNTS[a]["folder"]) for a in accounts.KNOWN}
 # Every call to iTerm goes out without them, and every boot line drops
 # them before claude starts.
 UNSET = "unset -m 'CLAUDE*'; "
+
+# Set after UNSET, on a Haiku session's claude line alone.
+HAIKU_SUBAGENTS = "CLAUDE_CODE_SUBAGENT_MODEL=haiku CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1 "
 
 
 def clean() -> dict:
@@ -113,6 +122,10 @@ end tell'''
 # arrive as one paste, and a return inside a paste is a newline, not a
 # send. The line then sits in the prompt, typed and unsent.
 #
+# Each write is its own script, and write() retries it. A script searches
+# for the pane anew, because a pane reached through windows by position
+# breaks when a window changes place, as one going full screen does.
+#
 # The text itself goes in pieces, because a long enough line outruns the
 # prompt and it keeps only what arrived last.
 #
@@ -144,11 +157,22 @@ WRITE = '''tell application "iTerm"
     end repeat
   end repeat
   if s is missing value then return ""
-{writes}{tail}  return "1"
+{writes}  return "1"
 end tell'''
 
 PIECE = 400
 PAUSE = 0.15
+
+# A window going full screen, or coming back, makes iTerm refuse every
+# search of its windows for about 0.4 seconds. Measured on iTerm 3.7.6: 8
+# of 170 searches failed, in three stretches, across one round trip. A
+# failed search types nothing, so it is tried again, a second apart.
+TRIES = 3
+A_RETRY = 1
+
+# Told of each refused write, with iTerm's words. lib/launch.py sets it to
+# its log. One holder of the hook, since panes cannot import launch.
+MISSED = [lambda pane, why: None]
 
 # A new pane answers with its id before its shell has drawn a prompt, and
 # a line typed into that gap lands scrambled. A 175 character line typed
@@ -157,9 +181,8 @@ PAUSE = 0.15
 # measured.
 SETTLE = 0.5
 
-RETURN = '''          delay 1
-          tell s to write text (character id 13) newline NO
-'''
+RETURN = "          tell s to write text (character id 13) newline NO\n"
+A_RETURN = 1
 
 # Control-K then Control-U, ten times, in one write: a Claude prompt
 # emptied before a command types. Each pair kills one line, the cursor
@@ -175,19 +198,9 @@ WIPE = ("          tell s to write text ("
 # Control-U, which kills the line the cursor sits on. A new pane is not
 # always at an empty prompt: a recalled command can be sitting there, and
 # the next thing typed joins onto the end of it. That splice produced
-# a recalled flag running straight into "cd /Users/..." and the boot failed.
+# a recalled flag running straight into the boot's "cd", and the boot failed.
 # Killing the line costs nothing when the line is already empty.
-CLEAR = '''tell application "iTerm"
-  repeat with w in windows
-    repeat with t in tabs of w
-      repeat with s in sessions of t
-        if (id of s) is "{pane}" then
-          tell s to write text (character id 21) newline NO
-        end if
-      end repeat
-    end repeat
-  end repeat
-end tell'''
+CLEAR = "          tell s to write text (character id 21) newline NO\n"
 
 # Every pane's id, then the terminal it holds. A browser pane holds none,
 # and its tty reads "missing value".
@@ -204,14 +217,87 @@ LIST = '''tell application "iTerm"
 end tell'''
 
 
+# At most ASKERS programs ask iTerm at once, from one process: osascript
+# here, and lib/iterm.py's tool. Uncapped, a slow iTerm left 1100 with
+# hundreds of them waiting at once, and they filled the Mac's memory. An
+# ask that finds no place within its own timeout is never started.
+ASKERS = threading.BoundedSemaphore(3)
+
+# More than BURST asks inside BURST_SECONDS is a flood. One line on stderr,
+# 1100's server log, names its askers, at most once a minute.
+BURST, BURST_SECONDS = 50, 10
+ASKS: collections.deque = collections.deque()
+TOLD = [0.0]
+TALLY = threading.Lock()
+
+
+def asker() -> str:
+    """Who asks iTerm: the first caller outside this module and lib/iterm.py."""
+    for f in reversed(traceback.extract_stack()[:-2]):
+        if os.path.basename(f.filename) not in ("panes.py", "iterm.py"):
+            return f"{os.path.basename(f.filename)}:{f.lineno} {f.name}"
+    return "unknown"
+
+
+def tally() -> None:
+    """Count one ask, and name the askers once they flood. Never raises."""
+    try:
+        now, who = time.time(), asker()
+        with TALLY:
+            ASKS.append((now, who))
+            while now - ASKS[0][0] > BURST_SECONDS:
+                ASKS.popleft()
+            if len(ASKS) <= BURST or now - TOLD[0] < 60:
+                return
+            TOLD[0], count = now, len(ASKS)
+            top = collections.Counter(w for _, w in ASKS).most_common(5)
+    except Exception:
+        return
+    print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} panes: {count} iTerm asks in {BURST_SECONDS} seconds, from "
+          + ", ".join(f"{w} ({n})" for w, n in top), file=sys.stderr, flush=True)
+
+
+def ask(argv: list, timeout: float) -> subprocess.CompletedProcess:
+    """One program asking iTerm, once a place among ASKERS frees. Raises
+    subprocess.TimeoutExpired when none frees within `timeout`, as when
+    the program itself outlasts it."""
+    tally()
+    if not ASKERS.acquire(timeout=timeout):
+        raise subprocess.TimeoutExpired(argv, timeout)
+    try:
+        return subprocess.run(argv, env=clean(), capture_output=True, text=True, timeout=timeout)
+    finally:
+        ASKERS.release()
+
+
 def run(script: str, timeout: float = 10) -> str | None:
     """One osascript call. None means the question was not answered."""
     try:
-        r = subprocess.run(["/usr/bin/osascript", "-e", script], env=clean(),
-                           capture_output=True, text=True, timeout=timeout)
+        r = ask(["/usr/bin/osascript", "-e", script], timeout)
     except Exception:
         return None
     return r.stdout.strip() if r.returncode == 0 else None
+
+
+def write(pane: str, writes: str) -> bool:
+    """One write into a pane, tried until iTerm finds the pane: TRIES. A
+    call that timed out may still land, so it is never tried again."""
+    script = WRITE.format(pane=pane, writes=writes)
+    for i in range(TRIES):
+        if i:
+            time.sleep(A_RETRY)
+        try:
+            r = ask(["/usr/bin/osascript", "-e", script], 20)
+        except subprocess.TimeoutExpired:
+            MISSED[0](pane, "timed out")
+            return False
+        except Exception as e:
+            MISSED[0](pane, str(e))
+            continue
+        if r.returncode == 0 and r.stdout.strip() == "1":
+            return True
+        MISSED[0](pane, r.stderr.strip() or "pane not found")
+    return False
 
 
 def detach(script: str) -> None:
@@ -349,6 +435,11 @@ def tty_of(pid) -> str:
         return ""
     if pid <= 0:
         return ""
+    # Inside 1100, the process list read in the background names it, and no
+    # program starts. A process too new for that list is asked of ps.
+    if ports.PROCESSES.running() and pid in (seen := ports.PROCESSES.last()):
+        t = seen[pid][2]
+        return f"/dev/{t}" if t and t != "??" else ""
     if pid not in TTYS[1] or time.time() - TTYS[0] >= A_SECOND:
         wanted = {pid} | {int(d["pid"]) for d in registry.claude_records().values()}
         found = {p: "" for p in wanted}
@@ -405,7 +496,11 @@ def terminals(within: float = 0) -> dict | None:
         found = None if out is None else {
             p: t if t.startswith("/dev/") else ""
             for p, _, t in (line.partition(" ") for line in out.splitlines()) if p}
+    # A pane opened or closed since the last answer is told at once: lib/reader.py's moved().
+    news = bool(LAST[0]) and found != LAST[1]
     LAST[:] = [time.time(), found]
+    if news:
+        reader.moved()
     return found
 
 
@@ -457,22 +552,29 @@ def say(pane: str, line: str, delay: float = 0, enter: bool = True,
     the tool calls it is running end, within the same turn. A command
     waits for the turn to end.
 
+    False means part of the line, or all of it, never landed.
+
     A delay is for a hook typing into its own pane, because the prompt it
     is answering is still being submitted. A delayed call is abandoned, so
-    it reports nothing back.
+    it reports nothing back, and nothing tries it again.
     """
     if not pane:
         return False
     pieces = [line[i:i + PIECE] for i in range(0, len(line), PIECE)] or [""]
-    writes = (WIPE if clear else "") + "".join(
+    steps = ([WIPE] if clear else []) + [
         f'          tell s to write text "{p}" newline NO\n'
         f"          delay {PAUSE}\n"
-        for p in (q.replace("\\", "\\\\").replace('"', '\\"') for q in pieces))
-    script = WRITE.format(pane=pane, writes=writes, tail=RETURN if enter else "")
+        for p in (q.replace("\\", "\\\\").replace('"', '\\"') for q in pieces)]
     if delay:
-        detach(f"delay {delay}\n{script}")
+        tail = f"          delay {A_RETURN}\n{RETURN}" if enter else ""
+        detach(f"delay {delay}\n" + WRITE.format(pane=pane, writes="".join(steps) + tail))
         return True
-    return run(script, 20 + PAUSE * len(pieces)) == "1"
+    if not all(write(pane, step) for step in steps):
+        return False
+    if not enter:
+        return True
+    time.sleep(A_RETURN)
+    return write(pane, RETURN)
 
 
 # The keys a page presses, each as the bytes my keyboard sends for it.
@@ -487,7 +589,7 @@ def press(pane: str, *keys: str) -> bool:
         return False
     writes = "".join(f"          tell s to write text {KEYS[k]} newline NO\n          delay {PAUSE}\n"
                      for k in keys)
-    return run(WRITE.format(pane=pane, writes=writes, tail="")) == "1"
+    return run(WRITE.format(pane=pane, writes=writes)) == "1"
 
 
 def open(where: str = "down", frm=None, cwd: str = "") -> str:
@@ -519,11 +621,27 @@ def open(where: str = "down", frm=None, cwd: str = "") -> str:
 def settle(pane: str) -> None:
     """Wait for a new pane's shell, then empty its prompt. Every new pane needs both."""
     time.sleep(SETTLE)
-    run(CLEAR.format(pane=pane))
+    write(pane, CLEAR)
+
+
+def programs(pane: str) -> list | None:
+    """What runs in a pane apart from its login and its shell, one command
+    each. None when iTerm did not answer. A pane closed, or a browser pane,
+    runs nothing: its terminal is empty."""
+    found = terminals()
+    if found is None:
+        return None
+    tty = found.get(pane, "")
+    if not tty:
+        return []
+    out = subprocess.run(["/bin/ps", "-t", tty.removeprefix("/dev/"), "-o", "command="],
+                         capture_output=True, text=True).stdout
+    return [c for c in out.splitlines() if not c.startswith("/usr/bin/login")
+            and c.split()[:1] != ["-zsh"]]
 
 
 def boot_line(words: str = "", acct: str = "1", model: str = "", effort: str = "",
-              number: str = "") -> str:
+              number: str = "", fork: str = "") -> str:
     """The line that starts a numbered session. Empty when a value is refused.
 
     The child claims its own number through /0-session-start, which blocks
@@ -539,15 +657,25 @@ def boot_line(words: str = "", acct: str = "1", model: str = "", effort: str = "
     defaults hold. An account pinned to a family takes its model instead:
     accounts.pinned().
 
+    A Haiku session forces its subagents onto Haiku too, whatever model an
+    Agent call or an agent file names: HAIKU_SUBAGENTS.
+
     Every session starts at ROOT. A session started in a subfolder loads
     no hook, because settings.json reaches each one through
     $CLAUDE_PROJECT_DIR, and that follows the folder it started in. Such
     a session never claims a number, and answers its own prompt instead.
+
+    A fork is a session id. The session then starts from that one's
+    conversation, forked, so the original carries on untouched. Its
+    transcript must already sit in this account's folder:
+    lib/launch.py's carry().
     """
     if effort and effort not in EFFORTS:
         return ""
     model = accounts.pinned(acct) or model
     if model and not re.fullmatch(r"[A-Za-z0-9.-]+", model):
+        return ""
+    if fork and not re.fullmatch(r"[A-Za-z0-9-]+", fork):
         return ""
     if str(acct) not in CONFIG:
         return ""
@@ -555,8 +683,10 @@ def boot_line(words: str = "", acct: str = "1", model: str = "", effort: str = "
     asked = f"{int(number):02d} " if str(number).isdigit() else ""
     prompt = f"/0-session-start {asked}{clean}".strip()
     tuned = (f" --model {model}" if model else "") + \
-        (f" --effort {effort}" if effort else "")
-    return f'{UNSET}cd {ROOT} && {CONFIG[str(acct)]}claude "{prompt}"{tuned}'
+        (f" --effort {effort}" if effort else "") + \
+        (f" --resume {fork} --fork-session" if fork else "")
+    forced = HAIKU_SUBAGENTS if "haiku" in model else ""
+    return f'{UNSET}cd {ROOT} && {CONFIG[str(acct)]}{forced}claude "{prompt}"{tuned}'
 
 
 def boot(where: str = "down", frm=None, words: str = "", acct: str = "1",

@@ -1,6 +1,6 @@
 ---
 name: prototype-rules
-description: Proposes what my rounds on this prototype teach every screen like it, and writes what I agree into its subject's own rules: The Screen, or the page rules.
+description: Proposes what my rounds on this prototype teach every screen like it, and writes what I agree into its subject's own rules: The Screen, its side's screens, or the page rules.
 allowed-tools: Skill, Read, Glob, Grep, Edit, Write
 argument-hint: "omit — after a lock-in, or to fold my answers after Send"
 ---
@@ -27,7 +27,7 @@ My words about this subject are the rounds.
 
 Read the winner, the one `code/prototypes/src/routes/<subject>/g<N>/v<M>.tsx` left.
 
-Read its subject's own rules. A product screen: The Screen, every document in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`. A page 1100 draws: the page rules, atop `.claude/lib/page.py`.
+Read its subject's own rules. A product screen: The Screen, every document in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`, then its side's screens, each in its side's own area of the vault. A page 1100 draws: the page rules, atop `.claude/lib/page.py`.
 
 ## Step 4 — Find the rules
 
@@ -39,7 +39,7 @@ A page or screen live today that breaks it → reword the rule until it holds th
 
 What its rules already hold is no new rule.
 
-Each rule is one fact, in its rules' voice. A product screen's names its kind: a document in The Screen, or a new one. A page's takes the next number.
+Each rule is one fact, in its rules' voice. A product screen's names its kind: a document in The Screen, or a new one. A rule holding for one side alone names that side's screens instead. A page's takes the next number.
 
 A rule clashing with one already there → one item naming both.
 
@@ -49,7 +49,7 @@ No rule found → say so in one line, and stop.
 
 Invoke `clarify-items`, with `then: /prototype-rules`.
 
-One item per rule: "Does this rule join The Screen, under <kind>?", or "Does this rule join the page rules, as rule <N>?"
+One item per rule: "Does this rule join The Screen, under <kind>?", "Does this rule join <its side's document>?", or "Does this rule join the page rules, as rule <N>?"
 
 Its `from` quotes my words, with their turn in the transcript copy.
 
@@ -61,6 +61,8 @@ Each agreed rule goes into its kind's document, in `knowledge/0010-playbook/0015
 
 A new kind takes its own document there, with the Write tool, and one line in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/the-screen-MOC.md`.
 
+A one-side rule goes into that side's document, with the Edit tool.
+
 A page's agreed rule joins the page rules, atop `.claude/lib/page.py`, under the next number, with the Edit tool. The line above the list keeps its count true.
 
 Say each rule written, one line each.
@@ -69,7 +71,7 @@ Say each rule written, one line each.
 
 Never write a rule I did not agree.
 
-Never edit the vault outside `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`.
+Never edit the vault outside `knowledge/0010-playbook/0015-coding/the-stack/the-screen/` and the side's screens, Step 3.
 
 Never edit `.claude/lib/page.py` outside the page rules.
 

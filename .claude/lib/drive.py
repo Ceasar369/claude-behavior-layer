@@ -6,7 +6,8 @@ drives, and whether that drive runs, is paused or has ended, is one file
 in its own folder, drive.json.
 
     {"drive": "plan", "state": "running", "taken": "2026-10-02T15:41:00",
-     "closed": {"A": "2026-10-02T13:53:07", "B": "2026-10-02T16:20:11"}}
+     "closed": {"A": "2026-10-02T13:53:07", "B": "2026-10-02T16:20:11"},
+     "passed": ["A1"]}
 
 `drive` holds the words each take handed it, in order, as its drive line
 takes them: plan, a stage's letter, or mission ids. The plan holds every
@@ -20,6 +21,10 @@ kept transcript says.
 An open plan's stage closes on my word alone, driven or not. Closed while
 nothing drives the plan, the file holds no drive: `drive` and `state`
 read "", and `closed` alone counts. A later take keeps it.
+
+A plan names its pause points: a stage or a mission carrying `"pause":
+true` pauses the drive once it is closed, or once its work is kept.
+`passed` holds each point the drive paused at, so resuming goes on past it.
 
 A take keeps a paused drive paused, so a successor taking its seat's
 drive again never undoes my pause. An ended drive taken again starts
@@ -63,6 +68,12 @@ RESUME = "Resume the drive."
 # The command that hands an assistant what it drives, before the drive's words.
 DRIVE = "/1-assistant drive"
 
+# What a skill acts on is a tool's exit code, never the words it prints.
+# tools/drive.py and tools/night-drive.py exit PAUSED on reaching a pause
+# point. tools/schedule.py's fire exits LAUNCHED once every row launched.
+PAUSED = 3
+LAUNCHED = 0
+
 # The registry's own files in a session's folder. They describe the seat,
 # never the work, so they stay behind when the work is kept.
 SEAT = (registry.RECORD, registry.RESERVED)
@@ -87,7 +98,8 @@ def read(nn: str) -> dict:
     if not isinstance(got, dict) or got.get("state") not in (*STATES, "") or not isinstance(got.get("drive"), str):
         return {}
     return {"drive": " ".join(got["drive"].split()), "state": got["state"], "taken": str(got.get("taken", "")),
-            "closed": {str(k): str(v) for k, v in (got.get("closed") or {}).items()}}
+            "closed": {str(k): str(v) for k, v in (got.get("closed") or {}).items()},
+            "passed": [str(p) for p in got.get("passed") or []]}
 
 
 def state(nn: str) -> str:
@@ -127,7 +139,7 @@ def take(nn: str, keys: list, done=None) -> dict:
     fresh = not driving(d) or (PLAN in held and PLAN not in was)
     d = {"drive": " ".join(held), "state": d["state"] if driving(d) else "running",
          "taken": time.strftime(transcripts.STAMP) if fresh else d["taken"],
-         "closed": d.get("closed", {})}
+         "closed": d.get("closed", {}), "passed": d.get("passed", [])}
     if PLAN in held:
         for at, when in (done or {}).items():
             d["closed"].setdefault(at, when)
@@ -137,6 +149,13 @@ def take(nn: str, keys: list, done=None) -> dict:
 def pause(nn: str) -> dict:
     d = read(nn)
     return write(nn, {**d, "state": "paused"}) if d.get("state") == "running" else d
+
+
+def reach(nn: str, point: str) -> dict:
+    """The drive pauses at pause point POINT, a stage's letter or a mission's
+    id, marked passed so "Resume the drive." goes on past it."""
+    d = read(nn)
+    return write(nn, {**d, "state": "paused", "passed": d["passed"] + [point]})
 
 
 def resume(nn: str) -> dict:
@@ -152,7 +171,7 @@ def close(nn: str, at: str, said: str) -> str:
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w") as f:
         f.write(said.strip("\n") + "\n")
-    d = read(nn) or {"drive": "", "state": "", "taken": "", "closed": {}}
+    d = read(nn) or {"drive": "", "state": "", "taken": "", "closed": {}, "passed": []}
     d["closed"][at] = time.strftime(transcripts.STAMP)
     write(nn, d)
     return out

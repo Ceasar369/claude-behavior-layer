@@ -15,10 +15,12 @@ and stops, so it can never move an existing session on its own.
   schedule.py fire NN        launch session NN's launch page, scheduled or not
 
 A fire takes the key out, then posts the page's rows to the page's own
-take, as my press of Launch does. First each row gets what the page gives
+take, as my press of Launch does. The launch then runs in this program,
+lib/launch.py's run(), holding the page's lock as a press's own program
+does. First each row gets what the page gives
 it as it draws, by the one rule in lib/launch.py, fill and settle: its
-number, and a place standing in iTerm's layout now. An account, a model
-or an effort it leaves unset is read as its pane opens.
+number, and a place standing in iTerm's layout now. Its account, model
+and effort are the ones its row took on its first save.
 
 The layout comes from iTerm's API, which answers from inside a session.
 
@@ -29,8 +31,8 @@ again: only my hand answers it, so its pane stays. A row failing three
 times, or left at its dialog, stays on the page, failed, as any failed
 row does.
 
-The fire waits for every row, then prints one line per row, and exits 1
-unless every row launched. A fire ended by a signal fails the rows still
+The fire waits for every row, then prints one line per row. It exits
+lib/drive.py's LAUNCHED once every row launched, and 1 otherwise. A fire ended by a signal fails the rows still
 booting, as a fresh 1100 does, so the page is not left locked.
 """
 
@@ -45,6 +47,7 @@ import threading
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import drive  # noqa: E402
 import finish  # noqa: E402
 import iterm  # noqa: E402
 import launch  # noqa: E402
@@ -60,16 +63,13 @@ def unschedule(lp, nn: str) -> None:
     """Take the key out of NN's launch.json. Its rows stay as they are."""
     with lp.LOCK:
         try:
-            with open(lp.path(nn)) as f:
-                d = json.load(f)
-        except (OSError, ValueError):
+            d = lp.whole(nn)
+        except lp.Unreadable:
             return
-        if not isinstance(d, dict) or lp.AFTER not in d:
+        if lp.AFTER not in d:
             return
         del d[lp.AFTER]
-        with open(lp.path(nn), "w") as f:
-            json.dump(d, f, indent=2)
-            f.write("\n")
+        lp.put(nn, d)
 
 
 # ---- the fire --------------------------------------------------------------------
@@ -102,8 +102,10 @@ def press(lp, nn: str, rows: list, seen: list) -> str:
     launch.fill(rows, lp.free(nn, rows), launch.home(tree, starter), launch.browsers_named(nn, tree), nn)
     launch.settle(rows, tree, starter)
     banner, before = [""], set(threading.enumerate())
-    lp.take_for(nn, banner)({"act": ["launch"], "rows": [json.dumps(rows)], "seen": [json.dumps(seen)]})
-    # The take launches on threads of its own, and each pane's wait on one more.
+    # The launch runs here, in this program, as a press's runs in its own:
+    # lib/launch.py's run.
+    lp.take_for(nn, banner, launch.run)({"act": ["launch"], "rows": [json.dumps(rows)], "seen": [json.dumps(seen)]})
+    # A browser pane is named on a thread of its own.
     while mine := [t for t in threading.enumerate() if t not in before]:
         for t in mine:
             t.join()
@@ -218,7 +220,7 @@ def main() -> None:
         signal.signal(sig, cut)
     lines, every = fire(nn, lp)
     print("\n".join(lines))
-    sys.exit(0 if every else 1)
+    sys.exit(drive.LAUNCHED if every else 1)
 
 
 if __name__ == "__main__":

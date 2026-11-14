@@ -1,0 +1,45 @@
+  /* The Teams tab, teams-page.py's: the locked prototype teams-tab g5/v1.
+     The launch page's rows and pills, the walk list's checklist and the
+     assistant page's cards come before this file. Only what is the tab's
+     own sits here. */
+  .tt { padding:10px 14px; }
+  .tt h2.sec { margin:18px 0 8px; }
+  .tt h2.sec:first-child { margin-top:4px; }
+
+  /* 1. The plan of teams: a card per team, arrows from what it waits on. */
+  .plan { position:relative; max-width:100%; overflow-x:auto; }
+  .plan .arrows { position:absolute; inset:0; }
+  .tcard { position:absolute; display:flex; flex-direction:column; gap:4px; align-items:flex-start;
+    padding:8px 10px; font:inherit; color:var(--text); text-align:left; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--c); border-radius:5px; }
+  .tcard:hover { background:var(--hover); }
+  .tcard.on { box-shadow:0 0 0 2px var(--blue); }
+  .tcard .ct { display:flex; align-items:center; gap:8px; }
+  .tcard .chip { --c:var(--grey); color:var(--text); }
+  .tcard .tst { color:var(--c); font-size:11px; font-weight:600; }
+  .tcard .dim { font-size:12px; }
+
+  /* 2. One team opened. Only the card clicked shows its own. The launch
+     list takes the page's own background: page rule 44. */
+  .opened { display:none; flex-direction:column; gap:10px; }
+  .opened.on { display:flex; }
+  .opened .facts { display:flex; flex-wrap:wrap; gap:6px 28px; }
+  .opened .facts .lbl { margin-right:6px; }
+  .opened .ob { background:none; color:var(--text); padding:0; min-height:0; }
+  .opened .ob th, .opened .ob td { border-color:var(--line); }
+  .opened .ob-h { color:var(--text); }
+  .opened .mark { color:var(--c); font-weight:700; }
+
+  /* 3. Each running team's plan, read only: nothing on it takes a press. */
+  .plans#items { padding:0; }
+  .plans .tplan > .ob-path { margin:0 0 8px; }
+  .plans .stage { margin:0 0 12px; }
+  .plans h3.sub { margin:0 0 6px; }
+  .plans .card { cursor:default; }
+  .plans .card:hover { border-color:var(--line); }
+
+  /* 4. Each team's launch row, its recommended drive under its pills. */
+  #rows .row { cursor:default; }
+  #rows .chip { color:var(--bg); }
+  #rows .rdrive { font-size:12px; }
+  #rows .rdrive .lbl { margin-right:6px; }

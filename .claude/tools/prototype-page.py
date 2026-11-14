@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""prototype-page.py — the page 4-prototype draws, on the prototypes app, 1400.
+"""prototype-page.py — the page 4-prototype draws, beside the prototypes app, 1400.
 
 It shows the prototypes, so I can see them and go from one to the next,
 and it picks: a Pick bar under every frame, a Pick page of rows, a
@@ -23,16 +23,18 @@ The variation in view sits beside the rows, half and half. Only a click
 changes a pick or that variation. Below Pick, the rail lists every variation by id, newest generation first,
 a thin line between two generations. Main opens on all of them, live and
 small, a row per generation. A variation I click fills main. Opened alone,
-it takes a tab.
+it takes a tab. A new generation, arriving while the page is open, fills
+main with its first variation and opens a new round: no pick, Send open
+again. Send that landed empties the feedback box.
 
 The top rail holds the family and the session on the left, the subject
 and the variation in view in the middle, with the one it grew from, and
 the page's two tools together on the right, one width: View all, then
 Open alone. Nothing moves when the view does.
 
-It draws; it never serves. The prototypes app, code/prototypes/, serves
-it at /, beside every variation, so both share 1400. 1100 frames it with
-the subject and the session in its query, and the app passes both here.
+1100 draws it at /proto/, the subject and the session in its query, and
+passes every variation under /proto/ through to the prototypes app,
+code/prototypes/, on 1400.
 
 None named, or one no subject name could be, draws the library: every
 winner under Locked, then every subject no hub frames under Saved,
@@ -46,13 +48,10 @@ picture once, headless, in the background, at low priority, one at a
 time. It draws the variation standing for the prototype, as its file
 stands, so an edit to that file draws it again.
 
-  prototype-page.py render --subject sign-in-form --session 05
-  prototype-page.py heard --subject sign-in-form --session 05
-  prototype-page.py render                         the library
-  prototype-page.py shoot                          draws the pictures missing
+  prototype-page.py shoot          draws the pictures missing
 
-heard prints the page's key, and the files whose writes can move it, so
-the app holds the page's watch until one moves it, as 1100 does.
+On the contract, lib/live.py's, 1100 draws the page itself, through
+drawn, files, taken and LIVE, and 1400 serves the variations alone.
 
 The shell is shared. See .claude/lib/page.py.
 It keeps the page rules atop .claude/lib/page.py.
@@ -61,7 +60,6 @@ It keeps the page rules atop .claude/lib/page.py.
 import argparse
 import base64
 import fcntl
-import hashlib
 import json
 import os
 import re
@@ -71,12 +69,20 @@ import urllib.parse
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import live  # noqa: E402
 import page  # noqa: E402
 import panes  # noqa: E402
 import plans  # noqa: E402
 import ports  # noqa: E402
+import reader  # noqa: E402
 import registry  # noqa: E402
-from prototypes import APP, PORT, ROUTES, SUBJECT, TAKEN, generations, looks, shelf, subject_file  # noqa: E402
+from prototypes import APP, BASE, PORT, ROUTES, SUBJECT, TAKEN, generations, looks, shelf, subject_file  # noqa: E402
+
+
+def at(route: str) -> str:
+    """A variation's route as the browser asks for it: under BASE. A
+    generation's file names it from the app's root, /checkout-page/g3/v1."""
+    return BASE.rstrip("/") + route
 
 
 def load(path: str) -> dict:
@@ -103,256 +109,7 @@ LIST = ('<svg viewBox="0 0 14 14" aria-hidden="true" fill="currentColor">'
 # A small preview is the page drawn at 1280 by 800, then shrunk to a quarter.
 # A real route frames small or full; a variation whose file is gone draws
 # as a reconstructed stub instead, in both the same way.
-STYLE = """<style>
-  #items:has(> .item.v.on) { padding:0; display:flex; flex-direction:column; }
-  #items .item.v { position:relative; }
-  #items .item.v.on { flex:1; display:flex; flex-direction:column; min-height:0; }
-  #items .item.v iframe { flex:1; width:100%; border:0; background:#fff; }
-  #items .item.v .stub { flex:1; display:flex; align-items:center; justify-content:center;
-    padding:0 18px; color:var(--dim); text-align:center; background:var(--bg); }
-  #items .thumbs { display:flex; flex-wrap:wrap; gap:14px; }
-  #items .card { width:320px; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
-  #items .thumb { position:relative; height:200px; overflow:hidden; cursor:pointer; background:#fff; }
-  #items .thumb:hover { outline:2px solid var(--text); outline-offset:-2px; }
-  #items .thumb iframe { width:1280px; height:800px; border:0; transform:scale(.25);
-    transform-origin:0 0; pointer-events:none; }
-  #items .thumb .stub { height:100%; font-size:12px; line-height:1.5; padding:0 14px; }
-  #items .thumb .chip { position:absolute; top:6px; left:6px; }
-  #items .thumb .chip.src { left:auto; right:6px; }
-  /* My pick: a bar below every frame it appears on, thumb or full, green once on. */
-  #items .card .pick, #items .item.v .pick { flex:none; display:flex; align-items:center;
-    justify-content:center; gap:6px; padding:9px; cursor:pointer; font-size:12px; font-weight:700;
-    color:var(--dim); border-top:1px solid var(--line); background:var(--panel); }
-  #items .card .pick:hover, #items .item.v .pick:hover { color:var(--text); }
-  #items .card.picked, #items .item.v.picked { outline:2px solid var(--green); outline-offset:-2px; }
-  #items .card.picked .pick, #items .item.v.picked .pick { color:var(--green); border-top-color:var(--green);
-    background:color-mix(in srgb, var(--green) 14%, var(--panel)); }
-  /* View all is grey, edged white. Open alone is white. Send is outlined. */
-  body:has(> header.top.prototype) > main { padding:0; display:flex; flex-direction:column; }
-  header.top.prototype .mid .now { margin-left:10px; color:var(--text); }
-  header.top.prototype .mid .now .src { color:var(--dim); font-weight:400; }
-  header.top.prototype button { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
-  header.top.prototype button.all { background:var(--grey); color:#fff; border:2px solid #fff; }
-  header.top.prototype button.all:hover:not(:disabled) { background:color-mix(in srgb, #fff 18%, var(--grey)); }
-  header.top.prototype button.all svg { width:14px; height:14px; flex:none; }
-  header.top.prototype button:disabled:not(#send) { background:var(--grey); color:var(--text);
-    border-color:var(--grey); opacity:.5; cursor:default; }
-  header.top.prototype button#send { margin-left:8px; }
-  header.top.prototype button#send[hidden] { display:none; }
-  header.top.prototype button#back { margin-right:8px; }
-  nav.nums .lbl { width:26px; margin:0 0 4px; text-align:center; color:var(--dim);
-    font-size:10px; font-weight:700; }
-  nav.nums .tab.pk { cursor:pointer; padding:5px 0 3px; background:var(--green); color:var(--bg); }
-  nav.nums .tab.pk svg { width:14px; height:14px; }
-  /* The Pick page: the rows on the left, the variation in view beside them,
-     half and half at any width, so a look's number is read where it is drawn. A .ch is one choice, a row
-     of options, one of them on. */
-  #items:has(> .item.pk.on) { padding:0; display:flex; flex-direction:column; flex:1 1 0; min-height:0; overflow:hidden; }
-  #items .item.pk.on { flex:1; display:flex; min-height:0; }
-  #items .item.pk .rows { flex:none; width:50%; box-sizing:border-box; overflow-y:auto; padding:14px 24px 20px; }
-  #items .item.pk .view { flex:none; width:50%; box-sizing:border-box; display:flex; flex-direction:column;
-    border-left:1px solid var(--line); }
-  #items .item.pk .view .cap { flex:none; padding:7px 14px; font-size:12px; font-weight:700;
-    color:var(--dim); background:var(--panel); border-bottom:1px solid var(--line); }
-  #items .item.pk .view iframe { flex:1; width:100%; border:0; background:#fff; }
-  #items .item.pk .view .stub { flex:1; display:flex; align-items:center; justify-content:center;
-    padding:0 24px; color:var(--dim); text-align:center; }
-  #items .item.pk .view [hidden] { display:none; }
-  #items .item.pk .gen { margin:0 0 26px; }
-  #items .item.pk .ch { margin:0 0 16px; }
-  #items .item.pk .ch.off { opacity:.5; }
-  #items .item.pk .rl { margin:0 0 6px; font-size:12px; font-weight:700; color:var(--dim);
-    letter-spacing:.04em; text-transform:uppercase; }
-  #items .item.pk .rl .hint { margin-left:8px; font-weight:400; text-transform:none; letter-spacing:0; }
-  #items .item.pk .opts { display:flex; flex-wrap:wrap; gap:10px; }
-  #items .item.pk .opt { flex:1 1 170px; min-height:64px; padding:10px 14px;
-    display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:3px;
-    font:inherit; text-align:left; color:var(--text); background:var(--panel); cursor:pointer;
-    border:1px solid var(--line); border-radius:6px; }
-  #items .item.pk .opt b { font-size:16px; }
-  #items .item.pk .opt .d { color:var(--dim); font-size:12px; line-height:1.4; overflow:hidden;
-    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-  #items .item.pk .opt.on { outline:2px solid var(--green); outline-offset:-2px;
-    background:color-mix(in srgb, var(--green) 14%, var(--panel)); }
-  #items .item.pk .opt.on b { color:var(--green); }
-  #items .item.pk .shown { margin:0; color:var(--dim); font-size:13px; line-height:1.5; }
-  /* A touch screen, as my phone, and never a Mac, however narrow its pane.
-     Every control takes a fingertip: 44 by 44 points, Apple's minimum. */
-  @media (hover:none) and (pointer:coarse) {
-    header.top.prototype button { min-height:44px; }
-    header.top.prototype ~ nav.nums .tab { width:44px; padding:0; line-height:44px; }
-    #items .card .pick, #items .item.v .pick { min-height:44px; }
-  }
-</style>
-"""
-
-SCRIPT = """<script>
-const now = document.getElementById('now');
-/* GROUPS names each variation's competing groups, as 1/v1: ['A', 'B'].
-   pick is the variation I chose, lk the look I chose in each group, as
-   '1/v1|A': '1'. A group left out is open. */
-let cur = 'all', pick = '', lk = {};
-/* Whether the session works now. Its word rides at the end of the watch's
-   key, after its last '|'. A move of that word alone greys or frees Send in
-   place, so the box keeps what I typed. A Send already sent stays as it
-   is. Any other move draws the page again. */
-const WORKING = 'Working. Send opens once its turn ends.';
-let busy = BUSY;
-/* WebKit applies the page's zoom again inside a framed variation. Neutralize
-   it on each frame, then zoom a full variation itself. Thumbnails keep their
-   1280 by 800 layout and scale with the surrounding page. */
-function zoomFrames() {
-  const z = parseFloat(document.documentElement.style.zoom) || 1;
-  document.querySelectorAll('#items iframe').forEach(f => {
-    f.style.zoom = z === 1 ? '' : String(1 / z);
-    if (f.closest('.thumb')) f.style.transform = `scale(${z / 4})`;
-    else {
-      try {
-        const root = f.contentDocument && f.contentDocument.documentElement;
-        if (root) root.style.zoom = z === 1 ? '' : String(z);
-      } catch (e) {}
-    }
-  });
-}
-document.querySelectorAll('#items iframe').forEach(f => f.addEventListener('load', zoomFrames));
-addEventListener('ws-zoom', zoomFrames);
-zoomFrames();
-window.told = now => {
-  const w = document.getElementById('watch'), files = k => k.slice(0, k.lastIndexOf('|'));
-  if (files(now) !== files(w.dataset.key)) return location.reload();
-  w.dataset.key = now;
-  busy = now.endsWith('|working');
-  if (!document.getElementById('send').classList.contains('sent')) sync();
-};
-
-function show(k) {
-  cur = k;
-  tab(k);
-  const f = document.getElementById('f-' + k);
-  if (f && !f.src) f.src = f.dataset.src;
-  const item = document.getElementById('t-' + k), from = item.dataset.from;
-  const bare = k === 'all' || k === 'pick';
-  now.innerHTML = bare ? '' : 'G' + k.replace('/', ' · ')
-    + `<span class="src">${from ? '  ←  ' + from : '  ·  fresh'}</span>`;
-  document.getElementById('all').disabled = k === 'all';
-  document.getElementById('alone').disabled = bare;
-  if (k === 'pick') focusVar(pick || FIRST);
-}
-
-/* The frame beside the rows shows one variation, drawn live: the one I last
-   clicked a row of. Nothing changes it on hover. A variation whose file is
-   gone shows its direction instead. */
-function focusVar(k) {
-  if (!(k in ROUTES)) return;
-  const f = document.getElementById('pf'), st = document.getElementById('ps');
-  document.getElementById('pc').textContent = 'G' + k.replace('/', ' · ');
-  f.hidden = !ROUTES[k];
-  st.hidden = !!ROUTES[k];
-  if (ROUTES[k] && f.dataset.k !== k) { f.dataset.k = k; f.src = ROUTES[k]; }
-  if (!ROUTES[k]) st.textContent = 'Reconstructed from the record — the file is gone. ' + DIRECTIONS[k];
-}
-
-
-function alone() {
-  const f = document.getElementById('f-' + cur);
-  if (f) window.open(f.dataset.src, '_blank');
-}
-
-/* Every place a pick shows draws from pick and lk, so a pick made on a
-   bar, or in a row, shows on both. */
-function paint() {
-  document.querySelectorAll('.card, .item.v').forEach(el => el.classList.toggle('picked', el.dataset.k === pick));
-  document.querySelectorAll('.opt.vo').forEach(el => el.classList.toggle('on', el.dataset.k === pick));
-  document.querySelectorAll('.opt.lo').forEach(el =>
-    el.classList.toggle('on', lk[el.dataset.k + '|' + el.dataset.g] === el.dataset.n));
-  document.querySelectorAll('.ch.gr').forEach(el => el.classList.toggle('off', !!pick && el.dataset.k !== pick));
-  sync();
-}
-
-/* My pick: one variation at a time, on a bar or in a row. Never show()'s
-   own navigation — the bar stops that click reaching it. */
-function selectCard(k, ev) {
-  ev.stopPropagation();
-  pickVar(k);
-}
-
-function pickVar(k) {
-  pick = pick === k ? '' : k;
-  focusVar(k);
-  paint();
-}
-
-/* A look picked chooses its variation too: the look is one of its own. */
-function pickLook(k, g, n) {
-  const id = k + '|' + g;
-  lk[id] = lk[id] === n ? '' : n;
-  if (lk[id]) pick = k;
-  focusVar(k);
-  paint();
-}
-
-/* The groups of the variation I chose that hold no pick yet. */
-function unpicked() {
-  return (GROUPS[pick] || []).filter(g => !lk[pick + '|' + g]);
-}
-
-function fit() {
-  const t = document.getElementById('fb'), b = document.getElementById('pbar');
-  const open = document.activeElement === t || !!t.value.trim();
-  b.classList.toggle('open', open);
-  t.style.height = 'auto';
-  t.style.height = (open ? Math.max(t.scrollHeight + 4, 84) : 40) + 'px';
-}
-
-/* The button names what Send types: a pick with every group picked, a pick
-   with groups still open, or my words alone. While the session works, it
-   is greyed. */
-function sync() {
-  const t = document.getElementById('fb'), send = document.getElementById('send');
-  const note = t.value.trim(), left = unpicked().length;
-  const word = left ? left + ' open' : 'lock in';
-  send.disabled = busy || (!pick && !note);
-  if (busy) send.title = WORKING;
-  else if (send.title === WORKING) send.title = '';
-  send.textContent = pick && note ? (left ? 'Send · ' + word + ', with feedback' : 'Send · with feedback')
-    : pick ? 'Send · ' + word : note ? 'Send · feedback only' : 'Send';
-}
-
-/* The looks I picked, one pair a group of the variation I chose: 'A:1,B:'.
-   A group with no number is open. */
-function chosen() {
-  return (GROUPS[pick] || []).map(g => g + ':' + (lk[pick + '|' + g] || '')).join(',');
-}
-
-/* Nothing here decides whether Send locks a variation in or opens a new
-   generation. It only types the line; the session reads it like any other.
-   The post keeps the address's query, which names the session. */
-async function send() {
-  const b = document.getElementById('send');
-  b.classList.add('busy');
-  b.disabled = true;
-  const why = await typePost({act: 'send', pick, looks: chosen(), feedback: document.getElementById('fb').value},
-    location.pathname + location.search);
-  b.classList.remove('busy');
-  if (why === '') { b.classList.add('sent'); b.textContent = 'Sent'; return; }
-  b.classList.add('gone');
-  b.title = why || UNANSWERED;
-  b.textContent = 'Try again';
-  b.disabled = false;
-  refusal(b.title);
-}
-
-document.getElementById('fb').addEventListener('input', () => { fit(); sync(); });
-document.getElementById('fb').addEventListener('focus', fit);
-document.getElementById('fb').addEventListener('blur', fit);
-document.getElementById('send').onclick = send;
-sync();
-fit();
-
-const want = decodeURIComponent(location.hash.slice(1));
-show(document.getElementById('t-' + want) ? want : 'all');
-</script>
-"""
+STYLE = "<style>\n" + page.shared("prototype.css") + "</style>\n"
 
 
 PICK = re.compile(r"(\d+)/(v\d+)")
@@ -374,6 +131,8 @@ def take(nn: str, form: dict) -> str:
     get = lambda k: (form.get(k) or [""])[0]
     pick, note = get("pick").strip(), get("feedback").strip()
     m = PICK.fullmatch(pick) if pick else None
+    if pick and not m:
+        return "That pick names no variation. Nothing was typed."
     if not m and not note:
         return ""
     line = f"g{m.group(1)}/{m.group(2)}" if m else ""
@@ -396,7 +155,7 @@ def frame(v: dict, k: str, full: bool) -> str:
     """One variation's picture: its real route, small or full, or a
     reconstructed stub when its file is already gone."""
     if v.get("real", True) and v.get("route"):
-        src = page.esc(v["route"])
+        src = page.esc(at(v["route"]))
         return f'<iframe id="f-{k}" data-src="{src}"></iframe>' if full \
             else f'<iframe src="{src}" loading="lazy" tabindex="-1"></iframe>'
     return f'<div class="stub">Reconstructed from the record — the file is gone.<br>{page.esc(v.get("direction", ""))}</div>'
@@ -405,20 +164,20 @@ def frame(v: dict, k: str, full: bool) -> str:
 def block(g: dict) -> str:
     """One generation on the Pick page: a row for its variations, then a row
     per group of looks, each named by its variation. A look with no group
-    only shows, on a line of its own. One pick per row."""
+    only shows, on a line of its own. One pick per row. A button carries no
+    handler of its own: the page's script hears it."""
     n = g["generation"]
     opts, rest = [], []
     for v in g["variations"]:
         vid, k = page.esc(v["id"]), f"{n}/{page.esc(v['id'])}"
         came = f"← {source(v)} · " if source(v) else ""
-        opts.append(f'<button class="opt vo" data-k="{k}" onclick="pickVar(this.dataset.k)">'
+        opts.append(f'<button class="opt vo" data-k="{k}">'
                     f'<b>{vid}</b><span class="d">{came}{page.esc(v.get("direction", ""))}</span></button>')
         groups, shown = looks(v)
         for name, found in groups.items():
             gid = page.esc(name)
             chosen = "".join(
-                f'<button class="opt lo" data-k="{k}" data-g="{gid}" data-n="{page.esc(l["n"])}" '
-                f'onclick="pickLook(this.dataset.k, this.dataset.g, this.dataset.n)">'
+                f'<button class="opt lo" data-k="{k}" data-g="{gid}" data-n="{page.esc(l["n"])}">'
                 f'<b>look {page.esc(l["n"])}</b><span class="d">{page.esc(l.get("title", ""))}</span></button>'
                 for l in found)
             rest.append(f'<div class="ch gr" data-k="{k}"><div class="rl">{vid} · group {gid}'
@@ -430,19 +189,6 @@ def block(g: dict) -> str:
     return (f'<div class="gen"><h3 class="sub">G{n}</h3>'
             f'<div class="ch"><div class="rl">Variations<span class="hint">pick one</span></div>'
             f'<div class="opts">{"".join(opts)}</div></div>{"".join(rest)}</div>')
-
-
-def world(nn: str, subject: str) -> dict:
-    """Everything the page draws for session NN, in the fixture file's own
-    shape. `live` is the session's word, page.word's.
-    `key` drives the watch: the generations, then the word after its last
-    "|"; a fixture carries none."""
-    found = generations(os.path.join(APP, subject))
-    rec = registry.claude_records().get((registry.entries().get(nn) or {}).get("session_id"))
-    live = page.word(rec)
-    return {"nn": nn, "tag": plans.tag(nn) if nn != "00" else "band 00", "subject": subject,
-            "generations": [load(p) for _, p in found], "live": live,
-            "key": subject + ":" + ":".join(f"{n}@{os.path.getmtime(p)}" for n, p in found) + "|" + live}
 
 
 # The library's pictures, and Chrome's own profile for drawing them.
@@ -467,16 +213,14 @@ def picture(e: dict) -> str:
 
 
 def library() -> dict:
-    """Everything the library draws, in the fixture file's own shape. Each
-    entry carries its picture's path, once drawn, and whether one waits
-    to be drawn. `key` drives the watch: the shelf itself."""
+    """Everything the library draws. Each entry carries its picture's path,
+    once drawn, and whether one waits to be drawn."""
     locked, saved = shelf()
     for e in locked + saved:
         path = picture(e)
         e["picture"] = path if path and os.path.exists(path) else ""
         e["waits"] = bool(path) and not e["picture"] and not os.path.exists(path + NONE)
-    return {"locked": locked, "saved": saved,
-            "key": hashlib.sha1(json.dumps([locked, saved]).encode()).hexdigest()[:12]}
+    return {"locked": locked, "saved": saved}
 
 
 def shoot() -> None:
@@ -513,7 +257,7 @@ def draw_picture(route: str, path: str) -> None:
             subprocess.run(["taskpolicy", "-b", CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars",
                             "--no-first-run", "--no-default-browser-check",
                             f"--user-data-dir={os.path.join(SHOTS, 'chrome')}", "--window-size=1280,800",
-                            "--virtual-time-budget=6000", f"--screenshot={raw}", f"http://localhost:{PORT}{route}"],
+                            "--virtual-time-budget=6000", f"--screenshot={raw}", f"http://localhost:{PORT}{at(route)}"],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=90, check=False)
         except subprocess.TimeoutExpired:
             pass
@@ -531,43 +275,17 @@ def draw_picture(route: str, path: str) -> None:
             os.remove(left)
 
 
-def heard(nn: str, subject: str) -> dict:
-    """The page's key, and every file and folder whose write can move it.
-    A subject's page hears its folder, and what registry.watched names for
-    the session. The library hears the app's folder, every subject's, its
-    pictures, every session's hold, and where sessions start and stop. The
-    prototypes app holds its /heard on them."""
-    if not subject:
-        held = [n for n in registry.listing(registry.WORK) if re.fullmatch(r"\d{2}", n)]
-        homes = [os.path.join(APP, s) for s in registry.listing(APP) if generations(os.path.join(APP, s))]
-        return {"key": library()["key"],
-                "hears": [APP, SHOTS, registry.WORK] + homes + [subject_file(n) for n in held]
-                + [os.path.expanduser(f"{base}/sessions") for base in registry.LIVE]}
-    d = world(nn, subject)
-    return {"key": d["key"], "hears": [os.path.join(APP, d["subject"])] + registry.watched([nn])}
+def heard() -> list:
+    """Every file and folder whose write can move the library: the app's
+    folder, its pictures, the sessions folder, every subject's folder,
+    every session's hold, and where sessions start and stop."""
+    held = [n for n in registry.listing(registry.WORK) if re.fullmatch(r"\d{2}", n)]
+    homes = [os.path.join(APP, s) for s in registry.listing(APP) if generations(os.path.join(APP, s))]
+    return ([APP, SHOTS, registry.WORK] + homes + [subject_file(n) for n in held]
+            + [os.path.expanduser(f"{base}/sessions") for base in registry.LIVE])
 
 
-SHELF_STYLE = """<style>
-  #items .shelf h2.sec { font-size:26px; line-height:1.25; letter-spacing:0; text-transform:none;
-    color:var(--text); margin:36px 0 16px; padding-top:22px; }
-  #items .shelf h2.sec:first-child { margin-top:0; padding-top:0; border-top:0; }
-  #items .shelf .team { margin:0 0 22px; }
-  #items .shelf .tl { margin:0 0 8px; font:700 10px/1.4 ui-monospace,Menlo,monospace;
-    letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
-  #items .shelf a.card { display:block; color:var(--text); text-decoration:none; }
-  #items .shelf a.card:hover { outline:2px solid var(--text); outline-offset:-2px; }
-  #items .shelf .thumb { cursor:pointer; }
-  #items .shelf .thumb img { display:block; width:100%; height:100%; object-fit:cover; object-position:top left; }
-  #items .shelf .thumb .stub { display:flex; align-items:center; justify-content:center;
-    color:var(--dim); text-align:center; background:var(--bg); }
-  #items .shelf .cap { padding:8px 10px; border-top:1px solid var(--line); background:var(--panel); }
-  #items .shelf .cap b, #items .shelf .cap span { display:block; overflow:hidden; text-overflow:ellipsis;
-    white-space:nowrap; }
-  #items .shelf .cap b { font-size:13px; }
-  #items .shelf .cap span { margin-top:2px; font-size:11px; color:var(--dim); }
-  #items .shelf p.none { color:var(--dim); font-size:13px; }
-</style>
-"""
+SHELF_STYLE = "<style>\n" + page.shared("prototype-shelf.css") + "</style>\n"
 
 
 def who(e: dict) -> str:
@@ -584,16 +302,15 @@ def card(e: dict, line: str) -> str:
             shown = f'<img alt="" src="data:image/jpeg;base64,{base64.b64encode(f.read()).decode()}">'
     else:
         shown = f'<div class="stub">{"Drawing its picture…" if e.get("waits") else "No picture"}</div>'
-    return (f'<a class="card" href="/?{urllib.parse.urlencode({"subject": e["subject"]})}">'
+    return (f'<a class="card" href="{BASE}?{urllib.parse.urlencode({"subject": e["subject"]})}">'
             f'<div class="thumb">{shown}<span class="chip g" style="--c:var(--grey)">{page.esc(e["shown"])}</span></div>'
             f'<div class="cap"><b>{page.esc(e["subject"])}</b><span>{page.esc(line)}</span></div></a>')
 
 
 def draw_shelf(d: dict) -> str:
-    """The library, from library()'s dict or a fixture's. Every winner
-    under Locked, each card naming its session. Every subject saved under
-    Saved, grouped by its session, a session unknown last."""
-    watch = page.watch(d["key"]) if "key" in d else page.TABS
+    """The library, from library()'s dict. Every winner under Locked, each
+    card naming its session. Every subject saved under Saved, grouped by
+    its session, a session unknown last."""
     many = lambda n, word: f"{n} {word}{'' if n == 1 else 's'}"
     locked = "".join(card(e, who(e)) for e in d["locked"])
     groups = {}
@@ -610,50 +327,140 @@ def draw_shelf(d: dict) -> str:
                else '<p class="none">No prototype is locked in.</p>')
             + f'<h2 class="sec">Saved · {len(d["saved"])}</h2>'
             + (saved or '<p class="none">No prototype is saved.</p>')
-            + '</section></div>\n' + watch)
+            + '</section></div>\n' + page.TABS)
     top = page.head("prototype", "band 00", "Prototypes")
     return page.render("00-prototypes", [("", body)], top, refresh=0)
 
 
-def draw(d: dict) -> str:
-    """The page, from world()'s dict or a fixture's. Opened with no session,
-    it only shows: Send and the feedback box stay hidden, nothing picks,
-    and a button leads back to the library."""
-    nn, subject, gens = d.get("nn", "00"), page.esc(d["subject"]), d["generations"]
-    shows = nn == "00"
-    watch = page.watch(d["key"]) if "key" in d else page.TABS
-    # With nothing to show, every button stands disabled, in the same places.
-    off = "" if gens else " disabled"
-    back = '<button class="all" id="back" onclick="location.href=\'/\'">All prototypes</button>' if shows else ""
-    top = page.head("prototype", d.get("tag", ""), f'{subject}<span class="now" id="now"></span>',
-                    f'{back}<span class="group"><button class="all" id="all" onclick="show(\'all\')"{off}>'
-                    f'View all{LIST}</button>'
-                    f'<button id="alone" onclick="alone()"{off}>Open alone ↗</button></span>'
-                    f'<button id="send"{" hidden" if shows else off}>Send</button>')
-    if not gens:
-        body = STYLE + page.blank("No generation yet") + "\n" + watch
-        return page.render(f"{nn}-prototype", [("", body)], top, refresh=0)
+def missing(d: dict) -> bool:
+    """Whether Chrome is here, and library `d` waits on a picture."""
+    return os.path.exists(CHROME) and any(e["waits"] for e in d["locked"] + d["saved"])
 
-    rail = [] if shows else ['<div class="tab pk" data-k="pick" title="Pick" onclick="show(\'pick\')">' + CHECK + '</div>']
+
+def shot() -> subprocess.Popen:
+    """The job drawing every picture missing, shoot(), started detached."""
+    return subprocess.Popen([sys.executable, os.path.abspath(__file__), "shoot"], stdin=subprocess.DEVNULL,
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+
+# ---- the page on the contract --------------------------------------------------
+#
+# 1100 draws the page itself, at BASE, beside every variation 1400 still
+# serves: lib/live.py. Each change lands part by part, and the feedback box
+# keeps my words. The page's own script, .claude/pages/scripts/prototype.js, moves
+# about the page, picks and sends. Its data goes as JSON beside it. The
+# library's draw starts no program: it says the pictures are wanted, and
+# 1100's reader, PICTURES, starts the job. A picture still missing reads
+# "Drawing its picture…" until one is drawn.
+
+# What the page tells a press it takes none of.
+NO_SUCH = "This page takes no such press. Nothing was typed."
+# The picture job this process started last.
+JOB: list = [None]
+
+
+def shooting() -> None:
+    """Start the picture job, once a library draw wants it, a picture is
+    missing, the app answers, and the job started last has ended."""
+    if PICTURES.wanted() and not (JOB[0] and JOB[0].poll() is None) and missing(library()) and ports.answering(PORT):
+        JOB[0] = shot()
+
+
+PICTURES = reader.Reader(shooting)
+# What 1100 reads off the draws for this page: lib/reader.py.
+READERS = [PICTURES]
+
+
+def asked(query: str) -> tuple:
+    """The subject and the session an address names, as main() reads them:
+    a name no subject could take is none, and a session no number, 00."""
+    q = urllib.parse.parse_qs(query)
+    subject, session = (q.get("subject") or [""])[0], (q.get("session") or [""])[0]
+    return (subject if SUBJECT.fullmatch(subject) and subject not in TAKEN else "",
+            session if re.fullmatch(r"\d{2}", session) else "00")
+
+
+def readable(nn: str, subject: str) -> dict:
+    """Everything a subject's page draws for session NN, its generations
+    read one by one: a file cut short, or not a generation, stands as its
+    number alone, unreadable. `live` is the session's word, page.word's."""
+    gens = []
+    for n, p in generations(os.path.join(APP, subject)):
+        try:
+            g = load(p)
+            if not isinstance(g, dict) or not isinstance(g.get("variations"), list) \
+                    or not all(isinstance(v, dict) and v.get("id") for v in g["variations"]):
+                raise ValueError(p)
+            gens.append({**g, "generation": g.get("generation", n)})
+        except (OSError, ValueError):
+            gens.append({"generation": n, "variations": [], "unreadable": True})
+    return {"nn": nn, "tag": plans.tag(nn) if nn != "00" else "band 00", "subject": subject,
+            "generations": gens, "live": page.word(now(nn))}
+
+
+def now(nn: str):
+    """Claude Code's record of session NN as its file reads now, or None
+    once its process is gone. registry.claude_records() keeps its answer a
+    second, so a draw on a status write could read the status before it:
+    which record runs is read from there, its status from its own file."""
+    sid = (registry.entries().get(nn) or {}).get("session_id")
+    rec = registry.claude_records().get(sid)
+    if not rec:
+        return None
+    for base in registry.LIVE:
+        try:
+            with open(os.path.join(os.path.expanduser(base), "sessions", f"{rec['pid']}.json")) as f:
+                got = json.load(f)
+        except (OSError, ValueError):
+            continue
+        if isinstance(got, dict) and got.get("sessionId") == sid:
+            return got
+    return rec
+
+
+def drawn_page(d: dict) -> str:
+    """A subject's page, from readable()'s dict, opened by live.watch(),
+    every handler the page's script's. Opened with no session, it only
+    shows: Send and the feedback box stay hidden, nothing picks, and a
+    button leads back to the library."""
+    nn, subject = d["nn"], page.esc(d["subject"])
+    gens = [g for g in d["generations"] if g["variations"]]
+    shows = nn == "00"
+    watch = live.watch((registry.entries().get(nn) or {}).get("session_id", "") if not shows else "")
+    off = "" if gens else " disabled"
+    back = '<button class="all" id="back">All prototypes</button>' if shows else ""
+    top = page.head("prototype", d.get("tag", ""), f'{subject}<span class="now" id="now"></span>',
+                    f'{back}<span class="group"><button class="all" id="all"{off}>View all{LIST}</button>'
+                    f'<button id="alone"{off}>Open alone ↗</button></span>'
+                    f'<button id="send"{" hidden" if shows else off}>Send</button>')
+    scripts = page.TABS + f'<script src="{live.src("prototype.js")}"></script>\n'
+    if not gens:
+        lost = "".join(f'<p class="note">G{page.esc(g["generation"])} is unreadable.</p>' for g in d["generations"])
+        return page.render(f"{nn}-prototype", [("", watch + STYLE + page.blank("No generation yet") + lost
+                                                 + "\n" + scripts)], top, refresh=0)
+    rail = [] if shows else ['<div class="tab pk" data-k="pick" title="Pick">' + CHECK + '</div>']
     rows, items, groups, routes, said = [], [], {}, {}, {}
-    for g in reversed(gens):
-        n = g["generation"]
+    for g in reversed(d["generations"]):
+        n = page.esc(g["generation"])
         rail.append('<div class="gap"></div>')
         rail.append(f'<div class="lbl">G{n}</div>')
+        if g.get("unreadable"):
+            rows.append(f'<div class="stage"><h3 class="sub">G{n}</h3>'
+                        f'<p class="note">This generation\'s file is unreadable.</p></div>')
+            continue
         thumbs = []
         for v in g["variations"]:
             k = f"{n}/{page.esc(v['id'])}"
-            pick = "" if shows else f'<div class="pick" onclick="selectCard(\'{k}\', event)">Pick</div>'
-            rail.append(f'<div class="tab g" data-k="{k}" style="--c:var(--grey)" '
-                        f'onclick="show(\'{k}\')">{page.esc(v["id"])}</div>')
+            pick = "" if shows else '<div class="pick">Pick</div>'
+            rail.append(f'<div class="tab g" data-k="{k}" style="--c:var(--grey)">{page.esc(v["id"])}</div>')
             came = source(v)
             if looks(v)[0]:
-                groups[f"{n}/{v['id']}"] = list(looks(v)[0])
-            routes[f"{n}/{v['id']}"] = v["route"] if v.get("real", True) and v.get("route") else ""
-            said[f"{n}/{v['id']}"] = v.get("direction", "")
+                groups[f"{g['generation']}/{v['id']}"] = list(looks(v)[0])
+            routes[f"{g['generation']}/{v['id']}"] = at(v["route"]) if v.get("real", True) and v.get("route") else ""
+            said[f"{g['generation']}/{v['id']}"] = v.get("direction", "")
             tag = f'<span class="chip g src" style="--c:var(--grey)">← {came}</span>' if came else ""
             thumbs.append(f'<div class="card" data-k="{k}">'
-                          f'<div class="thumb" onclick="show(\'{k}\')">{frame(v, k, False)}'
+                          f'<div class="thumb">{frame(v, k, False)}'
                           f'<span class="chip g" style="--c:var(--grey)">{page.esc(v["id"])}</span>{tag}</div>'
                           f'{pick}</div>')
             items.append(f'<section class="item v" id="t-{k}" data-k="{k}" data-from="{came}">'
@@ -668,64 +475,73 @@ def draw(d: dict) -> str:
                      '<div class="stub" id="ps" hidden></div></div></section>')
     bar = (f'<div class="bar{" hide" if shows else ""}" id="pbar"><div class="lab">Feedback</div>'
            '<textarea id="fb" placeholder="Optional. Empty sends the pick as-is."></textarea></div>')
-    first = f"{gens[-1]['generation']}/{gens[-1]['variations'][0]['id']}"
-    data = json.dumps({"GROUPS": groups, "ROUTES": routes, "DIRECTIONS": said, "FIRST": first,
-                       "BUSY": d.get("live") == "working"})
-    # A name inside the data can never close the script around it.
-    known = ("<script>const {GROUPS, ROUTES, DIRECTIONS, FIRST, BUSY} = "
-             + data.replace("</", "<\\/") + ";</script>")
-    body = (STYLE + f'<div id="items">{"".join(items)}</div>\n' + bar + watch + page.TYPING + known + SCRIPT)
-    rail_html = f'<nav class="nums" id="index">{"".join(rail)}</nav>\n'
-    return page.render(f"{nn}-prototype", [("", body)], top + rail_html, refresh=0)
+    data = json.dumps({"GROUPS": groups, "ROUTES": routes, "DIRECTIONS": said, "BASE": BASE,
+                       "FIRST": f"{gens[-1]['generation']}/{gens[-1]['variations'][0]['id']}",
+                       "BUSY": d.get("live") == "working"}).replace("</", "<\\/")
+    body = (watch + STYLE + f'<div id="items">{"".join(items)}</div>\n' + bar
+            + f'<script type="application/json" id="proto">{data}</script>\n' + scripts)
+    return page.render(f"{nn}-prototype", [("", body)], top + f'<nav class="nums" id="index">{"".join(rail)}</nav>\n',
+                       refresh=0)
 
 
-def render(nn: str, subject: str) -> str:
-    """A subject's page, or the library. A library with a picture missing
-    starts the job drawing it, detached, so the page never waits on it."""
+def drawn_shelf() -> str:
+    """The library, as draw_shelf() draws it, opened by live.watch(). It
+    starts no program: it says its pictures are wanted."""
+    PICTURES.want()
+    body = draw_shelf(library())
+    return body.replace(page.TABS, live.watch() + page.TABS, 1)
+
+
+def drawn(query: str) -> str:
+    """The page an address under BASE names: a subject's, or the library."""
+    subject, nn = asked(query)
+    return drawn_page(readable(nn, subject)) if subject else drawn_shelf()
+
+
+def files(query: str) -> list:
+    """Every file and folder whose write can move the page. A subject's
+    page: its folder and each file in it, what registry.watched names for
+    the session, and each session's record and plan, which name the tag.
+    The library: what heard() names, each subject's files, and the route
+    file each picture is named for."""
+    subject, nn = asked(query)
     if subject:
-        return draw(world(nn, subject))
-    d = library()
-    if os.path.exists(CHROME) and any(e["waits"] for e in d["locked"] + d["saved"]):
-        subprocess.Popen([sys.executable, os.path.abspath(__file__), "shoot"], stdin=subprocess.DEVNULL,
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-    return draw_shelf(d)
+        home = os.path.join(APP, subject)
+        out = [APP, home] + [os.path.join(home, f) for f in registry.listing(home)] + registry.watched([nn])
+        for n in registry.entries():
+            own = registry.folder(n)
+            out += [os.path.join(own, registry.RECORD), os.path.join(own, plans.PLAN)]
+        return list(dict.fromkeys(out))
+    out = heard()
+    for home in out[3:]:
+        if home.startswith(APP + os.sep):
+            out += [os.path.join(home, f) for f in registry.listing(home)]
+    locked, saved = shelf()
+    for e in locked + saved:
+        g, _, v = e["shown"].partition("/")
+        out.append(os.path.join(ROUTES, e["subject"], g, f"{v}.tsx"))
+    return list(dict.fromkeys(out))
+
+
+def taken(form: dict) -> str:
+    """Send, pressed on the contract: take(), for the session the press
+    names in its `session` field, since lib/live.py hands a press no
+    query. A press naming any other act is refused. The app door's names none."""
+    if (form.get("act") or ["send"])[0] != "send":
+        return NO_SUCH
+    return take(asked(urllib.parse.urlencode({"session": (form.get("session") or [""])[0]}))[1], form)
+
+
+# The page's contract, lib/live.py's: its address, BASE alone, its query
+# naming the subject and the session; its draw, its files, its take.
+LIVE = live.Page(re.escape(BASE), drawn, files=files, take=taken, query=True)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("verb", choices=["render", "heard", "fixture", "take", "shoot"])
-    ap.add_argument("file", nargs="?")
-    ap.add_argument("--subject", default="")
-    ap.add_argument("--session", default="00")
-    args = ap.parse_args()
-    if args.verb == "shoot":
-        shoot()
-        return
-    if args.verb == "fixture":
-        if not args.file:
-            sys.exit("fixture takes a file.")
-        with open(args.file) as f:
-            d = json.load(f)
-        out = os.path.splitext(args.file)[0] + ".html"
-        with open(out, "w") as f:
-            f.write(draw_shelf(d) if "locked" in d else draw(d))
-        print(out)
-        return
-    if args.verb == "take":
-        session = args.session if re.fullmatch(r"\d{2}", args.session) else "00"
-        form = urllib.parse.parse_qs(sys.stdin.read())
-        why = take(session, form)
-        if why:
-            sys.exit(why)
-        return
-    # The query is anyone's to write. A name no subject could take never
-    # reaches a path.
-    subject = args.subject if SUBJECT.fullmatch(args.subject) and args.subject not in TAKEN else ""
-    session = args.session if re.fullmatch(r"\d{2}", args.session) else "00"
-    if args.verb == "heard":
-        json.dump(heard(session, subject), sys.stdout)
-        return
-    sys.stdout.write(render(session, subject))
+    ap.add_argument("verb", choices=["shoot"])
+    ap.parse_args()
+    shoot()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,93 @@
+  /* The shared shell draws a top rail and a left one. This page keeps only
+     the top, in one column that never grows past the glass, so a narrow
+     pane wraps the rows instead of cutting them. */
+  body:has(> header.top) { grid-template-columns:minmax(0, 1fr); }
+  body:has(> header.top) > main, header.top { min-width:0; grid-column:1 / -1; }
+  /* The page's tools sit together, one width: the two adds, then Launch. */
+  header.top .acts button { white-space:nowrap; }
+  header.top .acts button.minor { font-weight:600; background:var(--bg); color:var(--text);
+    border:1px solid var(--line); }
+  header.top .acts button.minor:hover:enabled { border-color:var(--text); }
+  @media (max-width:520px) { header.top .acts button { padding:5px 7px; } }
+  /* With no row, the page says so, in one line across the whole screen. */
+  body.none .preview, body.none main > h2 { display:none; }
+  body.none #rows { height:100%; }
+  .banner { background:var(--panel); border:1px solid var(--red); color:var(--red); border-radius:5px;
+    padding:6px 9px; margin-bottom:8px; }
+  /* The map is a section like any other. It scrolls with the page. */
+  .preview { padding-bottom:8px; }
+  .mhead { display:flex; align-items:center; gap:10px; margin-bottom:5px; flex-wrap:wrap; }
+  .mhead .who { font-weight:700; color:var(--blue); }
+  .strip { display:flex; gap:4px; }
+  .strip span { font-size:10px; padding:1px 7px; border-radius:3px; color:var(--dim);
+    border:1px solid var(--line); text-transform:uppercase; letter-spacing:.06em; }
+  .strip span.on { color:var(--text); border-color:var(--blue); }
+  /* One tab, drawn to the shape of the real one. Its height is fixed and
+     its width follows the tab's own proportions, as iTerm reports them. A
+     pane too narrow for it shrinks it whole, its shape kept. */
+  .tabmap { display:flex; width:calc(var(--h) * var(--ar)); max-width:100%; aspect-ratio:var(--ar);
+    background:var(--line); border:1px solid var(--line); border-radius:4px; overflow:hidden; }
+  .split { display:flex; gap:2px; min-width:0; min-height:0; }
+  .split.cols { flex-direction:row; } .split.rows { flex-direction:column; }
+  .pane { flex:1; min-width:0; min-height:0; overflow:hidden;
+    border-left:3px solid var(--c); padding:4px 6px; background:var(--panel); }
+  .pane .pl { font-weight:700; font-size:12px; overflow-wrap:anywhere; line-height:1.25; }
+  .pane .pm { color:var(--dim); font-size:10px; overflow-wrap:anywhere; }
+  .pane.ghost { outline:1px dashed var(--blue); outline-offset:-1px; border-left-color:var(--blue);
+    background:color-mix(in srgb, var(--blue) 10%, var(--panel)); cursor:grab; opacity:.7; touch-action:none; }
+  .pane.ghost .pl, .pane.ghost .pm { overflow:hidden; text-overflow:clip; white-space:nowrap;
+    overflow-wrap:normal; }
+  .pane.ghost .pl { font-size:14px; }
+  .pane.ghost.active { outline:2px solid var(--blue); outline-offset:-2px; opacity:1;
+    background:color-mix(in srgb, var(--blue) 24%, var(--panel)); }
+  .pane.live { cursor:grab; touch-action:none; }
+  .pane.drop { position:relative; }
+  .pane.drop::after { content:''; position:absolute; background:color-mix(in srgb, var(--blue) 40%, transparent);
+    border:2px solid var(--blue); box-sizing:border-box; pointer-events:none; }
+  .pane.drop.left::after { inset:0 50% 0 0; } .pane.drop.right::after { inset:0 0 0 50%; }
+  .pane.drop.up::after { inset:0 0 50% 0; } .pane.drop.down::after { inset:50% 0 0 0; }
+
+  .row { background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--blue);
+    border-radius:5px; padding:6px 8px; margin-bottom:5px; cursor:pointer; }
+  .row.active { box-shadow:0 0 0 2px var(--blue); }
+  .row.busy { border-left-color:var(--grey); cursor:default; opacity:.7; }
+  .row.failed { border-left-color:var(--red); }
+  .line { display:flex; gap:5px 14px; align-items:center; flex-wrap:wrap; margin-bottom:4px; }
+  /* A label and its pills wrap as one, never apart. Pills too many for the
+     row, as a window's tabs, wrap inside their group, its label first. */
+  .grp { display:inline-flex; gap:3px; align-items:center; white-space:nowrap; max-width:100%; }
+  .grp > .pills { flex-wrap:wrap; min-width:0; }
+  .grp .lbl { margin-right:3px; }
+  /* Every control in a row is one height. */
+  .row input[type=text], .pills button, .pad button, .x { box-sizing:border-box; height:22px;
+    font:inherit; font-size:11px; line-height:1; border-radius:4px; }
+  .row input[type=text], .row textarea { padding:0 7px; background:var(--bg); color:var(--text);
+    border:1px solid var(--line); }
+  .row input:focus, .row textarea:focus { outline:none; border-color:var(--blue); }
+  .num { width:3.2em; text-align:center; font-weight:700; }
+  .site { width:16em; font-weight:700; }
+  .words { width:14em; font-weight:700; }
+  .row textarea { display:block; width:100%; height:2.9em; padding:3px 7px; font:inherit;
+    font-size:12px; border-radius:4px; resize:vertical; }
+  .lbl { color:var(--dim); font-size:10px; text-transform:uppercase; letter-spacing:.06em; }
+  .lbl.acct { color:#ff9500; } .lbl.model { color:#d65cff; } .lbl.effort { color:#35ffe8; }
+  .lbl.drive { color:#ff6b8b; }
+  .lbl.place { color:var(--blue); }
+  .lands { flex:1; min-width:0; color:var(--blue); font-size:12px; font-weight:700;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .state { color:var(--red); font-size:12px; font-weight:700; }
+  .row.busy .state { color:var(--dim); }
+  .pills { display:inline-flex; gap:3px; align-items:center; }
+  .pills button { padding:0 8px; cursor:pointer; background:var(--bg); color:var(--g); font-weight:600;
+    border:1px solid color-mix(in srgb, var(--g) 45%, var(--line)); }
+  .pills button:hover { border-color:var(--g); }
+  .pills button.on { background:var(--g); color:#0f1115; border-color:var(--g); font-weight:800; }
+  .pills button.new { border-style:dashed; }
+  .pills button:disabled, .pad button:disabled { opacity:.3; cursor:not-allowed; }
+  .pad { display:inline-flex; gap:3px; }
+  .pad button { width:22px; padding:0; cursor:pointer; font-size:12px;
+    background:var(--bg); color:var(--blue); border:1px solid var(--blue); font-weight:700; }
+  .pad button:hover:enabled { background:var(--blue); color:var(--bg); }
+  .x { width:22px; padding:0; cursor:pointer; font-size:14px; background:var(--bg); color:var(--dim);
+    border:1px solid var(--line); }
+  .x:hover:enabled { color:var(--red); border-color:var(--red); }

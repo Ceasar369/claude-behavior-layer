@@ -23,20 +23,16 @@ name and place show in the top rail.
 The lead's cases are .claude/state/walk-case/<walker>-….md, outside every
 session's folder. The lead is walk.json's "main".
 
-1100 imports this file for render, key, answer, tab and heard: the tab
-shows once a session holds a screenshot, and never waits on me. Only try
-runs a server.
+1100 imports this file for answer, tab and heard: the tab shows once a
+session holds a screenshot, and never waits on me. On the contract,
+lib/live.py's, it draws through drawn, files and LIVE.
 
-  walk-shots-page.py try FILE [--port 1113]   the tab, drawn from a fixture file alone
-
-A fixture holds nn, tag and shots, each {j, journey, name, time, at, file,
-rep}: j its folder under walk/, journey that journey's title, name the
-file's without .png, file an absolute path.
+Each screenshot is {j, journey, name, time, at, file, rep}: j its folder
+under walk/, journey that journey's title, name the file's without .png,
+file an absolute path.
 """
 
-import argparse
 import glob
-import hashlib
 import json
 import os
 import re
@@ -45,6 +41,7 @@ import time
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import live  # noqa: E402
 import page  # noqa: E402
 import plans  # noqa: E402
 import registry  # noqa: E402
@@ -139,147 +136,14 @@ def shots(nn: str) -> list:
 
 
 def world(nn: str) -> dict:
-    """Everything the tab draws for session NN, in a fixture's shape."""
+    """Everything the tab draws for session NN: its tag and its screenshots."""
     return {"nn": nn, "tag": plans.tag(nn, plans.owners(registry.entries())), "shots": shots(nn)}
-
-
-def key(nn: str) -> str:
-    """What the tab reloads on: every screenshot's name, and every case
-    file's state."""
-    words = []
-    for walker, base, main in sources(nn):
-        for root, _, names in os.walk(base):
-            words += [os.path.join(root, n) for n in sorted(names) if n.endswith(".png")]
-        for name in registry.listing(CASES) if main else []:
-            if not name.startswith(f"{walker}-"):
-                continue
-            try:
-                words.append(f"{name}:{os.path.getmtime(os.path.join(CASES, name))}")
-            except OSError:
-                pass
-    return hashlib.sha1("\0".join(words).encode()).hexdigest()[:12]
 
 
 # ---- the page -----------------------------------------------------------------------
 
 # The prototype's own rules, after the shell's: screenshots-tab g5/v1.
-CSS = """<style>
-  /* The journeys' rail: as wide as the widest name a walk makes, 190-21,
-     six characters, then the box's padding and its own. A journey's title
-     wraps to it, a word too long breaking where it must. Each box borrows
-     the clarify page's number rail, nav.nums. */
-  body:has(> header.top) > aside { width:calc(6ch + 32px); }
-  .ws-j { margin:14px 0 8px; text-transform:none; letter-spacing:0; overflow-wrap:anywhere; }
-  .ws-j:first-child { margin-top:0; }
-  .tab.ws-row, .tab.ws-row:hover, .tab.ws-row.on { display:block; margin:0 0 6px; padding:3px 6px;
-    text-align:center; font-weight:700; border-radius:4px;
-    background:var(--c, var(--grey)); color:var(--text); }
-  .tab.ws-row.on { outline:2px solid var(--text); outline-offset:1px; }
-  /* The screenshot fills main's width, its shape kept, and a taller one
-     scrolls down inside main. */
-  body:has(> header.top) > main { display:flex; overflow:hidden; padding:8px; }
-  .ws-view { flex:1; min-width:0; min-height:0; overflow-y:auto; }
-  .ws-shot { display:block; width:100%; height:auto; border:1px solid var(--line); border-radius:5px; }
-  /* A touch screen: each box a fingertip tall. */
-  @media (hover:none) and (pointer:coarse) {
-    .tab.ws-row, .tab.ws-row:hover, .tab.ws-row.on { padding:0 6px; line-height:44px; }
-  }
-  /* My phone, upright: the screenshot takes three quarters of the glass
-     under the top rail, and the journeys the rest, each scrolling on its
-     own: shots-upright g1/v1's look 2. */
-  @media (hover:none) and (pointer:coarse) and (orientation:portrait) {
-    body:has(> header.top) { grid-template-columns:minmax(0, 1fr); grid-template-rows:auto minmax(0, 3fr) minmax(0, 1fr); }
-    body:has(> header.top) > main { grid-column:1 / -1; grid-row:2; }
-    body:has(> header.top) > aside { grid-column:1 / -1; grid-row:3; width:auto; border-right:0;
-      border-top:1px solid var(--line); }
-  }
-</style>"""
-
-SCRIPT = r"""<script>
-const S = %DATA%, SPEEDS = %SPEEDS%, BASE = %BASE%;
-let at = 0, playing = 0, speed = 0, timer = 0;
-const last = S.length - 1;
-const $ = id => document.getElementById(id);
-const view = $('view'), shot = $('shot');
-function rail() {
-  let h = '';
-  S.forEach((s, i) => {
-    const prev = S[i - 1];
-    if (!prev || prev.j !== s.j) h += `<h2 class="ws-j">${s.journey}</h2>`;
-    h += `<div class="tab ws-row" data-i="${i}" onclick="go(${i})"`
-       + (s.rep ? ' style="--c:var(--red)"' : '') + `>${s.name}</div>`;
-  });
-  $('rail').innerHTML = h;
-}
-function show() {
-  const s = S[at];
-  document.querySelectorAll('.ws-row').forEach(r => {
-    const on = +r.dataset.i === at;
-    r.classList.toggle('on', on);
-    if (on) r.scrollIntoView({block: 'nearest'});
-  });
-  // A new screenshot starts at its top.
-  if (shot.dataset.at !== String(at)) { shot.dataset.at = at; view.scrollTop = 0; }
-  shot.src = '%PIC%/' + at;
-  shot.alt = s.name;
-  $('mid').textContent = `${s.name} · ${at + 1} of ${S.length}`;
-  $('back').disabled = at === 0;
-  $('next').disabled = at === last;
-  $('play').textContent = playing ? 'Pause' : 'Play';
-  $('speed').textContent = SPEEDS[speed] + '×';
-  keep();
-}
-// My place, my speed and whether it plays outlive a reload, as a new
-// screenshot brings one. The place is kept by the screenshot itself, its
-// journey, name and time, never by where it sat in the list.
-const KEPT = 'shots:' + location.pathname, idOf = s => s.j + '|' + s.name + '|' + s.time;
-const keep = () => sessionStorage.setItem(KEPT, JSON.stringify({id: idOf(S[at]), playing, speed}));
-function go(i) { at = Math.max(0, Math.min(i, last)); show(); }
-function stop() { playing = 0; clearInterval(timer); show(); }
-function play() {
-  if (playing) return stop();
-  playing = 1; clearInterval(timer);
-  timer = setInterval(() => { if (at >= last) return stop(); at++; show(); }, BASE / SPEEDS[speed]);
-  show();
-}
-function faster() { speed = (speed + 1) % SPEEDS.length; if (playing) { playing = 0; play(); } else show(); }
-addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight') go(at + 1);
-  if (e.key === 'ArrowLeft') go(at - 1);
-  if (e.key === ' ') { e.preventDefault(); play(); }
-});
-let was = null;
-try { was = JSON.parse(sessionStorage.getItem(KEPT) || 'null'); } catch (e) {}
-if (was) { at = Math.max(0, S.findIndex(s => idOf(s) === was.id)); speed = SPEEDS[was.speed] ? was.speed : 0; }
-rail(); show();
-if (was && was.playing) play();
-</script>"""
-
-
-def draw(d: dict, tail: str = "") -> str:
-    """The tab, from what world() reads or what a fixture holds. `tail` is its watch."""
-    nn, s = d["nn"], d["shots"]
-    if not s:
-        top = page.head("shots", d["tag"], "0 of 0")
-        return page.render(f"{nn}-shots", [("", page.blank("No screenshot yet") + tail)],
-                           top + "<aside></aside>\n", refresh=0)
-    acts = ('<span class="group"><button class="btn" id="back" onclick="go(at - 1)">Back</button>'
-            '<button class="btn" id="play" onclick="play()">Play</button>'
-            '<button class="btn" id="next" onclick="go(at + 1)">Next</button>'
-            '<button class="btn" id="speed" title="Speed" onclick="faster()">1×</button></span>')
-    top = page.head("shots", d["tag"], '<span id="mid"></span>', acts)
-    body = '<div class="ws-view" id="view"><img class="ws-shot" id="shot" alt=""></div>'
-    data = [{k: v for k, v in x.items() if k != "file"} for x in s]
-    script = (SCRIPT.replace("%DATA%", json.dumps(data).replace("</", "<\\/"))
-              .replace("%SPEEDS%", json.dumps(SPEEDS)).replace("%BASE%", str(BASE))
-              .replace("%PIC%", serve.address("shots", nn) + "/pic"))
-    return page.render(f"{nn}-shots", [("", CSS + body + tail + script)],
-                       top + '<aside id="rail"></aside>\n', refresh=0)
-
-
-def render(nn: str) -> str:
-    return draw(world(nn), page.watch(key(nn)))
-
+CSS = "<style>\n" + page.shared("walk-shots.css") + "</style>"
 
 def picture(d: dict, k: str):
     """Screenshot K of the tab, as its bytes and their type."""
@@ -294,9 +158,7 @@ def picture(d: dict, k: str):
 
 
 def answer(nn: str, rest: str):
-    """The tab, or one screenshot: /pic/K."""
-    if not rest:
-        return render(nn)
+    """One screenshot of the tab: /pic/K."""
     if m := re.fullmatch(r"/pic/(\d+)", rest):
         return picture(world(nn), m.group(1))
     return None
@@ -328,27 +190,64 @@ def heard() -> list:
     return out + [CASES] if mains else out
 
 
-# ---- tried alone ----------------------------------------------------------------
+# ---- the page on the contract --------------------------------------------------
+#
+# 1100 draws the rail itself, so a new screenshot lands part by part:
+# lib/live.py. The screenshots go as
+# data beside it, and the page's own script, .claude/pages/scripts/walk-shots.js,
+# walks them. Each screenshot's bytes still ride on answer()'s /pic/K.
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    sub = ap.add_subparsers(dest="verb", required=True)
-    tried = sub.add_parser("try")
-    tried.add_argument("file")
-    tried.add_argument("--port", type=int, default=1113)
-    args = ap.parse_args()
-    path = os.path.abspath(args.file)
-    load, mark = serve.fixture(path)
+def drawn(nn: str) -> str:
+    """Session NN's Screenshots tab, on the contract."""
+    d, e = world(nn), page.esc
+    s = d["shots"]
+    watch = live.watch((registry.entries().get(nn) or {}).get("session_id", ""))
+    # The same script with no screenshot at all, so the first one arriving reloads nothing.
+    script = f'<script src="{live.src("walk-shots.js")}"></script>\n'
+    if not s:
+        top = page.head("shots", d["tag"], "0 of 0")
+        return page.render(f"{nn}-shots", [("", watch + page.blank("No screenshot yet") + script)],
+                           top + "<aside></aside>\n", refresh=0)
+    acts = ('<span class="group"><button class="btn" id="back">Back</button>'
+            '<button class="btn" id="play">Play</button>'
+            '<button class="btn" id="next">Next</button>'
+            '<button class="btn" id="speed" title="Speed">1×</button></span>')
+    top = page.head("shots", d["tag"], '<span id="mid"></span>', acts)
+    rail = ""
+    for i, x in enumerate(s):
+        if not i or s[i - 1]["j"] != x["j"]:
+            rail += f'<h2 class="ws-j">{e(x["journey"])}</h2>'
+        rail += (f'<div class="tab ws-row" data-i="{i}"' + (' style="--c:var(--red)"' if x["rep"] else "")
+                 + f'>{e(x["name"])}</div>')
+    data = json.dumps({"shots": [{k: x[k] for k in ("j", "journey", "name", "time")} for x in s],
+                       "speeds": SPEEDS, "base": BASE, "pic": serve.address("shots", nn) + "/pic"}).replace("</", "<\\/")
+    body = (watch + CSS + '<div class="ws-view" id="view"><img class="ws-shot" id="shot" alt=""></div>'
+            + f'<script type="application/json" id="shots">{data}</script>\n' + script)
+    return page.render(f"{nn}-shots", [("", body)], top + f'<aside id="rail">{rail}</aside>\n', refresh=0)
 
-    def route(p: str):
-        bare = p.partition("?")[0]
-        if m := re.search(r"/pic/(\d+)$", bare):
-            return picture(load(), m.group(1))
-        return None
 
-    serve.run(f"walk-shots-page-{args.port % 100:02d}", args.port, lambda: draw(load(), page.watch(mark())),
-              route=route, keyof=mark, hears=lambda: [path])
+def files(nn: str) -> list:
+    """Every file and folder whose write can move session NN's tab: its
+    folder, where walk/ and walk.json come later, walk.json itself, walk/
+    down to each journey's folder, the journeys' own files in walks/, which
+    title them, the cases folder, and each session's record and plan,
+    which name the tag."""
+    mine = registry.folder(nn)
+    out = [registry.WORK, mine, os.path.join(mine, "walk.json"), CASES]
+    for _, base, _ in sources(nn):
+        out.append(base)
+        for area in registry.listing(base):
+            out.append(os.path.join(base, area))
+            for section in registry.listing(os.path.join(base, area)):
+                out += [os.path.join(base, area, section), os.path.join(registry.ROOT, "walks", area, section)]
+                out += [os.path.join(base, area, section, j) for j in registry.listing(os.path.join(base, area, section))]
+    for n in registry.entries():
+        own = registry.folder(n)
+        out += [os.path.join(own, registry.RECORD), os.path.join(own, plans.PLAN)]
+    return list(dict.fromkeys(out))
 
 
-if __name__ == "__main__":
-    main()
+# The tab's contract, lib/live.py's: its address, its draw, its files. It
+# takes no press. /pic/K is no Page: each screenshot's bytes would be kept
+# in the table's memory, so it rides on answer().
+LIVE = live.Page(serve.address("shots", r"(\d{2})"), drawn, files=files)

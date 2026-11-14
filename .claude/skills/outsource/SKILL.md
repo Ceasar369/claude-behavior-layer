@@ -1,13 +1,13 @@
 ---
 name: outsource
-description: Hands coding pieces to Codex, ChatGPT's coding agent, or Grok Build, xAI's, runs them from this session, then audits and places what comes back.
+description: Hands coding pieces to Codex, ChatGPT's coding agent, runs them from this session, then audits and places what comes back.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Skill
 argument-hint: "[the pieces, and the files each needs] — none named: the coding in hand"
 ---
 
 # Outsource
 
-Codex is ChatGPT's coding agent. Grok Build is xAI's. Each is an engine. You hand one pieces, run each yourself in the background, and audit what comes back.
+Codex is ChatGPT's coding agent, the engine. You hand it pieces, run each yourself in the background, and audit what comes back.
 
 Your number is NN, as `CLAUDE.md` defines it.
 
@@ -33,7 +33,7 @@ python3 .claude/tools/outsource.py new NN <slug>
 
 It prints the piece's folder, F. Write `F/task.md` whole with Write, every part filled, no `TODO:` left.
 
-- **Run settings.** The engine: `grok` only when I name Grok, `codex` otherwise. Its model and effort are its card's, on 1100's System page; a brief never sets them. Web stays off unless the piece needs a live fact.
+- **Run settings.** The engine: `codex`. Its model and effort are its card's, on 1100's System page; a brief never sets them. Web stays off unless the piece needs a live fact.
 - **Read.** Each file by its path from the repository root, and a range when only part is needed.
 - **Checks.** Each a command run from F, naming the engine's files `out/<name>`. It reads them, never runs them.
 - **Calls that stay mine.** Every choice about what a person sees.
@@ -60,7 +60,7 @@ Run each with `run_in_background` set. Never poll.
 
 At most `atOnce` of `.claude/tools/outsource.json` run at once. One more is refused: start it once one ends.
 
-Say one line per start: "Codex runs <slug>." or "Grok runs <slug>." Then work on.
+Say one line per start: "Codex runs <slug>." Then work on.
 
 ## Step 5 — Act on each run's end
 
@@ -107,7 +107,7 @@ Never fix an engine's file yourself. It goes back.
 
 Never place a file you have not read whole.
 
-Never run `codex` or `grok` but through `.claude/tools/outsource.py`.
+Never run `codex` but through `.claude/tools/outsource.py`.
 
 Never name `CLAUDE.md`, a rules file or a secret's file in a brief.
 

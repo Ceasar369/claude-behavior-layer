@@ -1,0 +1,29 @@
+  /* The journeys' rail: as wide as the widest name a walk makes, 190-21,
+     six characters, then the box's padding and its own. A journey's title
+     wraps to it, a word too long breaking where it must. Each box borrows
+     the clarify page's number rail, nav.nums. */
+  body:has(> header.top) > aside { width:calc(6ch + 32px); }
+  .ws-j { margin:14px 0 8px; text-transform:none; letter-spacing:0; overflow-wrap:anywhere; }
+  .ws-j:first-child { margin-top:0; }
+  .tab.ws-row, .tab.ws-row:hover, .tab.ws-row.on { display:block; margin:0 0 6px; padding:3px 6px;
+    text-align:center; font-weight:700; border-radius:4px;
+    background:var(--c, var(--grey)); color:var(--text); }
+  .tab.ws-row.on { outline:2px solid var(--text); outline-offset:1px; }
+  /* The screenshot fills main's width, its shape kept, and a taller one
+     scrolls down inside main. */
+  body:has(> header.top) > main { display:flex; overflow:hidden; padding:8px; }
+  .ws-view { flex:1; min-width:0; min-height:0; overflow-y:auto; }
+  .ws-shot { display:block; width:100%; height:auto; border:1px solid var(--line); border-radius:5px; }
+  /* A touch screen: each box a fingertip tall. */
+  @media (hover:none) and (pointer:coarse) {
+    .tab.ws-row, .tab.ws-row:hover, .tab.ws-row.on { padding:0 6px; line-height:44px; }
+  }
+  /* My phone, upright: the screenshot takes three quarters of the glass
+     under the top rail, and the journeys the rest, each scrolling on its
+     own: shots-upright g1/v1's look 2. */
+  @media (hover:none) and (pointer:coarse) and (orientation:portrait) {
+    body:has(> header.top) { grid-template-columns:minmax(0, 1fr); grid-template-rows:auto minmax(0, 3fr) minmax(0, 1fr); }
+    body:has(> header.top) > main { grid-column:1 / -1; grid-row:2; }
+    body:has(> header.top) > aside { grid-column:1 / -1; grid-row:3; width:auto; border-right:0;
+      border-top:1px solid var(--line); }
+  }

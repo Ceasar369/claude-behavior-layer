@@ -22,3 +22,7 @@ It returns its one strongest point, naming the fact it rests on, with its quote 
 2. Which lenses? My five axes, from [[the-thinking-axioms|The Thinking Axioms]], unless I name others.
 3. Is every fact checked? Each runs as a claim, as [[protocol-answer-one-pick|Answer One Pick]] rules.
 4. What comes back? Both sides, each fact marked. No count, no recommendation.
+
+## The lessons
+
+Nothing sits here.

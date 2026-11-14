@@ -62,9 +62,10 @@ Its parts, in order, each only when it applies:
 1. An agenda item I named: "Read the README in `<the item's folder>`, then `<the item's path>`: it only reminds me of this work, so look at the subject with me, never at the item."
 2. The subject, in my words, with its path.
 3. Each neighbour: "Session `<its seat>` leads a team on `<its subject>`, in `<the part>`, so read what your sessions would write before they write a file both could touch."
-4. "Be my assistant for it, with the skill 1-assistant: you lead a team of sessions that covers everything it needs, from clarification and prototyping to implementation and testing."
+4. "Be my assistant for it, with the skill 1-assistant: you lead a team of sessions that covers everything it needs, from clarification and prototyping to implementation and testing, until the finish list you agree with me is green."
 5. A discovery I asked for: "Your first stage is discovery: one session finds out what I want and clarifies it with me."
-6. My words name the team's plan open: "Your plan is open, as `knowledge/0010-playbook/0011-assisting/the-stages.md` says, under "Two kinds of plan". Start by planning the first stage with me." Otherwise: "Start by planning the first stage with me. Once it ends, we refine the plan together."
+6. My words name known parallel work: "Swarm it, as `knowledge/0010-playbook/0011-assisting/assisting-protocols/protocol-swarming.md` says."
+7. My words name the team's plan open: "Your plan is open, as `knowledge/0010-playbook/0011-assisting/the-stages.md` says, under "Two kinds of plan". Start by planning the first stage with me." Otherwise: "Start by planning the first stage with me. Once it ends, we refine the plan together."
 
 One team:
 
