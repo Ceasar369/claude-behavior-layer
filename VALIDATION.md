@@ -1,43 +1,34 @@
 # Release validation
 
-This public snapshot starts from committed source `289c5586`.
-The existing export rules omit project code and live state.
-Six additional redactions replace private examples and test-fixture paths.
+This public copy starts from committed source `d7c5a941`.
+The export rules omit project code and live state.
+They cut or replace each private example on the way.
 No original working installation was changed.
 
-## Candidate fixes
+## Before each push
 
-- Run all 33 configured Python hooks through `python3`.
-- Quote their project paths, including folders containing spaces.
-- Provide `.claude/project.example.json` for a separate trial.
-- Add `scripts/check.py` and a macOS source-check workflow.
-- Document setup, permissions, sample ports, and tested limits.
-- Add the local mod's README, author, and MIT metadata.
+Three checks stand before every push to this repository.
 
-The trial sample uses branch `main` and fixed shift `20000`.
-Its dashboard address is `http://127.0.0.1:21100`.
-The runtime controller remains bound to the loopback interface.
+- The export refuses a file naming a private project, a person, or the author's home folder.
+- A second pass reads every file of the branch for the same words, an email address, a home folder, or a key's shape.
+- gitleaks then scans the folder for secrets.
 
-## Checks performed
+The push runs only when all three are clean. It is never forced.
+
+## Checks performed on this copy
 
 | Check | Result |
 | --- | --- |
-| Export contents plus documented redactions | 271 source files matched |
-| Known credential, JWT, and private-key pattern scan | No matches |
-| Personal absolute paths | Generic documentation examples only |
-| Python syntax | All 101 layer Python files parsed |
+| Whole-branch read: private words, emails, home folders, key shapes | 404 files read, none found |
+| gitleaks secret scan | No findings |
+| Python syntax | All 158 layer Python files parsed |
 | JSON syntax | Five configuration/manifest files parsed |
+| Configured hooks | All 36 run through `python3`, each path quoted |
 | `walk-clear-test.py` | 7 passed |
-| `drive-test.py` | 5 passed |
-| `follow-test.py` | 31 passed |
-| `launch-plan-test.py` | 6 passed |
-| Full isolated check runner | Passed on macOS, Python 3.12 and 3.14 |
-| Quoted hook inside a fresh folder containing spaces | Passed |
-| Sample project facts, branch and fixed port shift | Passed |
-| Local marketplace and mod manifests | Validated using Claude Code 2.1.316 |
-| Documented marketplace add and plugin install commands | Both succeeded at local scope |
-| Installed plugin listing | Enabled, local scope, version 0.1.0 |
-| Installation paths and symlinks | Entirely inside isolated trial |
+| `drive-test.py` | 14 passed |
+| `follow-test.py` | 41 passed |
+| `launch-plan-test.py` | 48 passed |
+| Full isolated check runner | Passed on macOS, Python 3.12 and 3.14, with an empty home folder |
 
 Run the same isolated checks with:
 
@@ -45,15 +36,30 @@ Run the same isolated checks with:
 python3 scripts/check.py
 ```
 
+## Checks from v1.0.0, not repeated
+
+These ran on the v1.0.0 snapshot, from committed source `289c5586`.
+They were not run again on this copy.
+
+| Check | Result at v1.0.0 |
+| --- | --- |
+| Quoted hook inside a fresh folder containing spaces | Passed |
+| Sample project facts, branch and fixed port shift | Passed |
+| Local marketplace and mod manifests | Validated using Claude Code 2.1.316 |
+| Documented marketplace add and plugin install commands | Both succeeded at local scope |
+| Installed plugin listing | Enabled, local scope, version 0.1.0 |
+| Installation paths and symlinks | Entirely inside isolated trial |
+
 Manifest validation used the existing native Claude Code installation.
 A separate temporary `CLAUDE_CONFIG_DIR` isolated its settings.
 The documented commands installed only into that isolated trial.
 No plugin was installed into the user's existing configuration.
 No login, trust, or macOS permission prompt occurred.
 The trial also used a project folder containing spaces.
-The native executable was invoked directly to verify version 2.1.316.
-A PATH-selected older Homebrew binary was also detected.
-The README therefore asks readers to check their CLI version.
+
+The trial sample uses branch `main` and fixed shift `20000`.
+Its dashboard address is `http://127.0.0.1:21100`.
+The runtime controller remains bound to the loopback interface.
 
 ## Scope of these results
 

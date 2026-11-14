@@ -117,12 +117,12 @@ Keep its controller local; the public site is a static preview.
 python3 scripts/check.py
 ```
 
-This parses 101 Python files and five JSON files.
-It runs 49 existing tests using isolated temporary fixtures.
+This parses 158 Python files and five JSON files.
+It runs 110 existing tests using isolated temporary fixtures.
 The checks passed on macOS with Python 3.12 and 3.14.
-The mod and marketplace validate under Claude Code 2.1.316.
-Its documented local installation commands also passed an isolated trial.
-A fresh folder containing spaces also passed its hook/configuration checks.
+The mod and marketplace were validated under Claude Code 2.1.316, for v1.0.0.
+Its documented local installation commands passed an isolated trial then.
+A fresh folder containing spaces passed its hook/configuration checks then.
 
 These checks do not start real Claude conversations or panes.
 Playwright/MCP startup was not exercised in these checks.
