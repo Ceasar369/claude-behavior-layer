@@ -200,7 +200,7 @@ class WrittenRowTest(unittest.TestCase):
 class CloneTest(unittest.TestCase):
     """Row 91 clones session 01, whose record says account 2, session id 34c5-abcd."""
 
-    ROW = {"uid": 1, "n": "91", "name": "Web app walker", "message": "/clone-session", "account": "3",
+    ROW = {"uid": 1, "n": "91", "name": "Site walker", "message": "/clone-session", "account": "3",
            "model": "sonnet", "effort": "low"}
     PROJECT = "-Users-me-Projects-my-project"
 
@@ -217,14 +217,19 @@ class CloneTest(unittest.TestCase):
         folder = lambda nn: os.path.join(self.root, "sessions", f"{int(nn):02d}")
         self.patch = patch.object(page.launch.registry, "folder", side_effect=folder)
         self.patch.start()
+        # Accounts 2 and 3 are the test's own, never this Mac's list.
+        self.known = patch.dict(page.launch.panes.CONFIG,
+                                {a: f"CLAUDE_CONFIG_DIR={f} " for a, f in self.folders.items()})
+        self.known.start()
 
     def tearDown(self):
+        self.known.stop()
         self.patch.stop()
 
     def test_a_clone_row_resumes_its_target_forked(self):
         line = page.launch.line({**self.ROW, "clone": "01"})
         self.assertTrue(line.endswith(" --resume 34c5-abcd --fork-session"), line)
-        self.assertIn('"/0-session-start 91 Web app walker" --model', line)
+        self.assertIn('"/0-session-start 91 Site walker" --model', line)
 
     def test_a_row_without_clone_is_unchanged(self):
         line = page.launch.line(self.ROW)
