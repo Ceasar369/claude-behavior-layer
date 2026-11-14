@@ -40,10 +40,9 @@ It holds my layer alone.
 
 ## Who this guide is for
 
-Three readers, each on a Mac:
+Two readers, each on a Mac:
 
-- You, my co-founder.
-- Any co-founder of mine.
+- You, in a project of yours.
 - Me, in another project of mine.
 
 Where my own path differs, a document says so, under "On my own Mac".
