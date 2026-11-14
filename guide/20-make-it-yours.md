@@ -19,7 +19,7 @@ Each account may keep its own file too: account 2's is `~/.claude-acct2/CLAUDE.m
 One line to any session does both. Mine, in my trial's words:
 
 ```
-In CLAUDE.md, put this project's own name and words where the stand-in is: the title Newcomer Trial, then one line, a throwaway trial of the layer, deleted after the walk. Then name main as the branch my sessions share, where it says work.
+In CLAUDE.md, put this project's own name and words where the stand-in is: the title Claude Layer Trial, then one line, a throwaway trial of the layer, deleted after the walk. Then name main as the branch my sessions share, where it says work.
 ```
 
 Put your own name, words and branch in place of mine. It wrote both, then marked the doctor's finding built in `agreed.md`: 19. It left the two examples in `thinking.md` that name `work`: they are only examples.

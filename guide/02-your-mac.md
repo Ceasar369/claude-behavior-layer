@@ -8,9 +8,9 @@ What your Mac needs before my layer runs, and three settings.
 |---|---|---|
 | macOS | Typing into panes, waiting on files, background jobs | Any recent macOS |
 | iTerm2 | Every pane: opening it, typing into it, naming it, splitting it | `/Applications/iTerm.app` |
-| Claude Code | Every session. From 2.1.283, auto mode starts by itself | `claude` on your PATH, or `~/.local/bin/claude` |
-| Python 3.10 or newer | Every hook, library module and tool | The first `python3` on your PATH |
-| Node, with `npx` | Each session's own browser, Playwright | The PATH Claude Code sees |
+| Claude Code | Every session. 2.1.316 or newer | `claude` on your PATH, or `~/.local/bin/claude` |
+| Python 3.12 or newer | Every hook, library module and tool | The first `python3` on your PATH |
+| Node 22 or newer, with `npx` | Each session's own browser, Playwright | The PATH Claude Code sees |
 | git | `/8-ship`, the behaviour doctor, and taking my layer | Your PATH |
 | zsh | Every pane's shell | macOS's default shell |
 
@@ -36,19 +36,9 @@ Install what is missing, your own way.
 
 **iTerm2's Python API** (your hands). In iTerm2: Settings, General, Magic, "Enable Python API". My layer reads iTerm2's layout, splits panes and rearranges them through it. The Python package must be version 1.14 or newer.
 
-**Python first on your PATH.** Every hook starts with `#!/usr/bin/env python3`. macOS's own Python is 3.9.6, and my hooks fail under it. The first `python3` your PATH finds must be 3.10 or newer.
+**Python first on your PATH.** Every hook starts with `#!/usr/bin/env python3`. macOS's own Python is 3.9.6, and my hooks fail under it. The first `python3` your PATH finds must be 3.12 or newer.
 
 **Auto mode.** From Claude Code 2.1.283, a session in a terminal starts in auto mode by itself. Nothing to set. My walks met no permission prompt.
-
-An older Claude Code needs one line in each account's own settings file:
-
-```
-"permissions": {"defaultMode": "auto"}
-```
-
-Account 1's file is `~/.claude/settings.json`. A second account's sits in its own folder: document 04. If the file already holds a `"permissions"` entry, add `"defaultMode": "auto"` inside it.
-
-Without it, on an older Claude Code, each permission prompt holds its session until your hand answers it.
 
 Your project's `.claude/settings.json` can never set it. Claude Code ignores auto mode there.
 
@@ -63,11 +53,12 @@ Your project's `.claude/settings.json` can never set it. Claude Code ignores aut
 In a new iTerm2 pane, type:
 
 ```
-which python3 claude node npx; python3 --version; claude --version
+which python3 claude node npx; python3 --version; node --version; claude --version
 ```
 
 - Each name prints a path.
-- Python prints 3.10 or newer.
-- Claude Code prints its version. Below 2.1.283, auto mode needs its line.
+- Python prints 3.12 or newer.
+- Node prints 22 or newer.
+- Claude Code prints 2.1.316 or newer. An older one needs updating.
 
 Then, in iTerm2's Settings, "Enable Python API" shows on. Document 04 installs the Python package when you first open a launch page.

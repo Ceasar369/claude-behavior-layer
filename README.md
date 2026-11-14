@@ -111,6 +111,8 @@ Try `/2-clarify` with one decision you want explained.
 The dashboard can control local sessions and inspect their files.
 Keep its controller local; the public site is a static preview.
 
+The [guide](guide/00-read-me.md) walks every step, one document at a time.
+
 ## Checks and limits
 
 ```sh

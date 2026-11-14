@@ -47,8 +47,8 @@ Never start account 1 with `CLAUDE_CONFIG_DIR=~/.claude`. Claude Code would then
 **2. Its zero-turn mod** (your hands). Outside Claude Code, in an iTerm2 terminal at your project's root, type each line:
 
 ```
-CLAUDE_CONFIG_DIR=~/.claude-acct2 claude plugin marketplace add --scope user ./.claude/mods
-CLAUDE_CONFIG_DIR=~/.claude-acct2 claude plugin install --scope user zero-turn@layer-mods
+CLAUDE_CONFIG_DIR=~/.claude-acct2 claude plugin marketplace add --scope local ./.claude/mods
+CLAUDE_CONFIG_DIR=~/.claude-acct2 claude plugin install --scope local zero-turn@layer-mods
 ```
 
 Use account 3's folder for account 3. The marketplace points to this project's `.claude/mods` folder: keep it in place. New sessions load the mod after installation.
@@ -85,7 +85,7 @@ Three accounts take an order such as `3 2 1 3 2`. Each account's share of the tu
 
 ## Auto mode, on each account
 
-From Claude Code 2.1.283, nothing to set: 02. On an older one, the line of 02 goes in each account's own file: `~/.claude-acct2/settings.json` for account 2. Account 1's never reaches it.
+From Claude Code 2.1.283, nothing to set: 02.
 
 ## Chrome, with several accounts
 

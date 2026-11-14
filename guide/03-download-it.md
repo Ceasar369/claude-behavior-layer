@@ -16,16 +16,13 @@ The repository is public, and holds my layer alone. Git takes it with no GitHub 
 
 Started from 00's line, your Claude has done this part already.
 
-A trial folder first, if you like: an empty folder you delete after. Your real project takes my layer the same way.
+A trial folder first, if you like: an empty folder you delete after. Your real project takes it as the next part shows.
 
 ```
 mkdir ~/layer-trial
 cd ~/layer-trial
-git init
-git pull https://github.com/Ceasar369/claude-behavior-layer.git main
+git clone https://github.com/Ceasar369/claude-behavior-layer.git .
 ```
-
-In my walk, that pull from GitHub took a second.
 
 My layer's files land at the folder's root, with this guide.
 
@@ -49,19 +46,21 @@ Git stops once on each file we both hold. In my test project, that was `CLAUDE.m
 
 Type `git branch`. It prints your branch's name, after a `*`. In my walks it printed `main`.
 
-Then find your project's shift. Type:
+Then copy the sample into `.claude/project.json`:
+
+```
+cp .claude/project.example.json .claude/project.json
+```
+
+It names the project `Claude Layer Trial`, its branch `main`, and its shift 20000. Change the name and branch for your own project.
+
+Then check the shift. Type:
 
 ```
 python3 .claude/tools/ports.py free
 ```
 
-It lists the shift each project on this Mac holds, then the lowest free one: `Free: 20000`. Your project takes that one, so no two projects ever share a port.
-
-Then write `.claude/project.json`, with your project's name, that branch and that shift. Type this line, with yours in place of mine:
-
-```
-printf '%s\n' '{"name": "Newcomer Trial", "branch": "main", "shift": 20000}' > .claude/project.json
-```
+It lists the shift each project on this Mac holds, then the lowest free one: `Free: 20000`. If it prints another, put that one in the file, so no two projects ever share a port.
 
 The name is how 1100 calls your project, on your phone too. The branch is the only one `/8-ship` commits. With no file, `/8-ship` commits only a branch named `work`, and the name is your folder's.
 
@@ -80,8 +79,8 @@ It prints, as JSON, the fourteen facts my layer reads. `name` and `branch` are y
 In an iTerm2 terminal, at this project's root and outside Claude Code, type each line for account 1:
 
 ```
-claude plugin marketplace add --scope user ./.claude/mods
-claude plugin install --scope user zero-turn@layer-mods
+claude plugin marketplace add --scope local ./.claude/mods
+claude plugin install --scope local zero-turn@layer-mods
 ```
 
 The marketplace points to this project's `.claude/mods` folder. Keep that folder in place. `.claude/settings.json` already turns `zero-turn@layer-mods` on. Document 04 installs it on each extra account. Restart Claude Code after installation.
@@ -135,7 +134,7 @@ Do what it says, when you choose. That stop takes down that project's 1100 and i
 
 The door lets a Claude desktop app chat, your app chat, read and act on your sessions. It is `.claude/tools/app-door.py`. It speaks MCP, the language the Claude app's connectors speak.
 
-The app runs it on this Mac, through your project's own desktop extension, named for it: "Newcomer Trial sessions" for this trial. It talks over a pipe only the app holds: no tunnel, no port, no key. Each project has its own extension.
+The app runs it on this Mac, through your project's own desktop extension, named for it: "Claude Layer Trial sessions" for this trial. It talks over a pipe only the app holds: no tunnel, no port, no key. Each project has its own extension.
 
 In an iTerm2 terminal, at your project's root, type this. It packs the extension:
 
@@ -143,9 +142,9 @@ In an iTerm2 terminal, at your project's root, type this. It packs the extension
 python3 .claude/tools/app-door.py extension
 ```
 
-It prints the file's path, `.claude/state/door/newcomer-trial-sessions.mcpb`, under your project's folder. Double-click it, and the Claude app installs it. Its tool permissions sit on its own page in the app.
+It prints the file's path, `.claude/state/door/claude-layer-trial-sessions.mcpb`, under your project's folder. Double-click it, and the Claude app installs it. Its tool permissions sit on its own page in the app.
 
-The app chat cannot restart 1100. To keep 1100 up, hand that to launchd, the Mac's service manager. It needs a `python3` of 3.10 or newer, the one your shell finds:
+The app chat cannot restart 1100. To keep 1100 up, hand that to launchd, the Mac's service manager. It needs a `python3` of 3.12 or newer, the one your shell finds:
 
 ```
 python3 .claude/tools/app-door.py install
@@ -153,7 +152,7 @@ python3 .claude/tools/app-door.py install
 
 Killed or frozen, 1100 is back within ten seconds. Stopped on purpose, it comes back a minute later. Either way, without band 00. It starts again at each login.
 
-Its label is `com.behaviour-layer.app-door.` followed by your project's name in lowercase. Each run of characters outside `a` to `z` and `0` to `9` becomes a dash. Leading and trailing dashes are dropped. For `Newcomer Trial`, it is `com.behaviour-layer.app-door.newcomer-trial`.
+Its label is `com.behaviour-layer.app-door.` followed by your project's name in lowercase. Each run of characters outside `a` to `z` and `0` to `9` becomes a dash. Leading and trailing dashes are dropped. For `Claude Layer Trial`, it is `com.behaviour-layer.app-door.claude-layer-trial`.
 
 The door has a switch. `python3 .claude/tools/app-door.py shut` refuses every call, until `python3 .claude/tools/app-door.py open`. A new project's door starts open.
 
@@ -177,9 +176,11 @@ rm ~/Library/LaunchAgents/<its label>.plist
 ## Unproven here
 
 - Taking `main` with no GitHub account. My walk's Mac was signed in to GitHub.
+- `git clone` into the folder. My walk ran `git init`, then `git pull`.
 - A branch named other than `main`. My Mac's git takes `main` from Xcode's own settings.
 - Joining the two files, and finishing the merge. My test proved only where git stops.
 - A project already holding its own `.claude/` settings, skills or hooks.
+- Copying the sample. My walk wrote the file by hand, named Newcomer Trial.
 - 1100 starting on 21100 for a new project, through this guide. Another project of mine fixes the same shift, set by hand. No walk of this guide ran it.
 - Without the shift: stopping my other project's 1100, so this one's starts. No walk stopped mine.
 - Installing the zero-turn mod, and its answer to a session's Skill call. No walk tested either.

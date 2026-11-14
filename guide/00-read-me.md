@@ -15,7 +15,7 @@ If it asks whether you trust this folder, press Down, then Return: "Yes, I trust
 Then give your Claude this one line, word for word:
 
 ```
-Download the main branch of the public GitHub repository https://github.com/Ceasar369/claude-behavior-layer into this folder. It needs no GitHub account. Check that python3 is 3.10 or newer, and help me install it if not. Then tell me to restart Claude Code here. After the restart, read guide/00-read-me.md and walk me through every document in guide/, in order, one step at a time: explain each step, wait for me wherever it needs my hands, and run each document's check with me.
+Download the main branch of the public GitHub repository https://github.com/Ceasar369/claude-behavior-layer into this folder. It needs no GitHub account. Check that python3 is 3.12 or newer, and help me install it if not. Then tell me to restart Claude Code here. After the restart, read guide/00-read-me.md and walk me through every document in guide/, in order, one step at a time: explain each step, wait for me wherever it needs my hands, and run each document's check with me.
 ```
 
 When it tells you to restart, type `/exit`. Then, in the same folder:
