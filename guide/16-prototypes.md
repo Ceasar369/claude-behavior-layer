@@ -38,6 +38,37 @@ My walk's app ran on Vite, React and TanStack Router, installed by pnpm: 84 pack
 
 My last walk's build picked that stack from my layer's own files, and took its packages from the network. It did look at which processes held my 1100 and 1400.
 
+**Its config, as a template.** The app's `code/prototypes/vite.config.ts` sets two things my layer needs: the port, read from `PORT`, and the base, `/proto/`. Mine reads:
+
+```
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig, loadEnv } from "vite";
+
+// The whole app sits here, prototypes.py's BASE. 1100 passes every address
+// under it through to this port, so 1100 frames the app from its own
+// origin: the Claude app's browser panel refuses a frame from another port.
+const BASE = "/proto/";
+
+// Every prototype is a route here. None calls a backend, so the environment
+// gives only the port.
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const port = Number(env.PORT);
+  if (!Number.isInteger(port)) throw new Error("PORT is not set.");
+  return {
+    base: BASE,
+    plugins: [
+      tanstackRouter({ target: "react", autoCodeSplitting: true }),
+      react(),
+    ],
+    server: { port, strictPort: true, allowedHosts: [".ts.net"] },
+  };
+});
+```
+
+If your session's build writes another, hold it to those two.
+
 **`node_modules/` stays out of git.** My layer's `.gitignore` holds it, among its four lines: `__pycache__/`, `.claude/settings.local.json`, `.claude/state/`, `node_modules/`. No `/8-ship` carries the app's 89 MB.
 
 **Its band entry.** The build also wrote a `band` into `.claude/project.json`, so `/00-sessions-dashboard` serves the app on 1400. In my walk, the file then read:
