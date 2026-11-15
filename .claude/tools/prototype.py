@@ -13,12 +13,12 @@ A subject is two folders. code/prototypes/<subject>/ holds one g<N>.json
 per generation. code/prototypes/src/routes/<subject>/ holds one
 g<N>/v<M>.tsx per variation.
 
-  prototype.py hold 05 proposal-header         session 05 holds that subject, and no other session does
+  prototype.py hold 05 profile-header         session 05 holds that subject, and no other session does
   prototype.py status 05                       1400, 05's subject, its winner while locked, up or down
-  prototype.py lock-in proposal-header g2/v3   keeps g2/v3, deletes every other variation
-  prototype.py lock-in proposal-header g2/v3 --looks 1,4   the same; a variation with groups keeps one look in each
-  prototype.py build 05 proposal-header        session 05 builds that winner, whoever made it: its stop removes it
-  prototype.py remove proposal-header          deletes the subject whole, and every session's hold on it
+  prototype.py lock-in profile-header g2/v3   keeps g2/v3, deletes every other variation
+  prototype.py lock-in profile-header g2/v3 --looks 1,4   the same; a variation with groups keeps one look in each
+  prototype.py build 05 profile-header        session 05 builds that winner, whoever made it: its stop removes it
+  prototype.py remove profile-header          deletes the subject whole, and every session's hold on it
   prototype.py remove rail-teams --winner      the same for a locked winner. Without --winner, it refuses
 
 Writing a generation holds its subject too, through hooks/prototype-hold.py.

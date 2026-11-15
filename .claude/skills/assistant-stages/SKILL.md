@@ -13,7 +13,7 @@ My number, NN, as `CLAUDE.md` defines it. My folder is `.claude/state/sessions/N
 
 No `stages.json` there, and NN does not end in 0 → I sit off an assistant's seat. `python3 .claude/tools/launch.py seat` prints the seat, SS. Run the skill `0-session-start` with `SS <my title's words>`: my folder and my pages move to SS. Say so in one line, and go on as SS.
 
-My title's words are my name without its number: `07-proposal-thinking` gives `proposal thinking`.
+My title's words are my name without its number: `07-search-thinking` gives `search thinking`.
 
 ## Step 2 — Take the work
 

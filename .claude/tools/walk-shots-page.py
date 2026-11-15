@@ -49,9 +49,9 @@ import serve  # noqa: E402
 
 WALK = "walk"
 CASES = os.path.join(registry.ROOT, ".claude", "state", "walk-case")
-SHOT = re.compile(r"\d+(?:-[\w-]+)?\.png")
+SHOT = re.compile(r"\d+[A-Z]*(?:-[\w-]+)?\.png")
 # A screenshot a case names, its path under the walker's walk/ folder.
-NAMED = re.compile(r"[\w-]+/[\w-]+/[\w-]+/\d+(?:-[\w-]+)?\.png")
+NAMED = re.compile(r"[\w-]+/[\w-]+/[\w-]+/\d+[A-Z]*(?:-[\w-]+)?\.png")
 SPEEDS = [1, 1.5, 2, 3]
 BASE = 1500
 

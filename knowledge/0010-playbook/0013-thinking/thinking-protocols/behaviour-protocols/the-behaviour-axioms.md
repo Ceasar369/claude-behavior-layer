@@ -96,4 +96,4 @@ A folder in `.claude/` whose layout is ours stays flat until it passes nine file
 
 Python 3 and its standard library, and two packages: iterm2 and cryptography.
 
-AppleScript writes the dock launcher. TypeScript writes a mod, and a mod only calls Python.
+TypeScript writes a mod, and a mod only calls Python.

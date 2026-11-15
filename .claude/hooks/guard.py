@@ -21,8 +21,9 @@ It reads what is typed through lib/shell.py, down into $(...), backticks,
 bash -c, eval and a heredoc a shell reads. A pid or a port hidden in a
 variable passes unseen, and so does a script that kills.
 
-A git push of my layer is refused too: the layer is public, and
-tools/export.py push is its one push, after its check.
+A git push of my layer is refused too, by its folder, its name, or its
+remote's push address: the layer is public, and tools/export.py push is
+its one push, after its check.
 
 A headless claude chat, -p or --print, is refused too. It holds Claude
 Code's own tools, which message the sessions on this Mac. A test chat
@@ -49,6 +50,7 @@ sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 import hook  # noqa: E402
 import incident  # noqa: E402
+import project  # noqa: E402
 from shell import Reader  # noqa: E402
 
 NAMED = {"pkill", "killall"}
@@ -392,13 +394,15 @@ def chat(command: str, cwd: str) -> str:
 
 
 LAYER = ("Refused: my layer is public, and a plain git push reads nothing first. "
-         "Push it through its checks: python3 .claude/tools/export.py push.")
+         "Its one push is python3 .claude/tools/export.py push, from the project that builds it.")
 
 
 def layer_push(command: str, cwd: str) -> str:
     """The refusal for a git push of my layer, typed in the shell, or "":
-    one run in the layer branch's folder, or one naming the layer, its
-    branch or a remote. tools/export.py push is the one push, after its check."""
+    one run in the layer branch's folder, one naming the layer, its branch
+    or a remote, or one whose remote's push address is the layer's public
+    repository, a bare push included. tools/export.py push is the one push,
+    after its check."""
     folder = os.path.realpath(hook.ROOT + "-layer")
 
     def pushes(words: list, where) -> bool:
@@ -412,7 +416,10 @@ def layer_push(command: str, cwd: str) -> str:
         if words[i:i + 1] != ["push"]:
             return False
         here = os.path.realpath(where) if where else ""
-        return here == folder or here.startswith(folder + os.sep) or any("layer" in w for w in words[i + 1:])
+        if here == folder or here.startswith(folder + os.sep) or any("layer" in w for w in words[i + 1:]):
+            return True
+        named = [w for w in words[i + 1:] if not w.startswith("-")]
+        return project.to_layer(here or hook.ROOT, named[0] if named else "")
 
     reader = Reader()
     try:

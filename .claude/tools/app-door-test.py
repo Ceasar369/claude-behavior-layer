@@ -489,36 +489,36 @@ class Tools(unittest.TestCase):
         self.stub(self.v.agenda, "HEADINGS", {"1": "Phase 1: First Launch"})
         self.stub(self.v.agenda, "NAMES", ("Money", "Docs"))
         items = [
-            {"id": "apple-sign-in", "title": "Apple sign in", "phase": "1", "after": [], "topics": ["Docs"],
-             "note": "What: Do, small: Apple sign in.\nMine: the Apple account."},
-            {"id": "bank-links", "title": "Bank links", "phase": "1", "after": ["apple-sign-in"], "topics": ["Money"],
+            {"id": "dark-mode", "title": "Dark mode", "phase": "1", "after": [], "topics": ["Docs"],
+             "note": "What: Do, small: Dark mode.\nMine: the Apple account."},
+            {"id": "export-button", "title": "Export button", "phase": "1", "after": ["dark-mode"], "topics": ["Money"],
              "note": "What: Fix, large: Acme and Globex."},
-            {"id": "live-keys", "title": "Live keys", "phase": "2", "after": [], "topics": ["Money"],
-             "note": "What: Do, medium: live keys."}]
+            {"id": "search", "title": "Search", "phase": "2", "after": [], "topics": ["Money"],
+             "note": "What: Do, medium: search."}]
         self.stub(self.v.agenda, "world", lambda: {"broken": [], "items": items})
         self.stub(self.v.agenda, "read", lambda: ({it["id"]: it for it in items}, []))
 
     def test_read_agenda_sums_each_phase(self):
         self.fake_agenda()
         self.assertEqual(self.call("read_agenda"), (
-            "Phase 1: First Launch: 2 items, 1 waits on you.\nMine: Apple sign in.\nOthers: Bank links.\n\n"
-            "Phase 2: 1 item, 0 wait on you.\nOthers: Live keys.\n\nTopics: Money, Docs. Orders: 1 to 2.", False))
+            "Phase 1: First Launch: 2 items, 1 waits on you.\nMine: Dark mode.\nOthers: Export button.\n\n"
+            "Phase 2: 1 item, 0 wait on you.\nOthers: Search.\n\nTopics: Money, Docs. Orders: 1 to 2.", False))
 
     def test_read_agenda_reads_an_item_a_topic_and_an_order(self):
         self.fake_agenda()
-        self.assertEqual(self.call("read_agenda", item="Bank links"), (
-            "Bank links. File bank-links. Order 2. Phase 1: First Launch.\nTopics: Money.\n"
-            "Waits on: Apple sign in.\nWaiting on it: nothing.\n\nWhat: Fix, large: Acme and Globex.", False))
+        self.assertEqual(self.call("read_agenda", item="Export button"), (
+            "Export button. File export-button. Order 2. Phase 1: First Launch.\nTopics: Money.\n"
+            "Waits on: Dark mode.\nWaiting on it: nothing.\n\nWhat: Fix, large: Acme and Globex.", False))
         self.assertEqual(self.call("read_agenda", topic="money"), (
-            "Topic money: 2 items.\nLive keys, order 1.\nBank links, order 2.", False))
+            "Topic money: 2 items.\nSearch, order 1.\nExport button, order 2.", False))
         self.assertEqual(self.call("read_agenda", order="1"), (
-            "Order 1: 2 items.\nApple sign in, order 1, waits on you.\nLive keys, order 1.", False))
+            "Order 1: 2 items.\nDark mode, order 1, waits on you.\nSearch, order 1.", False))
         self.assertEqual(self.call("read_agenda", item="Nope"), ("No agenda item Nope.", True))
 
     def test_read_agenda_finds_by_title_and_note(self):
         self.fake_agenda()
         self.assertEqual(self.call("read_agenda", query="globex"),
-                         ("1 item matches globex.\n\nBank links\nWhat: Fix, large: Acme and Globex.", False))
+                         ("1 item matches globex.\n\nExport button\nWhat: Fix, large: Acme and Globex.", False))
         self.assertEqual(self.call("read_agenda", query="zebra"), ("No agenda item matches zebra.", False))
 
     # ---- System ----

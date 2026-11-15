@@ -4,7 +4,7 @@
 A PostToolUse hook, with no skill behind it. A write is the trigger, so
 nothing is typed and no turn is spent.
 
-    code/prototypes/proposal-header/g2.json    the writing session holds proposal-header
+    code/prototypes/profile-header/g2.json    the writing session holds profile-header
 
 1100 hears the session's folder, counts the prototype as waiting on me,
 and frames it from the one prototypes app on 1400. Every other page 1100

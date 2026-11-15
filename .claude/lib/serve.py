@@ -647,7 +647,8 @@ def run(skill: str, port: int, render, take=None, route=None,
 
     def welcome(h) -> bool:
         host = h.headers.get("Host", "")
-        mine = host in local or (host.endswith(".ts.net") and h.headers.get("Tailscale-User-Login"))
+        name = host.rsplit(":", 1)[0]
+        mine = host in local or (name.endswith(".ts.net") and h.headers.get("Tailscale-User-Login"))
         origin = h.headers.get("Origin")
         return bool(mine) and (not origin or urllib.parse.urlsplit(origin).netloc == host)
 

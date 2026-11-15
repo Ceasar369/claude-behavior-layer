@@ -15,6 +15,9 @@ hears one line more after a commit: how many layer files changed since
 the last export, as the export's changes() counts them, or the sentence
 it refuses with. A project without it hears nothing more.
 
+A push aimed at the layer's public repository is refused: a project
+started from the layer can still track it.
+
 A push then waits, WAIT seconds at most, for GitHub's checks on the commit
 it pushed, and names each step that failed, with its first error line.
 Unread, a failed check went unseen for weeks. A project with no
@@ -194,6 +197,9 @@ def main() -> None:
     if not ahead:
         hook.done("Nothing to push.")
 
+    if project.to_layer(hook.ROOT):
+        hook.done(f"The push was refused: {BRANCH} pushes to the layer's public repository. "
+                  f"Point it at this project's own: git branch --set-upstream-to origin/{BRANCH}.")
     r = git("push")
     if r.returncode != 0:
         hook.done(f"The push was refused: {last_line(r)}")

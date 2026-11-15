@@ -147,7 +147,7 @@ The headline.
 
 A paragraph.
 
-- **Who starts it** — the service provider
+- **Who starts it** — the member
 
 ## The graph
 
@@ -187,7 +187,7 @@ class Graph(unittest.TestCase):
         self.assertEqual([s["box"] for s in got["steps"]],
                          [("First box", "one"), ("Is it so?", ""), ("Last box", "nowhere")])
         self.assertEqual(got["steps"][1]["branch"], ("yes", ("A branch", "two")))
-        self.assertEqual(got["text"][2], ("fact", ("Who starts it", "the service provider")))
+        self.assertEqual(got["text"][2], ("fact", ("Who starts it", "the member")))
         self.assertEqual((got["caption"], got["unproven"], got["sources"]),
                          ("the caption.", ["Unproven: the order."], ["https://example.com/flow"]))
         self.assertEqual(tool.linked(GRAPH), ["one", "nowhere", "two"])

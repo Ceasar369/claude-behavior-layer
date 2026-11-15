@@ -31,6 +31,14 @@ folder's name. A file that cannot be read names nothing.
             click opens none. No workspace: the project's folder.
   shift     a shift this project always takes, and flip then refuses.
             None: the state file's, or 0.
+  color     the square of 1100's icon on my phone, as #rrggbb. Orange.
+  glyph     what 1100's icon draws on it: SVG markup in Lucide's 24 by 24
+            stroke style, drawn white. The rocket Launch wears.
+  home      the folder of the project that builds the layer, ~ for my
+            home, where tools/layer.py send leaves a fix. None: none.
+  hooks     this project's own hooks, by event: each a file from the
+            root, with an optional "matcher" and "timeout".
+            hooks/own-hooks.py runs them. None: none.
   usage     a shared usage reader on this Mac, a program's path, ~ for my
             home. lib/accounts.py reads through it. None: none.
 
@@ -49,6 +57,13 @@ Two facts no file names sit here too, each read by two tools: TRAILER,
 the line /8-ship's commit and the export's close on, and STACK, the
 stack's folder, which coder-check counts and behaviour-doctor leaves out.
 
+LAYER names the layer's public repository, LAYER_URL its address, and
+to_layer() says whether a push from a folder lands there. The guard,
+/8-ship and the export read it: the export's push is the one push that
+repository takes. GITHUB names that repository's own files, which make it
+a project of its own: the export never touches them, and tools/layer.py
+keeps them out of a project's update.
+
   project.py [ROOT]    print the facts of the project at ROOT, this one by default
 
 Standard library only. The memory guard imports it on macOS's own Python,
@@ -58,6 +73,7 @@ Standard library only. The memory guard imports it on macOS's own Python,
 import json
 import os
 import re
+import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -67,6 +83,10 @@ ASKED = "/project"
 SHIFT_FILE = os.path.join(".claude", "state", "ports", "shift.json")
 TRAILER = "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 STACK = "knowledge/0010-playbook/0015-coding/the-stack/"
+ORANGE = "#f26b1f"
+LAYER = "claude-behavior-layer"
+LAYER_URL = f"https://github.com/Ceasar369/{LAYER}.git"
+GITHUB = ["guide/", "README.md", "LICENSE", "VALIDATION.md", "docs/", "scripts/", ".github/"]
 
 
 def read(root: str) -> dict:
@@ -77,6 +97,26 @@ def read(root: str) -> dict:
     except (OSError, ValueError):
         return {}
     return got if isinstance(got, dict) else {}
+
+
+def to_layer(where: str, remote: str = "") -> bool:
+    """Whether a git push from the folder WHERE, to REMOTE, lands in the
+    layer's public repository. REMOTE is a remote's name or an address. With
+    none, the one a bare push takes: the branch's push remote, the folder's
+    default, the branch's remote, then origin. An address no remote names is
+    read as it stands."""
+    def git(*args: str) -> str:
+        try:
+            r = subprocess.run(["git", "-C", where, *args], capture_output=True, text=True, timeout=10)
+        except (OSError, subprocess.SubprocessError):
+            return ""
+        return r.stdout.strip() if r.returncode == 0 else ""
+
+    if not remote:
+        branch = git("symbolic-ref", "--short", "HEAD")
+        remote = (git("config", "--get", f"branch.{branch}.pushRemote") or git("config", "--get", "remote.pushDefault")
+                  or git("config", "--get", f"branch.{branch}.remote") or "origin")
+    return LAYER in (git("remote", "get-url", "--push", "--all", remote) or remote)
 
 
 def part(d: dict, key: str) -> dict:
@@ -165,6 +205,11 @@ def facts(root: str) -> dict:
         "docs": docs + "/" if docs else "",
         "editor": words(dock.get("editor")),
         "workspace": os.path.join(root, workspace) if workspace else root,
+        "color": text(got.get("color")) if re.fullmatch(r"#[0-9a-fA-F]{6}", text(got.get("color"))) else ORANGE,
+        "glyph": text(got.get("glyph")),
+        "home": os.path.expanduser(text(got.get("home"))),
+        "hooks": {event: [h for h in each if isinstance(h, dict) and text(h.get("file"))]
+                  for event, each in part(got, "hooks").items() if isinstance(each, list)},
         "usage": os.path.expanduser(text(got.get("usage"))),
     }
 
@@ -177,6 +222,8 @@ BAND, COMMAND, MATCH = FACTS["band"], FACTS["command"], FACTS["match"]
 DATABASE, DOCS = FACTS["database"], FACTS["docs"]
 EDITOR, WORKSPACE = FACTS["editor"], FACTS["workspace"]
 USAGE = FACTS["usage"]
+COLOR, GLYPH = FACTS["color"], FACTS["glyph"]
+HOME, HOOKS = FACTS["home"], FACTS["hooks"]
 
 
 def identity() -> str:

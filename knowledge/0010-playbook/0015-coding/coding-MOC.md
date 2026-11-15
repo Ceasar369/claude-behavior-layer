@@ -8,8 +8,7 @@ How a session codes: everything touching `code/`.
 
 - [[the-coding-axioms|The Coding Axioms]] — what a session always respects when it codes.
 - [[coding-protocols-MOC|Protocols]] — every coding protocol, by the kind of code it serves.
-
-> **Stand-in.** `the-stack/`, once this project writes its own: what its code is built with.
+- [[the-stack-MOC|The Stack]] — what code is built with, its formats, and its vendors.
 
 ## Admission rule
 

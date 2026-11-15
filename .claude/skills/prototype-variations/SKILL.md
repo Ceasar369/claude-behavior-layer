@@ -9,7 +9,7 @@ argument-hint: "my words — a new subject, or feedback on this session's protot
 
 Each direction opens with what its variation shows, by "3. It shows only what my unknowns need", in `knowledge/0010-playbook/0014-prototyping/the-prototyping-axioms.md`. Then it says how the variation answers the unknowns.
 
-"The badge alone: a column per status the service provider sees, a numbered row per look" opens one.
+"The badge alone: a column per status the member sees, a numbered row per look" opens one.
 
 A direction naming numbered things says which they are: looks, which compete in groups, or sections of one design, which never do. It names each group's looks, as "looks 1 and 2 compete, 3 and 4 compete, 5 and 6 are only shown". `knowledge/0010-playbook/0014-prototyping/prototyping-protocols/protocol-glance.md` defines all three.
 

@@ -8,7 +8,7 @@ no skill, and the family's guards lapsed. The hold routes instead: while
 this session holds a subject, every message I type reaches it with one
 line more, handing my words to the router unchanged.
 
-    session 05 holds proposal-header · I type "I prefer v2, darker"
+    session 05 holds profile-header · I type "I prefer v2, darker"
         the session invokes 4-prototype with "I prefer v2, darker"
 
 A slash command routes itself, so it hears nothing. Neither does a session

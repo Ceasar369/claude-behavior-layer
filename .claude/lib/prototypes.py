@@ -34,8 +34,8 @@ live, and its stop takes down any it forgot, unless another session still
 builds it. The session that made it never does. A session coding a
 winner, whoever made it, marks it built: prototype.py build writes one
 line per winner in its own folder, the file `building`, which goes with
-the folder too. A session whose mission names the winner's file builds it
-with no line.
+the folder too. Only that line marks a builder. A mission naming the
+winner's file, to copy its look, builds nothing.
 
 The prototype tools, hooks and 1100's views need these. They live here,
 once.
@@ -49,7 +49,6 @@ import os
 import re
 import shutil
 
-import plans
 import project
 import registry
 
@@ -228,25 +227,8 @@ def build(nn: str, subject: str) -> None:
 
 def builds(nn: str, subject: str) -> bool:
     """Whether session NN builds this subject's winner: its `building`
-    names the subject, or its mission names the winner's file."""
-    pick = winner(subject)
-    if not nn or not pick:
-        return False
-    if subject in building(nn):
-        return True
-    owned = plans.owners(registry.entries())
-    if nn not in owned:
-        return False
-    g, v = pick.split("/")
-    path = os.path.relpath(os.path.join(ROUTES, subject, g, f"{v}.tsx"), registry.ROOT)
-    m = plans.mission(*owned[nn])
-    if not m.get("file"):
-        return False
-    try:
-        with open(os.path.join(registry.ROOT, m["file"])) as f:
-            return path in f.read()
-    except OSError:
-        return False
+    names the subject. A mission naming the winner's file is only a read."""
+    return bool(nn) and bool(winner(subject)) and subject in building(nn)
 
 
 def built(nn: str) -> list:

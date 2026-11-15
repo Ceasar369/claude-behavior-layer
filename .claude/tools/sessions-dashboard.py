@@ -300,18 +300,19 @@ def take(form: dict, path: str = "/") -> str:
 
 # ---- my iPhone's icon -----------------------------------------------------------------------
 
-# 1100 on my iPhone's home screen: my primary orange, --primary in
-# code/tokens/tokens.css, filling the square, and the white rocket Launch
-# wears, centred. With no icon tag, iOS asks the site's root for it.
+# 1100 on my iPhone's home screen: the project's color filling the square, and
+# its glyph, white, centred. A project naming neither gets orange and the
+# rocket Launch wears. With no icon tag, iOS asks the site's root for it.
 # librsvg draws it.
 TOUCH = ('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">'
-         '<rect width="180" height="180" fill="#f26b1f"/><g transform="translate(36 36) scale(4.5)" fill="none" '
+         '<rect width="180" height="180" fill="{}"/><g transform="translate(36 36) scale(4.5)" fill="none" '
          'stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">{}</g></svg>')
 
 
 def touch_icon() -> bytes:
     """The icon, 180 by 180, as a PNG."""
-    return subprocess.run(["/opt/homebrew/bin/rsvg-convert"], input=TOUCH.format(page.PATHS["launch"]).encode(),
+    svg = TOUCH.format(project.COLOR, project.GLYPH or page.PATHS["launch"])
+    return subprocess.run(["/opt/homebrew/bin/rsvg-convert"], input=svg.encode(),
                           capture_output=True, check=True).stdout
 
 

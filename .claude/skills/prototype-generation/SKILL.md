@@ -52,7 +52,7 @@ Each brief holds:
 5. The parts, styles and fixtures to import, by relative path, from any frontend under `code/`. Its frontend's look file, `src/base/styles.css`, comes whole, as text: `import look from "<relative path>/src/base/styles.css?inline"`. The route draws it as `<style>{look}</style>`, so it lives only while the route is on screen. The variation's own new rules follow it, and nothing else is copied. A source file's copied rules leave. A real rule it changes is rewritten among its own.
 6. Its data is typed in. No backend call, no login, no database.
 7. It never edits a file it imports.
-8. Its subject's own rules. A product screen's are The Screen, in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`, then its side's screens, as `prototype-rules` Step 3 names them. A variation that draws a whole screen obeys The Screen and the frame, in `knowledge/0010-playbook/0015-coding/the-stack/the-look.md`. A page 1100 draws obeys the page rules, atop `.claude/lib/page.py`. Its direction outranks them.
+8. Its subject's own rules. A product screen's are The Screen, in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`, then its side's screens, as `prototype-rules` Step 3 names them. A variation that draws a whole screen obeys The Screen and the frame in `knowledge/0010-playbook/0015-coding/the-stack/the-look.md` when it exists. A frame or token rule no file states is unproven. A page 1100 draws obeys the page rules, atop `.claude/lib/page.py`. Its direction outranks them.
 9. Its opening comment names its direction, numbers and stand-ins, and every look it uses: borrowed, with its page, or new. Each stand-in is also marked where it sits.
 
 ## Step 5 — Check the files
@@ -66,11 +66,11 @@ Each agent's report names only its own file. Another file written → name it in
 Write `code/prototypes/<subject>/g<N>.json` with the Write tool.
 
 ```json
-{"subject": "proposal-header", "generation": 2,
+{"subject": "profile-header", "generation": 2,
  "unknowns": [{"id": "u1", "text": "How the state reads at a glance."}],
  "variations": [
    {"id": "v1", "direction": "A full-width band: both parties agreed.",
-    "from": "1/v3", "route": "/proposal-header/g2/v1",
+    "from": "1/v3", "route": "/profile-header/g2/v1",
     "looks": [{"n": "1", "title": "Inside a card", "group": "A"},
               {"n": "2", "title": "Outline only", "group": "A"},
               {"n": "3", "title": "The pending state"}],
@@ -98,7 +98,7 @@ async (page) => {
 
 A favicon's 404 is no error.
 
-Then measure each screen it shows at 1500 wide, against The Screen's Width, `knowledge/0010-playbook/0015-coding/the-stack/the-screen/width.md`. Resize, then pass this to `browser_evaluate`. It lists every part narrower than the column:
+When The Screen's Width exists at `knowledge/0010-playbook/0015-coding/the-stack/the-screen/width.md`, read it and measure each screen it shows at 1500 wide. Resize, then pass this to `browser_evaluate`. It lists every part narrower than the column. With no Width document, a column-width rule is unproven; do not judge against it.
 
 ```js
 () => {
@@ -121,7 +121,7 @@ Then measure each screen it shows at 1500 wide, against The Screen's Width, `kno
 }
 ```
 
-Each part listed holds only fields or prose, or it centres: its white left equals its white right. Anything else is an error. A narrow part its direction asks for stays, named in chat.
+Where the Width document states this rule, each part listed holds only fields or prose, or it centres: its white left equals its white right. Anything else is an error. A narrow part its direction asks for stays, named in chat.
 
 An error → as the protocol says: the session fixes its own file, it is named in chat, or one agent, with `model: sonnet`, fixes that variation's file, briefed with its path, its route and the error. A fix is checked again.
 

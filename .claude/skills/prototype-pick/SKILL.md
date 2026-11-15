@@ -23,7 +23,7 @@ It holds one variation, its numbers all sections → say "Nothing to pick: g<N> 
 
 Each of its variations, `code/prototypes/src/routes/<subject>/g<N>/v<M>.tsx`.
 
-Its subject's own rules. A product screen: The Screen, every document in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`, and `knowledge/0010-playbook/0015-coding/the-stack/the-look.md` beside it, whole, then its side's screens, as `prototype-rules` Step 3 names them. A page 1100 draws: the page rules, atop `.claude/lib/page.py`, and nothing more of it.
+Its subject's own rules. A product screen: The Screen, every document in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`, whole, then its side's screens, as `prototype-rules` Step 3 names them. Read `knowledge/0010-playbook/0015-coding/the-stack/the-look.md` too when it exists. A frame or token rule no file states is unproven. A page 1100 draws: the page rules, atop `.claude/lib/page.py`, and nothing more of it.
 
 My words in this subject's rounds. A compacted chat → run `python3 .claude/tools/transcript.py copy NN --into NN`, and read `.claude/state/sessions/NN/transcript-NN.md`.
 
@@ -32,7 +32,7 @@ My words in this subject's rounds. A compacted chat → run `python3 .claude/too
 Weigh in this order. A higher one outranks a lower one.
 
 1. My words in this subject's rounds. A decision in chat is final.
-2. Its subject's own rules. A product screen: The Screen, in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`, and its side's screens, then the frame and the tokens, in `knowledge/0010-playbook/0015-coding/the-stack/the-look.md`. A page 1100 draws: the page rules.
+2. Its subject's own rules. A product screen: The Screen, in `knowledge/0010-playbook/0015-coding/the-stack/the-screen/`, and its side's screens, then the frame and the tokens in `knowledge/0010-playbook/0015-coding/the-stack/the-look.md` when it exists. A page 1100 draws: the page rules.
 3. A precedent in a real frontend under `code/`, named as a precedent.
 
 A choice none of them covers is a gap.

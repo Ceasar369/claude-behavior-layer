@@ -7,6 +7,7 @@ What a session reads only when the work asks for it.
 ## Children
 
 - [[the-map-MOC|The Map]] — where everything sits.
+- [[securing-MOC|Securing]] — how we keep data and systems safe: the policies we follow.
 - [[jury-MOC|Jury]] — how a session puts my words before a jury: many small agents, each answer quoted from its source.
 
 ## Admission rule

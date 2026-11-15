@@ -37,7 +37,7 @@ The whole checklist sits in one text fence.
 
 One block per variation: its id, then what it shows.
 
-Under it, every number it draws, in screen order: its number, then what it shows, as `1 — the client, Marie Tremblay`. A picture inside a section follows its section, as `2.1 — under Acme Projects' settings`.
+Under it, every number it draws, in screen order: its number, then what it shows, as `1 — the member, Sam Lee`. A picture inside a section follows its section, as `2.1 — under Acme Projects' settings`.
 
 Under each, one short line per item: `[ ] `, then where to look and what it shows, in plain words. A stand-in's line ends with "Stand-in."
 

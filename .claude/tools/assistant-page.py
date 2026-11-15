@@ -147,13 +147,13 @@ its own live state.
     {"stages": [
       {"name": "Stage B",
        "missions": [
-         {"id": "B1", "name": "machine proposals",
-          "file": ".claude/state/sessions/07/missions/B1-machine-proposals.md",
+         {"id": "B1", "name": "search backend",
+          "file": ".claude/state/sessions/07/missions/B1-search-backend.md",
           "queued": "2026-09-23T15:40:12",
-          "session": "21", "title": "21-machine-proposals"}]}]}
+          "session": "21", "title": "21-search-backend"}]}]}
 
 A mission's name is one to three words, and its launch row carries them,
-so its session is named NN-machine-proposals. Queue stamps each mission
+so its session is named NN-search-backend. Queue stamps each mission
 just before its launch. The one session with that name, claimed since, is
 its own, and its claim writes its number and title into the plan. A number
 is handed out again once its session closes, so only a running session

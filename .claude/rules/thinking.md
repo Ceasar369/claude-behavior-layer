@@ -64,8 +64,8 @@ The act waits until its reason is proven where the thing lives.
 
 Unproven → the check comes to me, never the act.
 
-- ❌ "No code uses Resend anymore. Its three records go."
-- ✅ "Unproven: no code uses Resend. Proposed: read Resend's own dashboard."
+- ❌ "No code uses the old vendor anymore. Its three records go."
+- ✅ "Unproven: no code uses the old vendor. Proposed: read its own dashboard."
 
 ## Judgement
 
@@ -295,7 +295,7 @@ A plan asking for one yes carries nothing that cannot be undone.
 
 Such an act leaves the plan, and comes back alone, with its own case.
 
-- ❌ "Ruling: launch the session with this plan, Resend's cleanup included."
+- ❌ "Ruling: launch the session with this plan, the old vendor's cleanup included."
 - ✅ "Ruling: launch the session with this plan. The delete comes after, alone."
 
 ### Six agents at most

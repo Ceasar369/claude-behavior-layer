@@ -12,7 +12,7 @@ Every part the plan built, run on your own ports, from [[running-locally|Running
 
 ## The steps, in order
 
-1. Walk every line of the record. A screen is walked with the Playwright MCP, a door proved with `curl`. A line that holds is marked built.
+1. Walk every line of the record. A screen is walked as [[protocol-screen|Screen]] rules, a door proved as [[protocol-backend|Backend]] rules. A line that holds is marked built.
 2. Sort each broken line. **Build**: a ruling or a vault line already answers it. **You**: it waits on my ruling.
 3. Propose your helper through `helper-session`. Its round holds one item for the helper, listing every build line, and one item for each you line, five a round. The rest wait for the next round.
 4. A you line I rule becomes a build line. My agree on the helper covers every fix and re-walk.

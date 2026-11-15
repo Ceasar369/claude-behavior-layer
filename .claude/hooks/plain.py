@@ -5,7 +5,7 @@ A Stop hook, on every turn's end, with no skill behind it. Anything
 technical reaches me in plain words, and each number a turn names is
 restated there, as .claude/rules/talking.md rules.
 
-    held:   "Release only works after Submit, milestones-rules.ts:1181."
+    held:   "Save only works after Submit, recipes-rules.ts:1181."
     held:   "Items 61 and 62 wait."
     passes: "item 55, Release needs no review step"
 
@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 import items  # noqa: E402
 
-# A file, its line, and maybe a range: "milestones-rules.ts:1181", "page.py:12-30".
+# A file, its line, and maybe a range: "recipes-rules.ts:1181", "page.py:12-30".
 LINED = re.compile(r"\b[\w./-]+\.(?:py|ts|tsx|js|jsx|md|json|swift|sh|css|html|sql|yml|yaml|txt):\d+(?:-\d+)?\b")
 FENCE = re.compile(r"^\s*```")
 LABEL = re.compile(r"^\s*\*\*[^*]+\*\*\s*$")

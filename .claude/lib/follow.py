@@ -6,7 +6,7 @@ never typing into it: the follow skill. Each follow sits in the seat's own
 folder, FILE, beside lib/successor.py's driving.json:
 
   {"10": {"for": "approve checks 16 to 24", "ends": "10 sends 11 its next journey",
-          "taken": "2026-10-29T17:02:11", "title": "10-proposals-lead",
+          "taken": "2026-10-29T17:02:11", "title": "10-search-lead",
           "session": "<its session id>", "bookmark": "2026-10-29T17:01:40"}}
 
 The seat's folder holds it, so a handover of the seat keeps it, and a new

@@ -105,7 +105,7 @@ KINDS = {"blue": "#60a5fa", "violet": "#a78bfa", "cyan": "#22d3ee", "yellow": "#
          "green": "#4ade80", "pink": "#f472b6", "orange": "#fb923c", "red": "#f87171",
          "teal": "#2dd4bf", "lime": "#a3e635", "indigo": "#818cf8", "magenta": "#e879f9",
          "slate": "#94a3b8", "rose": "#fb7185", "white": "#f1f5f9"}
-# An example inside a line, {{a $10,000 milestone, debited}}, wears the
+# An example inside a line, {{a 2-hour delay, announced}}, wears the
 # Example colour. A chart's source never reaches it.
 EXAMPLE = re.compile(r"\{\{(.+?)\}\}")
 HELD = re.compile("^\x00chart(\\d+)\x00$")

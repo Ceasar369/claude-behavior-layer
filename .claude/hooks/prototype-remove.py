@@ -2,7 +2,7 @@
 """prototype-remove.py — the hook behind /prototype-remove.
 
     /prototype-remove                   this session's own prototype
-    /prototype-remove proposal-header   the subject with that exact name
+    /prototype-remove profile-header   the subject with that exact name
 
 A subject goes whole, its generations and its routes, through the remove
 in lib/prototypes.py, the only one. It takes a subject's exact kebab name,
@@ -15,10 +15,10 @@ subject starts clean. The reply says so only for this session's own.
 
 A winner stays until the session building it removes it, once its real
 version is live, or the last one building it stops, through
-prototypes.built. The session that made it never removes it. The
-builder's mission names the winner's file under "Read first", as
-assistant-mission rules, or prototype.py build marked it as building. Any
-other remove of it, mine too, says so and removes nothing.
+prototypes.built. The session that made it never removes it. Only
+prototype.py build marks a session as building it. A mission naming the
+winner's file marks nothing. Any other remove of it, mine too, says so
+and removes nothing.
 """
 
 import glob

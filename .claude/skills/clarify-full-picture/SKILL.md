@@ -40,7 +40,7 @@ Under the bold label **In short**. Three lines: the work, done, needed.
 No insider word. A session's number and its mission's name stay.
 
 ```
-Session 21 builds mission C1, from your assistant, session 20. It turns a customer's own spreadsheet into an invoice.
+Session 21 builds mission C1, from your assistant, session 20. It turns a customer's own spreadsheet into a report.
 It is built and tested.
 It needs a test server you rent for two hours.
 ```

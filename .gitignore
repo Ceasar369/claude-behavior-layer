@@ -1,5 +1,4 @@
 __pycache__/
 .claude/settings.local.json
 .claude/state/
-.claude/tools/dock-launcher/*.app/
 node_modules/
