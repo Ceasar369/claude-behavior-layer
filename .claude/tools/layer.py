@@ -16,7 +16,8 @@ update refuses a project holding uncommitted changes, and the project
 that builds the layer. It fetches, then merges. With nothing new it says
 "Up to date". The public repository's own files, project.GITHUB, are put
 back as this project held them: one it never held is removed, and a
-clash on one is settled so. Any other clash stops the update with the
+clash on one is settled so. So is every file under a folder the project
+names its own, project.json's "own". Any other clash stops the update with the
 merge left open: each file is named, for my ruling. Settle each, then
 `git commit`. A clean merge is committed here.
 
@@ -73,7 +74,10 @@ def out(*args: str) -> str:
 
 
 def github(path: str) -> bool:
-    return any(path == p or (p.endswith("/") and path.startswith(p)) for p in project.GITHUB)
+    """Whether an update leaves a path as this project holds it: one of
+    the public repository's own files, or one under a folder the project
+    names its own."""
+    return any(path == p or (p.endswith("/") and path.startswith(p)) for p in project.GITHUB + project.OWN)
 
 
 def remote() -> None:

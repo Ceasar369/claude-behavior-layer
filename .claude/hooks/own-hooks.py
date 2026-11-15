@@ -3,7 +3,9 @@
 
 A hook of every event the layer answers: SessionStart, UserPromptSubmit,
 PreToolUse on a Skill call, PostToolUse on a Write or an Edit, and Stop.
-It has no skill behind it.
+It has no skill behind it. One more event is the layer's own: AfterShip,
+which hooks/8-ship.py sends after each commit, with the commit and its
+paths.
 
 .claude/settings.json is the layer's, the same in every project, so an
 update never clashes there. A project's own hooks sit in its

@@ -15,6 +15,10 @@ hears one line more after a commit: how many layer files changed since
 the last export, as the export's changes() counts them, or the sentence
 it refuses with. A project without it hears nothing more.
 
+A project naming hooks under "AfterShip", in .claude/project.json, has
+them run after each commit, through hooks/own-hooks.py. Each reads the
+commit and its paths on stdin, and its last line joins the ship's answer.
+
 A push aimed at the layer's public repository is refused: a project
 started from the layer can still track it.
 
@@ -162,6 +166,19 @@ def since_export() -> str:
         "No layer file changed since the last export."
 
 
+def after_ship(lines: list) -> str:
+    """What the project's own AfterShip hooks say of a commit just made, or
+    "". hooks/own-hooks.py runs them, handed the committed paths."""
+    if not lines or not project.HOOKS.get("AfterShip"):
+        return ""
+    event = {"hook_event_name": "AfterShip", "commit": git("rev-parse", "HEAD").stdout.strip(),
+             "paths": [x for x in git("show", "--name-only", "--format=", "HEAD").stdout.splitlines() if x]}
+    r = subprocess.run([sys.executable, os.path.join(hook.ROOT, ".claude", "hooks", "own-hooks.py")],
+                       input=json.dumps(event), capture_output=True, text=True)
+    said = (r.stdout or r.stderr).strip().splitlines()
+    return said[-1] if said else ""
+
+
 def main() -> None:
     args = hook.words(TRIGGER)
     word = args.first()
@@ -186,12 +203,14 @@ def main() -> None:
         os.remove(path)
         if r.returncode != 0:
             hook.done(f"Commit refused: {last_line(r)}")
+    after = after_ship(lines)
 
     if word != "push":
         if not dirty:
             hook.done("Nothing to ship.")
         layer = since_export()
-        hook.done(f"{count(dirty, 'path')} successfully committed to {BRANCH}." + (f"\n{layer}" if layer else ""))
+        hook.done(f"{count(dirty, 'path')} successfully committed to {BRANCH}."
+                  + "".join(f"\n{said}" for said in (layer, after) if said))
 
     ahead = [x for x in git("log", "--oneline", "@{u}..HEAD").stdout.splitlines() if x]
     if not ahead:

@@ -36,6 +36,9 @@ folder's name. A file that cannot be read names nothing.
             stroke style, drawn white. The rocket Launch wears.
   home      the folder of the project that builds the layer, ~ for my
             home, where tools/layer.py send leaves a fix. None: none.
+  own       the folders, from the root, an update of the layer leaves as
+            this project holds them: its own stack, where the layer
+            carries one too. tools/layer.py reads it. None: none.
   hooks     this project's own hooks, by event: each a file from the
             root, with an optional "matcher" and "timeout".
             hooks/own-hooks.py runs them. None: none.
@@ -208,6 +211,7 @@ def facts(root: str) -> dict:
         "color": text(got.get("color")) if re.fullmatch(r"#[0-9a-fA-F]{6}", text(got.get("color"))) else ORANGE,
         "glyph": text(got.get("glyph")),
         "home": os.path.expanduser(text(got.get("home"))),
+        "own": [p.rstrip("/") + "/" for p in words(got.get("own"))],
         "hooks": {event: [h for h in each if isinstance(h, dict) and text(h.get("file"))]
                   for event, each in part(got, "hooks").items() if isinstance(each, list)},
         "usage": os.path.expanduser(text(got.get("usage"))),
@@ -223,7 +227,7 @@ DATABASE, DOCS = FACTS["database"], FACTS["docs"]
 EDITOR, WORKSPACE = FACTS["editor"], FACTS["workspace"]
 USAGE = FACTS["usage"]
 COLOR, GLYPH = FACTS["color"], FACTS["glyph"]
-HOME, HOOKS = FACTS["home"], FACTS["hooks"]
+HOME, HOOKS, OWN = FACTS["home"], FACTS["hooks"], FACTS["own"]
 
 
 def identity() -> str:
