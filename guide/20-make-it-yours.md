@@ -85,6 +85,7 @@ Document 03 set its name and branch. Every other key is optional too.
 | `glyph` | What that icon draws: SVG markup, in Lucide's 24 by 24 stroke style | A rocket |
 | `home` | The folder of the project that builds my layer, when it sits on your Mac. `/layer-send` leaves a fix there | The fix lands in your own project, to send by hand |
 | `hooks` | Your own hooks, by event: section 6 | None |
+| `own` | Folders an update leaves as you hold them: section 6 | None |
 | `usage` | A shared usage reader on this Mac: a program's path, `~` for your home. `.claude/lib/accounts.py` reads through it | None |
 
 Your prototypes app writes its own `band` entry: 16.
@@ -111,6 +112,13 @@ Until you name your topics, one stands in: Behaviour. Name yours in `.claude/sta
 ```
 
 My `.claude/hooks/own-hooks.py` runs them, on a session's start, a prompt, a Skill call, a Write or an Edit, and a stop. A skill of yours that answers as a hook takes the two lines above.
+
+One more event is my layer's own: `AfterShip`. `/8-ship` runs each hook you name under it after a commit, and hands it the commit and its paths. Its last line joins the ship's answer. A project that publishes after a ship starts its publish there.
+- **Your own folders.** `the-stack/` holds my stack's documents. Yours may sit in the same folder. Name it in `.claude/project.json`, and an update leaves it as you hold it:
+
+```
+"own": ["knowledge/0010-playbook/0015-coding/the-stack/"]
+```
 - **Your edits to my files.** Avoid them: every update then stops on that file. A fix to one of mine goes back to me instead, in section 8.
 - **Your version of one of my skills.** A skill of the same name in your account's own folder beats the project's: `~/.claude/skills/` for account 1, `~/.claude-acct2/skills/` for account 2. It holds in all your projects, so use it rarely.
 
@@ -169,6 +177,7 @@ Each break you meet is a fix for my layer too.
 - `~/.claude/CLAUDE.md` for a project outside your home folder.
 - `/layer-update` and `/layer-send` in a real project, from GitHub. My trial ran their tool in a scratch folder: an update with new commits, a clash, and a patch.
 - A hook of your own, run by `own-hooks.py` inside a real session. My trial ran it in a scratch folder.
+- An `AfterShip` hook, and a folder named under `own`, in a real project.
 - Updating the zero-turn mod on each account. No walk tested it.
 - `git grep -n "Stand-in"` in a real project of yours. My walk ran it on a fresh trial.
 

@@ -76,7 +76,7 @@ Then type:
 python3 .claude/lib/project.py
 ```
 
-It prints, as JSON, the nineteen facts my layer reads. `name` and `branch` are yours, and `shift` and `fixed` read 20000. The fifteen others keep their defaults, most of them empty, until you set them: `folders`, `roles` and `sites` for your ports; `band`, `command` and `match` for band 00; `database`, `docs`, `editor` and `workspace`; `color` and `glyph` for 1100's icon; then `home`, `hooks` and `usage`. Document 20 says what each sets.
+It prints, as JSON, the twenty facts my layer reads. `name` and `branch` are yours, and `shift` and `fixed` read 20000. The sixteen others keep their defaults, most of them empty, until you set them: `folders`, `roles` and `sites` for your ports; `band`, `command` and `match` for band 00; `database`, `docs`, `editor` and `workspace`; `color` and `glyph` for 1100's icon; then `home`, `own`, `hooks` and `usage`. Document 20 says what each sets.
 
 ## Install the zero-turn mod
 
