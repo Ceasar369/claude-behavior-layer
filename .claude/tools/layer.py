@@ -215,7 +215,7 @@ def check() -> str:
 def base() -> str:
     """The layer commit this project last took."""
     if not out("rev-parse", "-q", "--verify", REF):
-        raise Refused(f"Refused: this project has never fetched the layer. Run layer.py update first.")
+        raise Refused("Refused: this project has never fetched the layer. Run layer.py update first.")
     found = out("merge-base", "HEAD", REF)
     if not found:
         raise Refused("Refused: this project shares no history with the public layer. Run layer.py update first.")
