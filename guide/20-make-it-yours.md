@@ -34,7 +34,7 @@ A line opening `> **Stand-in.**` waits for your project's facts. Find them:
 git grep -n "Stand-in"
 ```
 
-The nineteen lines opening `> **Stand-in.**` are yours. The others belong to my code and skills, or to this guide: leave them. On a fresh download, they are these:
+The twenty-three lines opening `> **Stand-in.**` are yours. The others belong to my code and skills, or to this guide: leave them. On a fresh download, they are these:
 
 | File | What goes there |
 |---|---|
@@ -43,8 +43,12 @@ The nineteen lines opening `> **Stand-in.**` are yours. The others belong to my 
 | `AGENTS.md:3` | Your project's name and what it is |
 | `CLAUDE.md:3` | Your project's name and what it is |
 | `knowledge/0010-playbook/0013-thinking/the-parts.md:15` | Your project's parts that run nowhere, beside Behaviour |
-| `knowledge/0010-playbook/0015-coding/coding-MOC.md:12` | `the-stack/`, once you write it: what your code is built with |
 | `knowledge/0010-playbook/0015-coding/the-coding-axioms.md:47` | One layer of your project, and the one `code/` folder its session touches |
+| `knowledge/0010-playbook/0015-coding/the-stack/the-formats.md:48` | Your project's currencies |
+| `knowledge/0010-playbook/0015-coding/the-stack/the-screen/a-records-page.md:11` | What each of your records adds to its page |
+| `knowledge/0010-playbook/0015-coding/the-stack/the-screen/the-screen-MOC.md:16` | Your own kinds of screen, one document each |
+| `knowledge/0010-playbook/0015-coding/the-stack/the-stack-MOC.md:12` | `the-look.md`, once you write it: what every frontend looks like, and its token file |
+| `knowledge/0010-playbook/0015-coding/the-stack/the-tools.md:90` | The languages every frontend carries |
 | `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:9` | The folder your archives and references sit in, by its full path |
 | `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:15` | Your archives, each folder and the trial it was |
 | `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:21` | Your references folder, by its full path |
@@ -62,7 +66,9 @@ A project with no servers can leave the server lines as they are.
 
 Before any new research, `thinking.md` sends a session to your references folder, and files new research there. Fill that line first, if you keep research.
 
-Five links lead nowhere. They name documents your project writes under `the-stack/` or `walks/`, or a placeholder.
+Two links lead nowhere. One names a document your project writes under `walks/`. The other is a placeholder.
+
+`the-stack/` holds my own stack's choices: its tools, its layout, its formats, its screens. Keep what fits your project, and rewrite the rest.
 
 ## 4. Your servers, in `.claude/project.json`
 
@@ -75,7 +81,10 @@ Document 03 set its name and branch. Every other key is optional too.
 | `band` | `servers`, `command` and `match`: what `/00-sessions-dashboard` starts as band 00, the one command it runs, and how the memory guard knows it | 1100 runs alone |
 | `database` | `port`, `name` and `pg_isready`: the one database 1100's System page shows a dot for | No dot |
 | `docs` | The docs folder `/coder-check` counts | None |
-| `dock` | `editor` and `workspace`: what a click on the Dock app opens | No editor opens |
+| `color` | The square of 1100's icon on your phone, as `#rrggbb` | Orange |
+| `glyph` | What that icon draws: SVG markup, in Lucide's 24 by 24 stroke style | A rocket |
+| `home` | The folder of the project that builds my layer, when it sits on your Mac. `/layer-send` leaves a fix there | The fix lands in your own project, to send by hand |
+| `hooks` | Your own hooks, by event: section 6 | None |
 | `usage` | A shared usage reader on this Mac: a program's path, `~` for your home. `.claude/lib/accounts.py` reads through it | None |
 
 Your prototypes app writes its own `band` entry: 16.
@@ -90,8 +99,19 @@ Until you name your topics, one stands in: Behaviour. Name yours in `.claude/sta
 
 ## 6. Your own pieces beside mine
 
-- **Your edits to my files.** Each merge keeps them. Git stops on a line we both changed, and you choose.
-- **Your own files.** Your own skills under new names, your own rules file in `.claude/rules/`, your own vault areas. My updates never touch them.
+- **Your own facts.** `.claude/project.json` is yours alone. My updates never touch it.
+- **Your own files.** Your own skills under new names, your own rules file in `.claude/rules/`, your own vault areas. New files never clash with my updates.
+- **Your own hooks.** `.claude/settings.json` is mine, the same in every project. Leave it as it is. Name each hook of yours in `.claude/project.json`, under `hooks`, by its event:
+
+```
+"hooks": {
+  "UserPromptSubmit": [{"file": ".claude/hooks/my-skill.py", "timeout": 60}],
+  "PreToolUse": [{"file": ".claude/hooks/my-skill.py", "timeout": 60}]
+}
+```
+
+My `.claude/hooks/own-hooks.py` runs them, on a session's start, a prompt, a Skill call, a Write or an Edit, and a stop. A skill of yours that answers as a hook takes the two lines above.
+- **Your edits to my files.** Avoid them: every update then stops on that file. A fix to one of mine goes back to me instead, in section 8.
 - **Your version of one of my skills.** A skill of the same name in your account's own folder beats the project's: `~/.claude/skills/` for account 1, `~/.claude-acct2/skills/` for account 2. It holds in all your projects, so use it rarely.
 
 `/behaviour-doctor` checks what you change against my rules: 19.
@@ -104,14 +124,29 @@ Its name is the same in every project. Installing it in a second project replace
 
 ## 8. My updates
 
-Once I push an update, take it from GitHub:
+Once I push an update, take it in a session. Commit your own work first, with `/8-ship`. Then type:
 
 ```
-git fetch https://github.com/Ceasar369/claude-behavior-layer.git main
-git merge --allow-unrelated-histories FETCH_HEAD
+/layer-update
 ```
 
-When nothing is new, the merge answers "Already up to date." My walk's did, from GitHub.
+It merges my newest `main` into your branch. When nothing is new, it answers "Up to date".
+
+GitHub's own files, this guide, the README and the website among them, are never added to your project by an update. One you already hold stays as you hold it.
+
+It stops on a file we both changed, and names each one. Your session lays each out, and you choose.
+
+It ends on its checks, one line each: your facts print, my own checks pass on your files, 1100 draws, each stand-in still unfilled, and whether `CLAUDE.md` names your branch.
+
+**A fix of yours, back to me.** You fixed one of my files, and every project should have it. Type:
+
+```
+/layer-send
+```
+
+It lists each file of mine your project changed since its last update. You pick. It writes one patch file. With `home` set in `.claude/project.json`, the patch lands in my project's inbox. With none, it lands in your `.claude/state/layer-outbox/`: send me that file.
+
+Your project never pushes to my repository. Its remote `layer` only fetches, and my layer's guard refuses any push aimed there.
 
 A change to the zero-turn mod lands once its `.claude/mods/zero-turn/.claude-plugin/plugin.json` version rises. Run this line in a terminal, from your project's folder, on each account:
 
@@ -132,7 +167,8 @@ Each break you meet is a fix for my layer too.
 - Your own agenda topics.
 - A skill of yours beating mine of the same name, and `~/.claude/skills/` reaching your other accounts.
 - `~/.claude/CLAUDE.md` for a project outside your home folder.
-- An update that brings new commits from GitHub. My walk's update found nothing new.
+- `/layer-update` and `/layer-send` in a real project, from GitHub. My trial ran their tool in a scratch folder: an update with new commits, a clash, and a patch.
+- A hook of your own, run by `own-hooks.py` inside a real session. My trial ran it in a scratch folder.
 - Updating the zero-turn mod on each account. No walk tested it.
 - `git grep -n "Stand-in"` in a real project of yours. My walk ran it on a fresh trial.
 

@@ -38,7 +38,7 @@ My walk's app ran on Vite, React and TanStack Router, installed by pnpm: 84 pack
 
 My last walk's build picked that stack from my layer's own files, and took its packages from the network. It did look at which processes held my 1100 and 1400.
 
-**`node_modules/` stays out of git.** My layer's `.gitignore` holds it, among its five lines: `__pycache__/`, `.claude/settings.local.json`, `.claude/state/`, `.claude/tools/dock-launcher/*.app/`, `node_modules/`. No `/8-ship` carries the app's 89 MB.
+**`node_modules/` stays out of git.** My layer's `.gitignore` holds it, among its four lines: `__pycache__/`, `.claude/settings.local.json`, `.claude/state/`, `node_modules/`. No `/8-ship` carries the app's 89 MB.
 
 **Its band entry.** The build also wrote a `band` into `.claude/project.json`, so `/00-sessions-dashboard` serves the app on 1400. In my walk, the file then read:
 

@@ -26,6 +26,8 @@ git clone https://github.com/Ceasar369/claude-behavior-layer.git .
 
 My layer's files land at the folder's root, with this guide.
 
+Then, in your first session, type `/layer-update`. It answers "Up to date", and renames the clone's remote to `layer`, which only fetches. Your own repository takes the name `origin` when you add it. Every later take is that one command: 20.
+
 ## Into your project
 
 In your project's folder:
@@ -37,10 +39,12 @@ git merge --allow-unrelated-histories FETCH_HEAD
 
 Your project may have its own history, unrelated to my layer. That flag lets git join them.
 
+This first take is by hand: your project holds no `/layer-update` yet. Every later take is `/layer-update`: 20.
+
 Git stops once on each file we both hold. In my test project, that was `CLAUDE.md` and `.gitignore`, and nothing else. Join each by hand, then commit:
 
 - `CLAUDE.md`: my sections first, then your project's own.
-- `.gitignore`: your lines, then my five: `__pycache__/`, `.claude/settings.local.json`, `.claude/state/`, `.claude/tools/dock-launcher/*.app/`, `node_modules/`.
+- `.gitignore`: your lines, then my four: `__pycache__/`, `.claude/settings.local.json`, `.claude/state/`, `node_modules/`.
 
 ## Name your project
 
@@ -72,7 +76,7 @@ Then type:
 python3 .claude/lib/project.py
 ```
 
-It prints, as JSON, the fourteen facts my layer reads. `name` and `branch` are yours, and `shift` and `fixed` read 20000. The ten others keep their defaults, most of them empty, until you set them: `folders`, `roles` and `sites` for your ports; `band`, `command` and `match` for band 00; then `database`, `docs`, `editor` and `workspace`. Document 20 says what each sets.
+It prints, as JSON, the nineteen facts my layer reads. `name` and `branch` are yours, and `shift` and `fixed` read 20000. The fifteen others keep their defaults, most of them empty, until you set them: `folders`, `roles` and `sites` for your ports; `band`, `command` and `match` for band 00; `database`, `docs`, `editor` and `workspace`; `color` and `glyph` for 1100's icon; then `home`, `hooks` and `usage`. Document 20 says what each sets.
 
 ## Install the zero-turn mod
 
@@ -175,6 +179,7 @@ rm ~/Library/LaunchAgents/<its label>.plist
 
 ## Unproven here
 
+- `/layer-update` in a fresh clone, through this guide. My trial ran its tool in a scratch folder.
 - Taking `main` with no GitHub account. My walk's Mac was signed in to GitHub.
 - `git clone` into the folder. My walk ran `git init`, then `git pull`.
 - A branch named other than `main`. My Mac's git takes `main` from Xcode's own settings.

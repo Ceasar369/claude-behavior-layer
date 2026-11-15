@@ -71,7 +71,7 @@ End it in the lead's chat: "End the walk." The lead keeps the walker's remaining
 
 Everything your app adds lives in your `walks/walks-standard.md`, never in my skills: other roles' views, a languages and widths walk, outside services, a server only some steps walk on. Every walk session reads your standard first.
 
-Docs pages are the exception: my skills walk them, and the reader brings each one to you. The walker reads a docs site built with Zudoku, as mine is. A site built another way needs its own docs function, in `.claude/skills/walk-drive/SKILL.md`: `.claude/hooks/walker-scripts.py` lets a walker run only the scripts walk-drive names, copied whole.
+Docs pages are the exception: my skills walk them, and the reader brings each one to you. The walker reads a docs site built with Zudoku. A site built another way needs its own docs function, in `.claude/skills/walk-drive/SKILL.md`: `.claude/hooks/walker-scripts.py` lets a walker run only the scripts walk-drive names, copied whole.
 
 Updating from an older layer? From your project's root, run this once. It rebuilds every checklist by the new rules:
 
