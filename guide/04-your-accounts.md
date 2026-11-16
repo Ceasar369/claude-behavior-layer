@@ -1,6 +1,6 @@
 # 04 — Your accounts
 
-One, two or three Claude accounts, joined to my layer. Do this before any step launches a second session.
+One Claude account or several, up to nine, joined to my layer. Do this before any step launches a second session.
 
 ## What an account is
 
@@ -11,6 +11,7 @@ An account is one Claude login, kept in one folder on your Mac.
 | 1 | `~/.claude` | `claude` |
 | 2 | `~/.claude-acct2` | `CLAUDE_CONFIG_DIR=~/.claude-acct2 claude` |
 | 3 | `~/.claude-acct3` | `CLAUDE_CONFIG_DIR=~/.claude-acct3 claude` |
+| 4 | `~/.claude-acct4` | `CLAUDE_CONFIG_DIR=~/.claude-acct4 claude` |
 
 My layer launches each session on one of them. `~/.claude-accounts.json` names them for it: one file per Mac, for every project. With no file, there is one account, 1, in `~/.claude`.
 
@@ -30,7 +31,7 @@ The status line then opens with your name. 1100's System page shows your plan af
 
 ## Each extra account: four acts
 
-Account 2 is the example. A third is the same, with `3`.
+Account 2 is the example. Each one after it is the same, with its own number: `3`, `4`.
 
 **1. Its login, in its own folder** (your hands). In iTerm2, type:
 
@@ -51,7 +52,7 @@ CLAUDE_CONFIG_DIR=~/.claude-acct2 claude plugin marketplace add --scope local ./
 CLAUDE_CONFIG_DIR=~/.claude-acct2 claude plugin install --scope local zero-turn@layer-mods
 ```
 
-Use account 3's folder for account 3. The marketplace points to this project's `.claude/mods` folder: keep it in place. New sessions load the mod after installation.
+Use each account's own folder for it. The marketplace points to this project's `.claude/mods` folder: keep it in place. New sessions load the mod after installation.
 
 **3. Its trust, in each project** (your hands). In your project's folder, type the same line:
 
@@ -97,11 +98,11 @@ Take its line out of the list, then restart 1100. Its turns stay in the order, a
 
 ## On my own Mac
 
-My list already holds my three accounts. It is one file per Mac, so a new project of mine sees all three. I never type this document's list lines: each replaces the whole list.
+My list already holds my four accounts. It is one file per Mac, so a new project of mine sees all four. I never type this document's list lines: each replaces the whole list.
 
 Each project keeps its own order, in its own `.claude/state/accounts/order.json`. A new project starts with none: every launch takes account 1. I set its order on its own System page.
 
-Each of my accounts trusts the new project once: act 3, on accounts 2 and 3.
+Each of my accounts trusts the new project once: act 3, on accounts 2, 3 and 4.
 
 ## Unproven here
 
