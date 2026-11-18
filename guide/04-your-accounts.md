@@ -4,14 +4,19 @@ One Claude account or several, up to nine, joined to my layer. Do this before an
 
 ## What an account is
 
-An account is one Claude login, kept in one folder on your Mac.
+An account is one Claude login, kept in one folder on your Mac. Its number is the name my layer gives it.
+
+You choose how many accounts you use, one to nine, and which number goes to which login. You also choose each one's folder. The list pairs them; the folder's name never has to match the number.
+
+One Mac's list, as an example:
 
 | Account | Its folder | How a session starts on it |
 |---|---|---|
 | 1 | `~/.claude` | `claude` |
 | 2 | `~/.claude-acct2` | `CLAUDE_CONFIG_DIR=~/.claude-acct2 claude` |
-| 3 | `~/.claude-acct3` | `CLAUDE_CONFIG_DIR=~/.claude-acct3 claude` |
-| 4 | `~/.claude-acct4` | `CLAUDE_CONFIG_DIR=~/.claude-acct4 claude` |
+| 3 | `~/.claude-acct4` | `CLAUDE_CONFIG_DIR=~/.claude-acct4 claude` |
+
+Here account 3 lives in `~/.claude-acct4`: a login once kept as a fourth account, renumbered after another was retired. Its folder never moved.
 
 My layer launches each session on one of them. `~/.claude-accounts.json` names them for it: one file per Mac, for every project. With no file, there is one account, 1, in `~/.claude`.
 
@@ -31,7 +36,7 @@ The status line then opens with your name. 1100's System page shows your plan af
 
 ## Each extra account: four acts
 
-Account 2 is the example. Each one after it is the same, with its own number: `3`, `4`.
+Account 2, in `~/.claude-acct2`, is the example. Each one after it is the same, with its own number and its own folder. Any new, empty folder will do: `~/.claude-work` works as well as `~/.claude-acct3`.
 
 **1. Its login, in its own folder** (your hands). In iTerm2, type:
 
@@ -41,7 +46,7 @@ CLAUDE_CONFIG_DIR=~/.claude-acct2 claude
 
 The first time, it shows "Welcome to Claude Code", then a choice of text style, then its login. Log in with that account. Then type `/exit`.
 
-Never move or rename that folder after its login. Claude Code keys the login's Keychain entry to the folder.
+Never move or rename that folder after its login. Claude Code keys the login's Keychain entry to the folder's path. A folder moved onto another's old path opens that other login.
 
 Never start account 1 with `CLAUDE_CONFIG_DIR=~/.claude`. Claude Code would then read another file, `~/.claude/.claude.json`, with a trust list of its own. Account 1 starts with plain `claude`.
 
@@ -92,17 +97,49 @@ From Claude Code 2.1.283, nothing to set: 02.
 
 One account drives your Chrome: the list's `chrome`, else account 1. To move it, add `"chrome": "2"` beside `"accounts"`. Then sign the Claude in Chrome extension, in each profile, into that account's login. Document 15 uses it.
 
-## Removing an account
+## Retiring an account
 
-Take its line out of the list, then restart 1100. Its turns stay in the order, and are passed over.
+1. Take its line out of `~/.claude-accounts.json`, then type `/00-sessions-dashboard restart`. Its card and pills leave 1100.
+2. Leave its folder where it is. Never move or rename it, nor give its path to another account: its path still opens its login.
+3. Archive or delete the folder only once no session runs on it. For a folder `~/.claude-acct3`, this line then prints `0`:
+
+```
+ps -Eww -o command | grep "CLAUDE_CONFIG_DIR=$HOME/.claude-acct3" | grep -vc grep
+```
+
+What still names the retired number is passed over:
+
+- Its turns stay in each project's order, skipped, so a list mended later finds the order whole.
+- A handover that saved it takes the order's next account instead.
+- A launch row naming it is refused: "Row 1: account 4 is not on this Mac's list."
+- Its `limits-N.json` is no longer written, nor shown on System.
+
+## Renumbering an account
+
+A number is only the list's name for a folder. To renumber, change the number in the list, never the folder. Then restart 1100.
+
+Each project's saved state names accounts by number. Change each from the old number to the new one, in every project:
+
+| File | What names the number |
+|---|---|
+| `.claude/state/accounts/order.json` | each turn in `order` |
+| `.claude/state/accounts/pins.json` | each key |
+| `.claude/state/finish/limits-N.json` | the file's name: rename `limits-4.json` to `limits-3.json` |
+| `.claude/state/sessions/NN/record.json` | `account` |
+| `.claude/state/sessions/NN/resume.json` | `account`, kept for a handover |
+| `.claude/state/sessions/NN/launch.json`, `stages.json` | each row's `account` |
+
+A number moved onto one the list just retired takes that number's old files. Set the old ones aside first: a retired account's `limits-3.json` would show as the new account 3's until its first read.
+
+A session already running keeps its folder. Its records name the old number until it stops.
 
 ## On my own Mac
 
-My list already holds my four accounts. It is one file per Mac, so a new project of mine sees all four. I never type this document's list lines: each replaces the whole list.
+My list already holds my accounts. It is one file per Mac, so a new project of mine sees all of them. I never type this document's list lines: each replaces the whole list.
 
 Each project keeps its own order, in its own `.claude/state/accounts/order.json`. A new project starts with none: every launch takes account 1. I set its order on its own System page.
 
-Each of my accounts trusts the new project once: act 3, on accounts 2, 3 and 4.
+Each of my accounts trusts the new project once: act 3, on every account but 1.
 
 ## Unproven here
 
@@ -114,6 +151,7 @@ Each of my accounts trusts the new project once: act 3, on accounts 2, 3 and 4.
 - 1100's restart showing a new account. My walk drew it on a fresh copy of 1100.
 - Moving Chrome to another account.
 - Writing the list with these lines. My Mac's list was written long ago.
+- Renumbering by this table. My Mac renumbered once, by hand, before it was written.
 
 ## Check
 
