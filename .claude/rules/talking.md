@@ -266,7 +266,7 @@ Three moves, in order. Definition, near-miss, example.
 >
 > **One real case.** An app calls Book with the key `book-4021`. Our
 > answer is lost on the way back. It calls again with `book-4021`. We
-> send the first answer again. The money moves once.
+> send the first answer again. The booking is made once.
 
 When the term is concrete, one line does it.
 
