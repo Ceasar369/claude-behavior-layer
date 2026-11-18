@@ -10,14 +10,14 @@ Every port is four digits, before the shift. Three things make it.
 
 ```
 <folder><role><session>
-    7      2      05    →  7205
+    6      2      05    →  6205
 ```
 
 Nothing is registered. No two sessions collide.
 
 ## The shift
 
-While `.claude/state/ports/shift.json` holds a shift, these ports add it: `1100`, `1400`, each session's derived ports, and every port band 00's command names. 20000 moves `1100` to `21100`, and session 05's derived `7205` to `27205`.
+While `.claude/state/ports/shift.json` holds a shift, these ports add it: `1100`, `1400`, each session's derived ports, and every port band 00's command names. 20000 moves `1100` to `21100`, and session 05's derived `6205` to `26205`.
 
 It keeps this project clear of another project's ports on the same Mac.
 

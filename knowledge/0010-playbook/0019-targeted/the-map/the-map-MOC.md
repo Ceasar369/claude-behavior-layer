@@ -6,7 +6,7 @@ Where things are. Every document here answers that one question.
 
 ## Children
 
-- [[outside-the-project|Outside The Project]] — the archives and the references, beside the live project.
+- [[outside-the-project|Outside The Project]] — what sits beside the live project, and the folder holding it.
 - [[the-repository|The Repository]] — which `code/` folder holds which layer, and where sessions meet.
 - [[running-locally|Running Locally]] — how a port is derived, and how a session reaches another layer.
 - [[the-browser|The Browser]] — which Chrome profile holds which login, and which session reaches it.

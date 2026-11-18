@@ -56,7 +56,7 @@ A full mission is written only once it is about to launch: its stage goes out, o
 
 A later one starts as notes. Each finished session adds what it taught.
 
-A night drive writes every mission whole before it starts. None starts as notes.
+An autonomous drive writes every mission whole before it starts. None starts as notes.
 
 ## 9. What I send is the ruling
 

@@ -244,6 +244,13 @@ class CloneTest(unittest.TestCase):
             said = page.launch.problems([{**self.ROW, "clone": "77"}])
         self.assertEqual(said, ["Row 1: Session 77 has no conversation to clone."])
 
+    def test_a_row_naming_an_account_the_list_lacks_says_so(self):
+        with patch.object(page.launch, "live", return_value=set()), \
+                patch.object(page.launch.registry, "files", return_value=[]):
+            said = page.launch.problems([{**self.ROW, "account": "4"}])
+        self.assertEqual(said, ["Row 1: account 4 is not on this Mac's list. Pick one of "
+                                + ", ".join(sorted(page.launch.panes.CONFIG)) + "."])
+
     def test_another_accounts_clone_copies_its_transcript_and_keeps_the_original(self):
         target = page.launch.cloned("01")
         got = page.launch.carry(target, "3", self.folders)

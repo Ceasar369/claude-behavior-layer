@@ -223,6 +223,21 @@ class PausePointTest(unittest.TestCase):
         self.assertIn("Next: kick off stage B.", said)
         self.assertEqual(drive.read("90")["passed"], ["A1", "A"])
 
+    def test_a_launched_team_tells_its_driver_of_each_close(self):
+        """Session 01's drive launched team 90: its stage close names 01's pane first."""
+        os.makedirs(os.path.join(self.seat, "autonomous-drive"))
+        self.put("autonomous-drive/drive.json", {"by": "01"})
+        self.gone |= {"A1", "A2"}
+        self.kept("A1", "91")
+        self.kept("A2", "92")
+        said = self.run_tool("close", "A", words="A1 and A2 wrote their files.")
+        self.assertIn("Next: type into session 01's pane, with `message`, that stage A closed, its summary in ", said)
+        self.assertIn(", then kick off stage B.", said)
+
+    def test_a_team_no_drive_launched_tells_nobody(self):
+        self.gone |= {"A1", "A2"}
+        self.assertNotIn("pane", self.run_tool("close", "A", words="A1 and A2 wrote their files."))
+
     def test_a_point_on_a_kept_mission_pauses_at_its_keep(self):
         self.run_tool("point", "A1")
         os.makedirs(registry.folder("91"))

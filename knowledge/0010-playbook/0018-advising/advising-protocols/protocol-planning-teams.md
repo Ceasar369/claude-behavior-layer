@@ -11,10 +11,10 @@ When I ask you to plan several teams.
 3. **Write each waiting team's launch list.** Each line is a result I can check on this Mac, never a time of day.
 4. **Name each place two teams share, and its owning team.** Keep each pause point I name before a team launches. Tool: `teams.py pause`.
 5. **Keep the plan of teams in your folder.** Each team, its seat, its launch list with each line's state, and each shared place with its owner. Tool: `teams.py`. A successor advisor reads it first. Your own page's Teams tab draws it, and no other session's page.
-6. **Recommend each team's drive, in the turn that readies its launch.** I keep the team, its assistant drives its plan, or it drives on one topic. Thinking left means I keep it.
-7. **Follow each team whose work a launch list waits on.** Skill: `follow`.
+6. **Each team drives autonomously, unless I ask for a regular drive.** [[protocol-preparing-an-autonomous-drive|Preparing An Autonomous Drive]] readies it. A team with thinking, a prototype or a walk with me left runs a regular drive, and the turn that readies its launch says why. A regular team: I keep it, its assistant drives its plan, or it drives on one topic. Thinking left means I keep it.
+7. **Follow no team. Its lead types into your pane at each stage's close and its plan's end.** An autonomous team's drive tool tells it to. A regular team's launch words do. Skill: `message`.
 8. **Turn a line green on its proof.** Skill: `assistant-check`.
-9. **Every line green → put that team's row on your launch page, with the launch choices I picked on the Teams tab.** I press Launch. In a night drive, you fire it: [[protocol-a-night-drive-runs|A Night Drive Runs]]. Skill: `launch`.
+9. **Every line green → put that team's row on your launch page, with the launch choices I picked on the Teams tab.** You fire an autonomous team's row: [[protocol-an-autonomous-drive-runs|An Autonomous Drive Runs]]. A regular team's waits for my press on Launch. Skills: `autonomous-drive`, or `launch`.
 
 ## What reaches me
 

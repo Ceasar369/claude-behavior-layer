@@ -17,7 +17,8 @@ name on its status line. Chrome names the account that drives my Chrome;
 naming none, the first account does. An account with no folder, or one
 another account already holds, is left out. With no list, or one that
 cannot be read, there is one account: 1, in ~/.claude. Every reader takes
-the accounts from here, and reads the list once, as it starts.
+the accounts from here, and reads the list once, as it starts. One that
+outlives a change of it, like the app door, asks changed(), and restarts.
 
 I set an order on 1100/system, as 3 2 1 3 2. Each session launched with
 no account named takes the next one, and the order starts over at its end,
@@ -131,6 +132,11 @@ FOLDERS = tuple(ACCOUNTS[a]["folder"] for a in KNOWN)
 # The account that drives my Chrome: tools/chrome.py.
 CHROME = MAC["chrome"]
 FALLBACK = KNOWN[0]
+
+
+def changed() -> bool:
+    """Whether the list now holds other accounts than this process read."""
+    return mac() != MAC
 
 
 def parse(text: str) -> list | None:

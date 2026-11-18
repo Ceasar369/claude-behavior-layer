@@ -11,9 +11,11 @@ You follow session NN, live, for one task, until its end. Your work gives you yo
 
 ## Step 1 — Say it back, then take it
 
+A follow starts only on my words, or my Follow press. No skill step and no Wait starts one: the session you wait on types into your pane.
+
 1. You drive NN, in `.claude/state/sessions/MM/driving.json` → say the drive already wakes you on its every turn. Start nothing.
 2. Name NN by its title, in `.claude/state/sessions/NN/record.json`.
-3. Name what you follow it for, and what ends the follow, from my words or your own Wait.
+3. Name what you follow it for, and what ends the follow, from my words.
 4. Nothing names a task → ask me for it. Start nothing.
 5. Say both back, one line each. Then take it at once, in the same turn, with no yes of mine:
 

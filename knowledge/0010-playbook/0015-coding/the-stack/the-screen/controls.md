@@ -16,4 +16,6 @@ on hover, deep orange.
 A standing setting, on or off, is a switch.
 A tick a form sends, or a consent, is a checkbox.
 
+A press never offers what the person's own record cannot give.
+
 Switches group by subject. Each group stands under its own label.

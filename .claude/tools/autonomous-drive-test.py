@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check the night drive's readiness check, its take and its accounts, on a
+"""Check the autonomous drive's readiness check, its take and its accounts, on a
 made-up repository of its own, never a real seat."""
 
 import importlib.util
@@ -19,7 +19,7 @@ import drive  # noqa: E402
 import finish  # noqa: E402
 import registry  # noqa: E402
 
-spec = importlib.util.spec_from_file_location("night_drive_tool_test", os.path.join(HERE, "night-drive.py"))
+spec = importlib.util.spec_from_file_location("autonomous_drive_tool_test", os.path.join(HERE, "autonomous-drive.py"))
 tool = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tool)
 
@@ -27,7 +27,7 @@ RUN = "  Run: `test -f out.txt` → prints nothing, exit 0\n"
 CHOSEN = {"account": "1", "model": "haiku", "effort": "low"}
 
 
-class NightDriveTest(unittest.TestCase):
+class AutonomousDriveTest(unittest.TestCase):
     def setUp(self):
         self.root = tempfile.TemporaryDirectory()
         self.addCleanup(self.root.cleanup)
@@ -71,7 +71,7 @@ class NightDriveTest(unittest.TestCase):
     def run_tool(self, *argv):
         out = io.StringIO()
         code = 0
-        with patch.object(sys, "argv", ["night-drive.py", *argv]), patch.object(sys, "stdout", out):
+        with patch.object(sys, "argv", ["autonomous-drive.py", *argv]), patch.object(sys, "stdout", out):
             try:
                 tool.main()
             except SystemExit as e:
@@ -108,7 +108,7 @@ class NightDriveTest(unittest.TestCase):
         said, code = self.run_tool("check", "05")
         self.assertEqual(code, 1)
         for gap in ("Session 05's plan is open: its stages close on my word alone.",
-                    "Team 50's plan is not written: .claude/state/sessions/05/night-drive/50/stages.json holds no mission.",
+                    "Team 50's plan is not written: .claude/state/sessions/05/autonomous-drive/50/stages.json holds no mission.",
                     "Team 50 waits on teams 60, with no launch list",
                     "A1's mission is still notes",
                     "A2 has no objectives file",
@@ -133,15 +133,15 @@ class NightDriveTest(unittest.TestCase):
     def test_start_runs_only_once_ready(self):
         _, code = self.run_tool("start", "05")
         self.assertEqual(code, 1)
-        self.assertFalse(os.path.exists(os.path.join(registry.folder("05"), "night-drive", "drive.json")))
+        self.assertFalse(os.path.exists(os.path.join(registry.folder("05"), "autonomous-drive", "drive.json")))
         at = ".claude/state/sessions/05"
         self.plan(at, [[self.mission(at, "A1", "one")]])
         said, code = self.run_tool("start", "05")
         self.assertEqual(code, 0, said)
-        self.assertTrue(os.path.isfile(os.path.join(registry.folder("05"), "night-drive", "drive.json")))
+        self.assertTrue(os.path.isfile(os.path.join(registry.folder("05"), "autonomous-drive", "drive.json")))
         said, code = self.run_tool("end", "05")
-        self.assertIn("Session 05's night drive ended.", said)
-        self.assertFalse(os.path.exists(os.path.join(registry.folder("05"), "night-drive")))
+        self.assertIn("Session 05's autonomous drive ended.", said)
+        self.assertFalse(os.path.exists(os.path.join(registry.folder("05"), "autonomous-drive")))
 
     def test_an_unread_window_shows_as_unread(self):
         os.remove(os.path.join(finish.STATE, "limits-1.json"))
@@ -161,7 +161,7 @@ class NightDriveTest(unittest.TestCase):
             self.assertEqual(self.run_tool("account", "05")[0].strip(), "1")
 
     def test_a_team_takes_its_plan_whole(self):
-        at = ".claude/state/sessions/05/night-drive/50"
+        at = ".claude/state/sessions/05/autonomous-drive/50"
         m = self.mission(at, "A1", "one", body=f"# A1 — one\n\nYour objectives are in `{at}/missions/A1-objectives.md`.\n")
         self.plan(at, [[{**m, "queued": "2026-11-13T20:00:00", "session": "51"}]])
         self.put(".claude/state/sessions/05/teams.json", {"teams": [{"seat": "50", "name": "late team", **CHOSEN}]})
@@ -183,19 +183,19 @@ class NightDriveTest(unittest.TestCase):
         with open(os.path.join(registry.folder("50"), "missions", "A1-one.md")) as f:
             self.assertIn(".claude/state/sessions/50/missions/A1-objectives.md", f.read())
         self.assertFalse(os.path.exists(os.path.join(self.root.name, at)))
-        self.assertTrue(os.path.isfile(os.path.join(registry.folder("50"), "night-drive", "drive.json")))
+        self.assertTrue(os.path.isfile(os.path.join(registry.folder("50"), "autonomous-drive", "drive.json")))
         said, code = self.run_tool("take", "50", "05")
         self.assertEqual(code, 1)
 
     def test_a_team_row_stands_alone_on_the_page(self):
-        at = ".claude/state/sessions/05/night-drive/50"
+        at = ".claude/state/sessions/05/autonomous-drive/50"
         self.plan(at, [[self.mission(at, "A1", "one")]])
         self.put(".claude/state/sessions/05/teams.json", {"teams": [{"seat": "50", "name": "late team", **CHOSEN}]})
         said, code = self.run_tool("row", "05", "50")
         self.assertEqual(code, 0, said)
         with open(os.path.join(registry.folder("05"), "launch.json")) as f:
             rows = json.load(f)["rows"]
-        self.assertEqual(rows, [{"n": "50", "name": "late team", "message": "/night-drive take 05", **CHOSEN}])
+        self.assertEqual(rows, [{"n": "50", "name": "late team", "message": "/autonomous-drive take 05", **CHOSEN}])
         said, code = self.run_tool("row", "05", "50")
         self.assertEqual(code, 1)
         self.assertIn("launch page holds rows", said)
@@ -211,10 +211,10 @@ class NightDriveTest(unittest.TestCase):
         self.assertEqual(code, 0, said)
         self.assertIn("Pause points:\n  Session 05's plan: after A1.\n  Session 05's plan: after stage A.\n", said)
 
-    def test_a_night_plan_pauses_at_its_point_and_resumes_there(self):
-        # A night drive over one team drives its plan through drive.py: its
+    def test_an_autonomous_plan_pauses_at_its_point_and_resumes_there(self):
+        # An autonomous drive over one team drives its plan through drive.py: its
         # pause point fires there, the drive started by the check.
-        spec = importlib.util.spec_from_file_location("drive_tool_night_test", os.path.join(HERE, "drive.py"))
+        spec = importlib.util.spec_from_file_location("drive_tool_autonomous_test", os.path.join(HERE, "drive.py"))
         drive_tool = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(drive_tool)
         at = ".claude/state/sessions/05"
@@ -250,9 +250,9 @@ class NightDriveTest(unittest.TestCase):
         self.assertIn("Next: kick off stage B.", said)
 
     def test_a_pause_before_a_team_holds_its_launch_until_resumed(self):
-        at = ".claude/state/sessions/05/night-drive/50"
+        at = ".claude/state/sessions/05/autonomous-drive/50"
         self.plan(at, [[self.mission(at, "A1", "one")]])
-        self.put(".claude/state/sessions/05/night-drive/drive.json", {"started": "2026-11-13T20:00:00",
+        self.put(".claude/state/sessions/05/autonomous-drive/drive.json", {"started": "2026-11-13T20:00:00",
                                                                       "state": "running"})
         self.put(".claude/state/sessions/05/teams.json", {"teams": [
             {"seat": "40", "name": "trunk team", **CHOSEN},
@@ -268,10 +268,10 @@ class NightDriveTest(unittest.TestCase):
         self.assertFalse(os.path.exists(page))
         said, code = self.run_tool("row", "05", "50")
         self.assertEqual(code, 1)
-        self.assertIn("The night drive is paused before team 50", said)
+        self.assertIn("The autonomous drive is paused before team 50", said)
         self.assertFalse(os.path.exists(page))
         said, code = self.run_tool("resume", "05")
-        self.assertIn("Resumed. Next: `python3 .claude/tools/night-drive.py row 05 50`", said)
+        self.assertIn("Resumed. Next: `python3 .claude/tools/autonomous-drive.py row 05 50`", said)
         said, code = self.run_tool("row", "05", "50")
         self.assertEqual(code, 0, said)
         self.assertIn("Team 50's row is on session 05's launch page.", said)

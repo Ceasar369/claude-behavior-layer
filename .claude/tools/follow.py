@@ -16,7 +16,10 @@ and says one line, then the session's state and how to read its newest
 turn, since it may already wait on someone. The running wait hears it, so a press never stops it.
 A follow taken again takes the new words and keeps its place. A session
 the seat drives is refused: the drive already wakes it on every turn.
-So is the seat itself, and a number no session holds.
+So is the seat itself, and a number no session holds. So is a follow my
+latest words never asked: a seat follows another only on my words, and
+my Follow press types "Follow session NN". Words asking it say follow and
+its number.
 
 release lets a follow go: its end held, or my stop line came. The wait
 hears that too. A session stopped, or another on its number, is released
@@ -37,6 +40,7 @@ import finish  # noqa: E402
 import follow  # noqa: E402
 import registry  # noqa: E402
 import successor  # noqa: E402
+import transcripts  # noqa: E402
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 
@@ -45,6 +49,18 @@ def seat(n: str) -> str:
     if not re.fullmatch(r"\d{1,2}", n):
         sys.exit(f"{n}: a seat's number, like 31.")
     return f"{int(n):02d}"
+
+
+def asked(path: str, nn: str) -> bool:
+    """Whether my latest words in transcript PATH ask a follow of NN. The
+    tail is read first, the whole file only when it holds none of mine."""
+    for records in (registry.tail(path), transcripts.records(path) if os.path.isfile(path) else []):
+        said = [w for w in (transcripts.mine(d) for d in records if d.get("type") in ("user", "attachment")) if w]
+        if said:
+            words = said[-1]
+            return bool(re.search(r"(?i)\bfollow", words)) and any(
+                int(n) == int(nn) for n in re.findall(r"(?<!\d)\d{1,2}(?!\d)", words))
+    return False
 
 
 def refused(mm: str, nn: str) -> str:
@@ -56,6 +72,9 @@ def refused(mm: str, nn: str) -> str:
         return f"Refused {nn}: no session holds it."
     if successor.drivers(held).get(nn) == mm:
         return f"Refused {nn}: you drive it, and the drive already wakes you on its every turn."
+    if not asked((held.get(mm) or {}).get("transcript", ""), nn):
+        return (f"Refused {nn}: my latest words ask no follow of it. A seat follows another only on my words. "
+                "The one you wait on types into your pane.")
     return ""
 
 

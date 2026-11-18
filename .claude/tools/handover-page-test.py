@@ -4,6 +4,8 @@
 Presses: a press under way is refused and starts nothing; on the
 contract, a post naming no act hands nothing over.
 
+Accounts: a saved account the list no longer holds is passed over.
+
 Drawn: on lib/trial.py's made-up folder, the page on the contract opens
 with its watch, names the files that move it, and draws its state files
 cut short at any length.
@@ -21,7 +23,7 @@ order:
   A changed page, put in place, equals the page drawn fresh, state by state.
   A pill I pick holds while the page changes, and Hand over names its act.
 
-  handover-page-test.py [NN] [Presses|Drawn|OwnProgram|Browser]
+  handover-page-test.py [NN] [Presses|Accounts|Drawn|OwnProgram|Browser]
 
 NN is this session's number, 14 when none is given.
 """
@@ -126,6 +128,23 @@ class Presses(unittest.TestCase):
             got = handover.progress("05")
         self.assertEqual(got["step"], "failed")
         self.assertIn("RuntimeError: no iTerm", got["said"])
+
+
+class Accounts(unittest.TestCase):
+    """A saved account the list no longer holds, as account 4 once a login
+    is retired, is passed over: the successor takes the order's next."""
+
+    def carried(self, kept: dict) -> dict:
+        with patch.object(handover, "named", return_value={"model": "opus"}), \
+                patch.object(handover, "saved", return_value=kept), \
+                patch.object(handover, "ACCOUNTS", ["1", "2", "3"]):
+            return handover.carried("05")
+
+    def test_a_listed_account_is_carried(self):
+        self.assertEqual(self.carried({"account": "3"}), {"account": "3", "model": "opus"})
+
+    def test_an_account_the_list_lacks_is_passed_over(self):
+        self.assertEqual(self.carried({"account": "4", "effort": "high"}), {"model": "opus", "effort": "high"})
 
 
 class Drawn(unittest.TestCase):

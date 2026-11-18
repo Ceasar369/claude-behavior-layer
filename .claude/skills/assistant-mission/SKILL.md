@@ -13,7 +13,7 @@ My number, NN, as `CLAUDE.md` defines it. My folder is `.claude/state/sessions/N
 
 The id finds its entry in `.claude/state/sessions/NN/stages.json`: its name, its stage, its `file`.
 
-It goes out now → Step 2: its stage goes out, or, in an open plan, I ruled it, or a night drive is being prepared.
+It goes out now → Step 2: its stage goes out, or, in an open plan, I ruled it, or an autonomous drive is being prepared.
 
 Otherwise → Step 5.
 
@@ -50,7 +50,7 @@ Write `missions/<id>-objectives.md` in my folder, beside its `file`, with the Wr
   Yours: <what I judge, and where I see it>
 ```
 
-One `- [ ]` line per end state the whole mission reaches. Each takes one proof under it, Run or Yours. A night drive's mission takes Run alone.
+One `- [ ]` line per end state the whole mission reaches. Each takes one proof under it, Run or Yours. An autonomous drive's mission takes Run alone.
 
 **Run** — a terminal command its session runs on this Mac, and what it prints when the line holds. It reads or tests, never writes. What it prints proves the whole claim. A build is the work's step, never a Run command: its Run line reads what the build left. Every line a command can prove is a Run line.
 

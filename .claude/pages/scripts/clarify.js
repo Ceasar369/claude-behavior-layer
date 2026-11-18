@@ -31,13 +31,8 @@
      wins. Green: agreed. Grey: unanswered. */
   const colour = it => words(it) ? 'red' : agreed(it) ? 'green' : 'grey';
   const answered = it => colour(it) !== 'grey';
-  function parts(it) {
-    const [verdict, ...rest] = String(it.proposed || '').split('\n');
-    return {v: verdict.trim().toLowerCase(),
-            words: rest.filter(l => l.startsWith('>')).map(l => l.replace(/^>\s?/, '')).join('\n')};
-  }
-  /* An assistant's proposal outlines a number still grey: green for agree, red for feedback. */
-  const hint = it => !it.proposed || answered(it) ? '' : parts(it).v === 'agree' ? 'green' : 'red';
+  /* Sessions' opinions outline a number still grey: green when they all agree, red otherwise. */
+  const hint = it => !it.lean || answered(it) ? '' : it.lean;
 
   /* cur is the item at the top, and part how far into it main shows, as a
      share of its height: what a zoom from home keeps. typing is the item
@@ -198,12 +193,12 @@
     if (on && !words(it) && n !== it.n) go(n, !!typing);
     else tools();
   }
-  /* Take it presses Agree, or writes the proposal's words as my feedback,
+  /* Take it presses Agree, or writes one session's words as my feedback,
      still mine to edit. Either moves on to the next open item. */
-  function takeIt(n) {
+  function takeIt(n, by) {
     const it = find(n), t = it && boxOf(it.n);
-    if (!it || D.sent) return;
-    const p = parts(it);
+    const p = it && (it.opinions || []).find(o => o.by === by);
+    if (!p || D.sent) return;
     if (p.v === 'agree') {
       if (!agreed(it)) agreeTo(it, 'yes');
       if (!words(it)) go(next(it.n));
@@ -256,7 +251,7 @@
     if (!to) return;
     if (to.id === 'agree') agree();
     else if (to.id === 'send') send();
-    else if ('take' in to.dataset) takeIt(to.dataset.take);
+    else if ('take' in to.dataset) takeIt(to.dataset.take, to.dataset.by);
     else go(to.dataset.go || to.dataset.k);
   });
   /* A press on Agree leaves the cursor in its box, so Agree acts on that box's item. */

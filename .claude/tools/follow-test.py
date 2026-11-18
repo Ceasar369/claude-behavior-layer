@@ -147,12 +147,32 @@ class DriveTest(Seats):
             json.dump({"11": {"topic": "", "taken": "2026-10-29T16:52:13"}}, f)
         self.assertEqual(successor.drivers(), {"11": "01"})
 
+    def said(self, *words):
+        """Seat 01's transcript: each of my words, one turn each, then its own reply."""
+        with open(self.held["01"]["transcript"], "w") as f:
+            for w in words:
+                f.write(json.dumps({"type": "user", "message": {"role": "user", "content": w}}) + "\n")
+                f.write(json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "ok"}]}})
+                        + "\n")
+
     def test_a_follow_of_a_driven_session_is_refused(self):
+        self.said("Follow session 12, through the follow skill. Here are the details:\n\n- its report")
         successor.take("01", ["11"], "t")
         self.assertIn("you drive it", follow_tool.refused("01", "11"))
         self.assertIn("this seat", follow_tool.refused("01", "01"))
         self.assertIn("no session", follow_tool.refused("01", "44"))
         self.assertEqual(follow_tool.refused("01", "12"), "")
+
+    def test_a_follow_my_latest_words_never_asked_is_refused(self):
+        """Session 01 followed session 60 on a skill's step, on 17 November. Only my words take one."""
+        self.assertIn("only on my words", follow_tool.refused("01", "12"))
+        self.said("Follow session 12.", "Launch team 10's row.")
+        self.assertIn("only on my words", follow_tool.refused("01", "12"))
+        self.said("Launch team 10's row.", "/follow 12")
+        self.assertEqual(follow_tool.refused("01", "12"), "")
+        self.said("follow 10 and 12 till they report")
+        self.assertEqual(follow_tool.refused("01", "10"), "")
+        self.assertIn("only on my words", follow_tool.refused("01", "11"))
 
     def test_a_seat_that_only_follows_hands_itself_over(self):
         self.assertFalse(successor.driving("01"))
@@ -447,10 +467,8 @@ class HoldTest(Seats):
                 unwatched.main()
         self.assertEqual(out.getvalue(), "")
 
-    def ended(self, said, covers=(), title=""):
+    def ended(self, said, covers=()):
         """What the hook prints for seat 01's turn ending on `said`."""
-        if title:
-            self.held["01"]["title"] = title
         live = {SID[n]: {"pid": 100 + int(n)} for n in SID}
         event = {"session_id": SID["01"], "last_assistant_message": said}
         out = io.StringIO()
@@ -464,30 +482,14 @@ class HoldTest(Seats):
                 pass
         return out.getvalue()
 
-    def test_a_wait_line_names_every_session(self):
-        self.assertEqual(unwatched.waited_on("Done.\n\n**Your move**\n\nWait: sessions 10, 11 and 12 answer. "
-                                             "I then launch stage B."), ["10", "11", "12"])
-        self.assertEqual(unwatched.waited_on("Wait: this session's 3 agents finish near 15:40."), [])
-        self.assertEqual(unwatched.waited_on("I read session 10.\n\nRuling: keep it."), [])
-
-    def test_a_wait_with_no_step_of_mine_passes(self):
-        """Told to stay idle, a seat waits on the one that stops it: no wake."""
-        self.assertEqual(unwatched.waited_on("Wait: session 01 keeps my folder, then stops this session."), [])
-        self.assertEqual(self.ended("Wait: session 01 stops this session. It sits idle until then."), "")
-
-    def test_a_wait_on_a_session_nothing_watches_is_held(self):
-        said = json.loads(self.ended("Wait: session 10 reworks its wave. I then fold its items."))
-        self.assertEqual(said["decision"], "block")
-        self.assertIn("session 10", said["reason"])
-        self.assertIn("`follow`", said["reason"])
+    def test_a_wait_on_a_session_nothing_watches_passes(self):
+        """A seat follows only on my words: the one it waits on types into its pane."""
+        self.assertEqual(self.ended("Wait: session 10 reworks its wave. I then fold its items."), "")
 
     def test_a_wait_on_a_watched_session_passes(self):
         self.assertEqual(self.ended("Wait: session 12 answers.", [{"12"}]), "")
         follow.take("01", "10", "a", "b")
         self.assertEqual(self.ended("Wait: session 10 reworks its wave.", [None]), "")
-
-    def test_an_advisor_waits_with_no_follow(self):
-        self.assertEqual(self.ended("Wait: session 10 reworks its wave.", title="01-advisor"), "")
 
 
 if __name__ == "__main__":

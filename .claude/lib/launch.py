@@ -258,6 +258,9 @@ def problems(rows: list) -> list:
         elif chrome(r) and r.get("account") and str(r["account"]) != accounts.CHROME:
             out.append(f"Row {i}: /drive-chrome runs only on account {accounts.CHROME}, the one "
                        f"driving Chrome. Account {r['account']} cannot click it.")
+        elif r.get("account") and str(r["account"]) not in panes.CONFIG:
+            out.append(f"Row {i}: account {r['account']} is not on this Mac's list. "
+                       f"Pick one of {', '.join(sorted(panes.CONFIG))}.")
         # An account left unnamed is taken at launch, so a stand-in checks the rest.
         elif not line({**r, "account": r.get("account") or accounts.FALLBACK}):
             out.append(f"Row {i}: its account, model or effort is refused.")

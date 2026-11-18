@@ -11,7 +11,7 @@ An assisting protocol is a written way to run one kind of work through sessions.
 - [[protocol-sizing-a-stage|Sizing A Stage]] — planned work: when you group a plan's missions into stages.
 - [[protocol-swarming|Swarming]] — known parallel work: when one big task splits into pieces, each on its own Haiku session.
 - [[driving-protocols-MOC|Driving Protocols]] — driven work: when I hand you sessions, until the last one stops.
-- [[night-driving-protocols-MOC|Night Driving Protocols]] — night-driven work: a drive prepared whole before it starts, so nothing waits on my press.
+- [[autonomous-driving-protocols-MOC|Autonomous Driving Protocols]] — autonomously driven work: a drive prepared whole before it starts, so nothing waits on my press or my ruling.
 
 ## Admission rule
 

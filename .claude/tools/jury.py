@@ -174,14 +174,16 @@ sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 import accounts  # noqa: E402
 import panes  # noqa: E402
+import project  # noqa: E402
 import registry  # noqa: E402
 import serve  # noqa: E402
 import transcripts  # noqa: E402
 
 ROOT = registry.ROOT
-# The references sit beside the project, its folder's name and "-references".
-# Jurors that search read them too.
-REFERENCES = ROOT + "-references"
+# The project's references folder, when project.json names one.
+# Jurors that search read it too.
+REFERENCES = project.REFERENCES
+WHERE = f"this project, the folder {REFERENCES}, or the web" if REFERENCES else "this project, or the web"
 AXES = os.path.join(ROOT, "knowledge", "0010-playbook", "0013-thinking", "the-thinking-axioms.md")
 STAMP = "%Y-%m-%dT%H:%M:%S"
 
@@ -193,8 +195,8 @@ MODELS = ("opus", "sonnet", "fable", "haiku")
 # A juror's reach, by its session's reads, and the tools that give it.
 READS = {
     "cited": "Read the claim's cited source, and nothing else.",
-    "own": f"Find your own source: this project, the folder {REFERENCES}, or the web.",
-    "any": f"Search anywhere: this project, the folder {REFERENCES}, or the web.",
+    "own": f"Find your own source: {WHERE}.",
+    "any": f"Search anywhere: {WHERE}.",
 }
 TOOLS = {"cited": ["Read", "WebFetch"],
          "own": ["Read", "Grep", "Glob", "WebFetch", "WebSearch"],

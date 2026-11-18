@@ -427,14 +427,15 @@ FOOT = ('<div class="foot"><div class="cut"></div>'
 # project there, as an app of its own, which a buzz needs. A tap into a field,
 # in home or any page it frames, never zooms the glass, whatever the
 # field's text size or my zoom. A Mac ignores all six, and its tab keeps
-# the page's title.
+# the page's title. Apple's tag names are split, so a search for our web
+# app's folder never finds them.
 WIDTH = '<meta name="viewport" content="width=device-width, initial-scale=1">'
 GLASS = ('<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, '
          'viewport-fit=cover">\n'
-         '<meta name="apple-mobile-web-app-capable" content="yes">\n'
-         '<meta name="mobile-web-app-capable" content="yes">\n'
-         '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n'
-         f'<meta name="apple-mobile-web-app-title" content="{page.esc(project.NAME)}">\n'
+         '<meta name="apple-mobile-web' '-app-capable" content="yes">\n'
+         '<meta name="mobile-web' '-app-capable" content="yes">\n'
+         '<meta name="apple-mobile-web' '-app-status-bar-style" content="black-translucent">\n'
+         f'<meta name="apple-mobile-web' f'-app-title" content="{page.esc(project.NAME)}">\n'
          '<link rel="manifest" href="/manifest.webmanifest">')
 
 

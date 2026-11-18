@@ -58,7 +58,7 @@ A team that would wait midway is cut in two teams. The second launches once its 
 
 A team done early simply closes.
 
-A launch list holds what one waiting team needs. Each line is a result I can check. It starts red, and turns green on `assistant-check`'s proof. Every line green → that team's row goes on my launch page. In a night drive, it fires with no press.
+A launch list holds what one waiting team needs. Each line is a result I can check. It starts red, and turns green on `assistant-check`'s proof. Every line green → that team's row goes on my launch page. In an autonomous drive, it fires with no press.
 
 Each place two teams share has one owning team.
 

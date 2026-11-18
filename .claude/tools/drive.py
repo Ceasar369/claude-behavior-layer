@@ -69,6 +69,10 @@ never launched leaves it free to close, and the stage closes driven or
 not.
 
 A mission is stopped or running the assistant page's own way, never a copy.
+
+A team another seat's autonomous drive launched reports to it, since no
+seat follows another on its own: close and end first tell its lead to
+type into that seat's pane, named by tools/autonomous-drive.py's driver().
 """
 
 import argparse
@@ -84,6 +88,7 @@ import plans  # noqa: E402
 import registry  # noqa: E402
 
 assistant = page.tool("assistant-page")
+autonomous = page.tool("autonomous-drive")
 
 
 def stages(nn: str) -> list:
@@ -351,7 +356,18 @@ def main() -> None:
         plans.save(nn, p)
     listed = finish_lines(nn) if args.verb in ("show", "finish", "green", "out") else []
     d, said = reached(nn, d)
-    print("\n".join(listed + said + stands(nn, d, args.verb == "resume")))
+    out = listed + said + stands(nn, d, args.verb == "resume")
+    up = autonomous.driver(nn) if args.verb in ("close", "end") else ""
+    if up:
+        news = (f"stage {args.keys[0]} closed, its summary in "
+                f"{os.path.relpath(drive.summary(nn, args.keys[0]), registry.ROOT)}"
+                if args.verb == "close" else "your plan ended")
+        tell = f"type into session {up}'s pane, with `message`, that {news}"
+        if out[-1].startswith("Next: "):
+            out[-1] = f"Next: {tell}, then {out[-1][6:]}"
+        else:
+            out.append(f"Next: {tell}.")
+    print("\n".join(out))
     if said:
         sys.exit(drive.PAUSED)
 

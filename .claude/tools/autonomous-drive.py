@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""night-drive.py — a drive prepared whole, so nothing waits on my press.
+"""autonomous-drive.py — a drive prepared whole, so nothing waits on my press.
 
-  night-drive.py check 05          every line the drive needs, each holding or naming its fix
-  night-drive.py start 05          the check, then the drive marked running, once every line holds
-  night-drive.py account 05        the account an extra session takes
-  night-drive.py row 05 50         team 50's row, alone on 05's launch page, for schedule.py fire
-  night-drive.py resume 05         "Resume the drive." past a pause point before a team
-  night-drive.py take 50 05        team 50 takes the plan 05 wrote for it, once 50 is claimed
-  night-drive.py end 05            the drive marked ended
+  autonomous-drive.py check 05          every line the drive needs, each holding or naming its fix
+  autonomous-drive.py start 05          the check, then the drive marked running, once every line holds
+  autonomous-drive.py account 05        the account an extra session takes
+  autonomous-drive.py row 05 50         team 50's row, alone on 05's launch page, for schedule.py fire
+  autonomous-drive.py resume 05         "Resume the drive." past a pause point before a team
+  autonomous-drive.py take 50 05        team 50 takes the plan 05 wrote for it, once 50 is claimed
+  autonomous-drive.py end 05            the drive marked ended
 
 A drive's driver holds its plan in its own folder. Over one session or
 one team, that is its stages.json: one session is a plan of one mission.
 Over several teams, it is its teams.json, as tools/teams.py keeps it. A
 team already launched holds its plan in its own folder. A team not
-launched yet has its plan written in the driver's night-drive/<seat>/:
+launched yet has its plan written in the driver's autonomous-drive/<seat>/:
 stages.json and missions/, as the driver's own would be. At launch, take
 moves it into the team's folder, so the plan has one writer at a time.
 
@@ -46,7 +46,7 @@ An extra session goes on System's default account, the order's next
 turn, read without taking it. Capped, it goes on the account with the
 most left: the lowest of its windows' highest percent used.
 
-knowledge/0010-playbook/0011-assisting/assisting-protocols/night-driving-protocols/
+knowledge/0010-playbook/0011-assisting/assisting-protocols/autonomous-driving-protocols/
 rules it.
 """
 
@@ -67,7 +67,7 @@ import plans  # noqa: E402
 import registry  # noqa: E402
 import waves  # noqa: E402
 
-HOME = "night-drive"
+HOME = "autonomous-drive"
 RECORD = "drive.json"
 TEAMS = "teams.json"
 WINDOWS = ("five_hour", "seven_day")
@@ -92,6 +92,11 @@ def load(p: str) -> dict:
     except (OSError, ValueError):
         return {}
     return got if isinstance(got, dict) else {}
+
+
+def driver(nn: str) -> str:
+    """The seat whose drive launched team NN, as take recorded it. None gives ""."""
+    return str(load(os.path.join(home(nn), RECORD)).get("by", ""))
 
 
 def plans_of(nn: str) -> list:
@@ -375,7 +380,7 @@ def row(nn: str, seat: str) -> tuple:
         sys.exit(f"Team {seat}'s plan is not in {rel(os.path.join(home(nn), seat))}/.")
     d = load(os.path.join(home(nn), RECORD))
     if d.get("state") == "paused":
-        sys.exit(f"The night drive is paused before team {d.get('at')}: nothing launches until \"Resume the drive.\"")
+        sys.exit(f"The autonomous drive is paused before team {d.get('at')}: nothing launches until \"Resume the drive.\"")
     if t.get("pause") and seat not in d.get("passed", []):
         write(os.path.join(home(nn), RECORD), {**d, "state": "paused", "at": seat,
                                                "passed": d.get("passed", []) + [seat]})
@@ -383,12 +388,12 @@ def row(nn: str, seat: str) -> tuple:
                 if load(os.path.join(registry.folder(x["seat"]), "drive.json")).get("state") == "ended"]
         return (f"Pause point reached: before team {seat} launches. Nothing new launches.\n"
                 f"Finished: {', '.join(done) or 'no team yet'}. Look at each team's report.md.\n"
-                f"Next: tell me so, then wait. \"Resume the drive.\" → `night-drive.py resume {nn}`, "
+                f"Next: tell me so, then wait. \"Resume the drive.\" → `autonomous-drive.py resume {nn}`, "
                 "then this row again."), True
     with launch.LOCK:
         if launch.read(nn):
             sys.exit(f"Session {nn}'s launch page holds rows: fire or clear them first.")
-        launch.save(nn, [{"n": seat, "name": t["name"], "message": f"/night-drive take {nn}",
+        launch.save(nn, [{"n": seat, "name": t["name"], "message": f"/autonomous-drive take {nn}",
                           **{k: str(t[k]) for k in CHOICES}}])
     return f"Team {seat}'s row is on session {nn}'s launch page. Next: `python3 .claude/tools/schedule.py fire {nn}`.", False
 
@@ -444,7 +449,7 @@ def main() -> None:
             sys.exit(1)
         if args.verb == "start":
             write(os.path.join(home(nn), RECORD), {"started": stamp(), "state": "running"})
-            print(f"The night drive runs, from {rel(home(nn))}/{RECORD}.")
+            print(f"The autonomous drive runs, from {rel(home(nn))}/{RECORD}.")
     elif args.verb == "account":
         print(extra_account())
     elif args.verb == "row":
@@ -458,19 +463,19 @@ def main() -> None:
         p = os.path.join(home(nn), RECORD)
         d = load(p)
         if d.get("state") != "paused":
-            sys.exit(f"Session {nn}'s night drive is not paused.")
+            sys.exit(f"Session {nn}'s autonomous drive is not paused.")
         write(p, {**d, "state": "running", "at": ""})
-        print(f"Resumed. Next: `python3 .claude/tools/night-drive.py row {nn} {d.get('at')}`, then fire it.")
+        print(f"Resumed. Next: `python3 .claude/tools/autonomous-drive.py row {nn} {d.get('at')}`, then fire it.")
     elif args.verb == "end":
         try:
             os.remove(os.path.join(home(nn), RECORD))
         except OSError:
-            sys.exit(f"Session {nn} runs no night drive.")
+            sys.exit(f"Session {nn} runs no autonomous drive.")
         try:
             os.rmdir(home(nn))
         except OSError:
             pass
-        print(f"Session {nn}'s night drive ended.")
+        print(f"Session {nn}'s autonomous drive ended.")
 
 
 if __name__ == "__main__":

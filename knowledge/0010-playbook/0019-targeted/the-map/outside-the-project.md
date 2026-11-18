@@ -2,21 +2,23 @@
 
 Up: [[the-map-MOC|The Map]]
 
-Two kinds of sibling folder beside the live project: the archives, and the references.
+> **Stand-in.** What sits beside the live project, and the one folder holding it.
 
-## Both sit beside the project
+## One folder beside the project
 
 > **Stand-in.** The folder they sit in, by its full path.
 
-None is inside the live project. None is a branch.
+Nothing in it is inside the live project.
+
+> **Stand-in.** The folders it holds.
 
 ## The archives
 
 > **Stand-in.** This project's archives, when it has any: each one's folder, and the trial it was.
 
-## The references
+## The captures
 
-### Where it sits
+### Where they sit
 
 > **Stand-in.** This project's references folder, by its full path.
 
@@ -25,6 +27,10 @@ It is not a git repository.
 Its own front door is `90-references-MOC.md`, at its root.
 
 That MOC lists every set. It is the authority on what is there.
+
+### Its sections
+
+> **Stand-in.** The references folder's section folders, when it has any.
 
 ### What it holds
 
@@ -46,7 +52,7 @@ A finding changes what we build. It leaves the capture behind.
 
 ### Reading one
 
-"The references" names one folder and no other.
+"The references" names the captures, and no other folder.
 
 ### Adding to it
 
@@ -54,4 +60,6 @@ One folder per subject, lowercase kebab-case.
 
 The folder carries its own MOC, and the date it was walked.
 
-Nothing is deleted from it.
+A new set joins its section's folder, never the root.
+
+A set is deleted only on my word.

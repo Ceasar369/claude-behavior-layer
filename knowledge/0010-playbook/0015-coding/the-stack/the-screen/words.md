@@ -23,5 +23,13 @@ its act follows the words.
 
 A screen shows each fact once, at every width.
 
+A screen reached by more than one path reads true on each. A line about
+what follows shows only where it follows.
+
+What follows a wrong try is said in its error, never before the first try.
+
+Two screens in a row never share a heading. A state of one screen, like its
+error, keeps it.
+
 An act takes the word the product already has for it. A screen never coins
 a new verb.

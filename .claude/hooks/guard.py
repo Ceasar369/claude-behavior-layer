@@ -403,7 +403,7 @@ def layer_push(command: str, cwd: str) -> str:
     or a remote, or one whose remote's push address is the layer's public
     repository, a bare push included. tools/export.py push is the one push,
     after its check."""
-    folder = os.path.realpath(hook.ROOT + "-layer")
+    folder = os.path.realpath(project.LAYER_FOLDER) if project.LAYER_FOLDER else ""
 
     def pushes(words: list, where) -> bool:
         if os.path.basename(words[0]) != "git":
@@ -416,7 +416,7 @@ def layer_push(command: str, cwd: str) -> str:
         if words[i:i + 1] != ["push"]:
             return False
         here = os.path.realpath(where) if where else ""
-        if here == folder or here.startswith(folder + os.sep) or any("layer" in w for w in words[i + 1:]):
+        if folder and here and (here == folder or here.startswith(folder + os.sep)) or any("layer" in w for w in words[i + 1:]):
             return True
         named = [w for w in words[i + 1:] if not w.startswith("-")]
         return project.to_layer(here or hook.ROOT, named[0] if named else "")

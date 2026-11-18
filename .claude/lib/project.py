@@ -44,6 +44,10 @@ folder's name. A file that cannot be read names nothing.
             hooks/own-hooks.py runs them. None: none.
   usage     a shared usage reader on this Mac, a program's path, ~ for my
             home. lib/accounts.py reads through it. None: none.
+  outside   this project's folders outside it, each from the root, ~ for
+            my home: its "layer", the layer branch's folder, which the
+            export writes and the guard refuses a plain push from, and its
+            "references", which searching jurors read. None: none.
 
 A shift moves every port of this project clear of another project's, so
 both run on one Mac: 20000 puts 1100 on 21100, and session 05's 7205 on
@@ -187,10 +191,16 @@ def database(d: dict) -> dict:
     return {"port": d["port"], "name": text(d.get("name")) or "Database", "pg_isready": text(d.get("pg_isready"))}
 
 
+def place(root: str, value) -> str:
+    """A folder the file names from ROOT, ~ for my home, by its full path. Empty with none."""
+    value = text(value)
+    return os.path.normpath(os.path.join(root, os.path.expanduser(value))) if value else ""
+
+
 def facts(root: str) -> dict:
     """Every fact of the project at ROOT, each fallback in place."""
     got = read(root)
-    ports, band, dock = part(got, "ports"), part(got, "band"), part(got, "dock")
+    ports, band, dock, outside = part(got, "ports"), part(got, "band"), part(got, "dock"), part(got, "outside")
     start, docs, workspace = text(band.get("command")), text(got.get("docs")).rstrip("/"), text(dock.get("workspace"))
     by, held = shift(root), servers(band.get("servers"))
     return {
@@ -215,6 +225,8 @@ def facts(root: str) -> dict:
         "hooks": {event: [h for h in each if isinstance(h, dict) and text(h.get("file"))]
                   for event, each in part(got, "hooks").items() if isinstance(each, list)},
         "usage": os.path.expanduser(text(got.get("usage"))),
+        "layer_folder": place(root, outside.get("layer")),
+        "references": place(root, outside.get("references")),
     }
 
 
@@ -228,6 +240,7 @@ EDITOR, WORKSPACE = FACTS["editor"], FACTS["workspace"]
 USAGE = FACTS["usage"]
 COLOR, GLYPH = FACTS["color"], FACTS["glyph"]
 HOME, HOOKS, OWN = FACTS["home"], FACTS["hooks"], FACTS["own"]
+LAYER_FOLDER, REFERENCES = FACTS["layer_folder"], FACTS["references"]
 
 
 def identity() -> str:

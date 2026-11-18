@@ -64,7 +64,7 @@ It exists → read it first. Keep every key it holds, as it is, not only `rows`:
 ]}
 ```
 
-A session row takes `name` and `message`. Add `n`, `account`, `model` or `effort` only when I named it, or a night drive's mission entry names it. A calling skill may also set `n`, the row's seat, as `another-team` does. A mission's row in a plan run in order always sets it, and an open plan's never does: the launch takes the next free seat. Axiom 7 of `knowledge/0010-playbook/0011-assisting/the-assisting-axioms.md` rules both. Add `"drive": true` only when I asked it to self-drive.
+A session row takes `name` and `message`. Add `n`, `account`, `model` or `effort` only when I named it, or an autonomous drive's mission entry names it. A calling skill may also set `n`, the row's seat, as `another-team` does. A mission's row in a plan run in order always sets it, and an open plan's never does: the launch takes the next free seat. Axiom 7 of `knowledge/0010-playbook/0011-assisting/the-assisting-axioms.md` rules both. Add `"drive": true` only when I asked it to self-drive.
 
 A clone of session XX, "Clone session 01", is always a row on my page, even alone, so I set its account and model there. It adds `"clone": "XX"`. Its name is the one I gave, else `clone-of-XX`. Its message is `/clone-session XX <its name> <the work I gave>`.
 

@@ -32,6 +32,8 @@ No door tool waits.
 
 Nothing types into the Claude app. The app chat reads a session when I ask, and again when a reminder it set with send_later comes back.
 
+The app chat types into a session through one door tool, `send_message`. My click on the app's prompt is its only guard, so that tool stays on Needs approval. Always allow lifts the click in every chat, and no mark the door serves brings it back.
+
 Each app chat has its own view of 1100: `localhost:1100/?app` is view 1, `?app=2` is view 2. A view follows only its own chat. The chat opens it in the app's side panel.
 
 `.claude/tools/app-door-test.py` fails when 1100 gains a button no door tool covers.

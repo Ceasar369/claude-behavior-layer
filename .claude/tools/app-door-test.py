@@ -187,7 +187,8 @@ class Tools(unittest.TestCase):
             "read_rules", "list_sessions", "read_session", "read_session_files", "read_file", "list_folder",
             "read_wave", "read_agenda", "read_system", "read_skills", "read_launch", "read_explanation",
             "read_library", "search_library", "read_word", "read_graph", "show_page", "draft_reply",
-            "mark_library_review", "write_launch", "launch_rows", "stop_session", "set_system", "answer_item"])
+            "mark_library_review", "write_launch", "launch_rows", "stop_session", "set_system", "answer_item",
+            "send_message"])
         for n, t in enumerate(served, 1):
             self.assertTrue(t["annotations"]["title"].startswith(f"{n:02d} "), t["name"])
             self.assertIs(t["annotations"]["readOnlyHint"], n <= 19, t["name"])
@@ -203,20 +204,50 @@ class Tools(unittest.TestCase):
 
     # ---- the desktop extension ----
 
-    def test_stdio_answers_each_line_and_nothing_stray_reaches_the_pipe(self):
+    def piped(self, text: str):
+        """The app's pipe holding TEXT, and the door's answers, as lines."""
         import io
-        lines = [{"jsonrpc": "2.0", "id": 1, "method": "ping"},
-                 {"jsonrpc": "2.0", "method": "notifications/initialized"},
-                 {"jsonrpc": "2.0", "id": 2, "method": "tools/list"}]
-        self.stub(self.v.sys, "stdin", io.StringIO("\n".join(map(json.dumps, lines)) + "\nnot json\n"))
+        self.stub(self.v.sys, "stdin", io.TextIOWrapper(io.BufferedReader(io.BytesIO(text.encode()))))
         pipe = io.StringIO()
         self.stub(self.v.sys, "stdout", pipe)
         self.stub(self.v.sys, "stderr", io.StringIO())
+        return pipe
+
+    def test_stdio_answers_each_line_and_nothing_stray_reaches_the_pipe(self):
+        lines = [{"jsonrpc": "2.0", "id": 1, "method": "ping"},
+                 {"jsonrpc": "2.0", "method": "notifications/initialized"},
+                 {"jsonrpc": "2.0", "id": 2, "method": "tools/list"}]
+        pipe = self.piped("\n".join(map(json.dumps, lines)) + "\nnot json\n")
         self.v.stdio()
         got = [json.loads(line) for line in pipe.getvalue().splitlines()]
         self.assertEqual([g["id"] for g in got], [1, 2, None])
         self.assertEqual(len(got[1]["result"]["tools"]), len(self.v.TOOLS))
         self.assertEqual(got[2]["error"]["code"], -32700)
+
+    def test_a_changed_account_list_restarts_the_door_with_the_message_it_holds(self):
+        ping = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"}) + "\n"
+        pipe = self.piped(ping + ping)
+        self.stub(self.v.accounts, "changed", lambda: True)
+        execs = []
+
+        def execve(path, argv, env):
+            execs.append((argv[1:], env[self.v.PENDING]))
+            self.assertEqual(os.path.basename(argv[1]), "app-door.py")
+            raise SystemExit
+        self.stub(self.v.os, "execve", execve)
+        with self.assertRaises(SystemExit):
+            self.v.stdio()
+        self.assertEqual([(argv[1:], held) for argv, held in execs], [(["stdio"], ping)])
+        self.assertEqual(pipe.getvalue(), "")
+        # The second message still waits on the pipe, for the door that follows.
+        self.assertEqual(self.v.sys.stdin.buffer.raw.read().decode(), ping)
+
+    def test_a_restarted_door_answers_the_message_it_was_handed_first(self):
+        pipe = self.piped(json.dumps({"jsonrpc": "2.0", "id": 2, "method": "ping"}) + "\n")
+        self.stub(self.v.os, "environ", {self.v.PENDING: json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})})
+        self.v.stdio()
+        self.assertEqual([json.loads(line)["id"] for line in pipe.getvalue().splitlines()], [1, 2])
+        self.assertNotIn(self.v.PENDING, self.v.os.environ)
 
     def test_the_extension_packs_its_manifest_and_starter(self):
         import zipfile
@@ -392,6 +423,21 @@ class Tools(unittest.TestCase):
         self.assertEqual(self.call("draft_reply", session="05", text="  "), ("Nothing to draft.", True))
         self.assertEqual(len(orders), 1)
 
+    def test_send_message_types_into_each_session_named_or_none(self):
+        typed = []
+        ok = {"02": "", "05": "", "08": "Session 08 sits at a dialog. Nothing was typed."}
+        self.stub(self.v.page, "typable", lambda nn, statuses: (ok.get(nn, "none"), {}, f"pane-{nn}"))
+        self.stub(self.v.panes, "say", lambda pane, line: typed.append((pane, line)) or True)
+        self.assertEqual(self.call("send_message", sessions="02, 5", text="Fix gap 1."),
+                         ("Sent to sessions 02 and 05.", False))
+        self.assertEqual(self.call("send_message", sessions="02", text="One."), ("Sent to session 02.", False))
+        self.assertEqual(self.call("send_message", sessions="02 08", text="Two."),
+                         ("Session 08 sits at a dialog. Nothing was sent. No session got it.", True))
+        self.assertEqual(self.call("send_message", sessions="02", text="  "), ("Nothing to send.", True))
+        self.assertEqual(self.call("send_message", sessions="all", text="Hi."),
+                         ("Name each session by its two digits. Nothing was sent.", True))
+        self.assertEqual(typed, [("pane-02", "Fix gap 1."), ("pane-05", "Fix gap 1."), ("pane-02", "One.")])
+
     def test_answer_item_presses_agree_or_feedback_and_never_send(self):
         self.assertEqual(self.call("answer_item", session="02", item="1", answer="agree"),
                          ("Item 1: agree saved on session 02's Clarify tab. Send stays yours.", False))
@@ -446,9 +492,24 @@ class Tools(unittest.TestCase):
         c.parse = lambda text: (head, items)
         c.then = lambda h: "/clarify-items"
         c.answered = lambda it: bool(it.get("feedback")) or it.get("agree") == "yes"
-        c.suggested = lambda it: tuple((it.get("proposed", "") + "\n").split("\n", 1))
+        c.opinions = lambda it: [{"v": "agree", "by": "30", "words": ""}] if it.get("proposed") else []
         c.proposes = lambda it: it.get("proposed", "").startswith("agree")
         self.stub(self.v.page, "tool", lambda name: {"clarify-page": c}[name])
+        self.stub(self.v.page, "colours", lambda: {})
+
+    def test_read_wave_names_each_helper_still_silent_on_an_item(self):
+        self.fake_clarify({"sent": ""}, [
+            {"n": "12", "title": "Cap retries", "question": "Cap at three?", "decision": "Cap at three."},
+            {"n": "14", "title": "Open", "question": "Open?", "decision": "Yes.", "proposed": "agree"}])
+        self.stub(self.v.page, "colours", lambda: {"30": ("green", "working", "helper")})
+        words, _ = self.call("read_wave", session="04")
+        self.assertEqual(words.count("No opinion yet from session 30, still working."), 1)
+        self.assertTrue(self.call("read_wave", session="04", item="12")[0].endswith(
+            "No opinion yet from session 30, still working."))
+        self.stub(self.v.page, "colours", lambda: {"30": ("red", "waits", "helper")})
+        self.assertIn("No opinion yet from session 30, which waits on you.", self.call("read_wave", session="04")[0])
+        self.stub(self.v.page, "colours", lambda: {})
+        self.assertNotIn("No opinion yet", self.call("read_wave", session="04")[0])
 
     def test_read_wave_reads_each_item_as_text(self):
         self.fake_clarify({"sent": ""}, [
@@ -461,7 +522,7 @@ class Tools(unittest.TestCase):
         self.assertTrue(words.startswith("Session 04's wave 3 of 3, 3 items, ready to send."))
         for line in ("Send types /clarify-items.", "Item 12, Cap retries.", "Question: Cap at three?",
                      "Decision: Cap at three.", "My answer: agreed.", "My answer: feedback: Call it say.",
-                     "My answer: none yet.", "Proposed: agree."):
+                     "My answer: none yet.", "Session 30 proposed: agree."):
             self.assertIn(line, words)
         self.assertNotIn("<", words)
 

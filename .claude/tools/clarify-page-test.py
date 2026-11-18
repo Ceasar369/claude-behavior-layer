@@ -61,7 +61,7 @@ STATES = {
     "c": ({}, [{**FIRST, "agree": "yes", "show": CHART.replace("Answer", "Reply")},
                {**SECOND, "proposed": "feedback\nby: 10\n> Call it live."}, THIRD]),
     "d": ({"sent": "yes"}, [{**FIRST, "agree": "yes"}, {**SECOND, "feedback": "Call it live."}, THIRD]),
-    "p": ({}, [{**FIRST, "proposed": "feedback\nby: 10\n> Take these words."}, SECOND]),
+    "p": ({}, [{**FIRST, "proposed": "agree\nby: 20\nfeedback\nby: 10\n> Take these words."}, SECOND]),
 }
 
 
@@ -121,6 +121,37 @@ class Presses(unittest.TestCase):
         self.press(act="agree", n="1", on="yes")
         self.assertEqual(self.press(act="fix", n="1", text=block), "Item 1 holds an answer. Nothing was changed.")
 
+    def opine(self, by: str, verdict: str = "agree", words: str = "") -> str:
+        text = "\n".join([verdict, f"by: {by}"] + [f"> {w}" for w in words.split("\n") if words])
+        return self.press(act="propose", n="1", text=text)
+
+    def held(self) -> list:
+        _, items = clarify.parse(self.saved())
+        return [(o["by"], o["v"], o["words"]) for o in clarify.opinions(items[0])]
+
+    def test_each_session_keeps_one_opinion_and_eight_at_most(self):
+        for by in ("01", "30", "41"):
+            self.assertEqual(self.opine(by), "")
+        self.assertEqual(self.opine("30", "feedback", "Take 08 instead."), "")
+        self.assertEqual(self.held(), [("01", "agree", ""), ("30", "feedback", "Take 08 instead."), ("41", "agree", "")])
+        for by in ("52", "63", "64", "65", "66"):
+            self.assertEqual(self.opine(by), "")
+        self.assertEqual(self.opine("70"), "Item 1 holds 8 opinions already, from sessions "
+                                           "01, 30, 41, 52, 63, 64, 65, 66. Nothing was saved.")
+        self.assertEqual(self.opine("52", "feedback", "Wait."), "")
+        self.assertEqual([o[0] for o in self.held()], ["01", "30", "41", "52", "63", "64", "65", "66"])
+
+    def test_send_answers_takes_opinions_only_when_they_agree(self):
+        self.opine("01")
+        self.opine("30")
+        _, items = clarify.parse(self.saved())
+        self.assertEqual(clarify.suggested(items[0]), ("agree", ""))
+        self.assertTrue(clarify.proposes(items[0]))
+        self.opine("41", "feedback", "Take 08.")
+        _, items = clarify.parse(self.saved())
+        self.assertEqual(clarify.suggested(items[0]), ("", ""))
+        self.assertFalse(clarify.proposes(items[0]))
+
     def test_a_save_swaps_the_wave_whole_and_keeps_its_birth(self):
         was = os.stat(self.path)
         self.assertEqual(self.press(act="feedback", n="1", text="Use 1104."), "")
@@ -147,10 +178,18 @@ class Drawn(unittest.TestCase):
                      '<a class="link" data-go="2">item 2</a>', '<span class="k">Wrong if</span>',
                      '<span class="lg"><b>+</b>New</span>', '<span class="dim">  old.py</span>',
                      '<h2 class="sec">Today</h2><p>One file.</p>', '<ul class="b "><li>Keep one</li><li>Split in three</li></ul>',
-                     "Session 10, your assistant, proposes · Feedback", '<blockquote class="pq">Call it live.</blockquote>',
-                     'data-take="2"', '<textarea id="fb-1" data-n="1"', 'id="r-3"', 'id="watch"', live.src("clarify.js")):
+                     "Session 10 proposes · Feedback", '<blockquote class="pq">Call it live.</blockquote>',
+                     "<span>0 of 1 agree</span>", '<span class="oc">1 of 8 opinions</span>',
+                     '<details class="prop" open><summary class="ph"><span class="pv">Session 10 proposes · Feedback</span>',
+                     'data-take="2" data-by="10"', '<textarea id="fb-1" data-n="1"', 'id="r-3"', 'id="watch"', live.src("clarify.js")):
             self.assertIn(part, got, part)
         self.assertNotIn("failed to draw", got)
+
+    def test_one_opinion_stands_open_and_two_fold(self):
+        self.put(wave("p"))
+        got = clarify.drawn("05")
+        self.assertIn('<details class="prop"><summary class="ph"><span class="pv">Session 10 proposes · Feedback</span>', got)
+        self.assertNotIn('<details class="prop" open>', got)
 
     def test_what_a_session_wrote_is_escaped(self):
         self.put(clarify.dump(1, {"sent": ""}, [{"n": "1", "title": "x", "question": "<script>alert(1)</script>",
@@ -159,7 +198,8 @@ class Drawn(unittest.TestCase):
         self.assertNotIn("<script>alert(1)", got)
         self.assertNotIn("</script><b>out</b>", got)
         data = json.loads(re.search(r'<script type="application/json" id="wave">(.*?)</script>', got, re.S).group(1))
-        self.assertEqual(data["items"], [{"n": "1", "agree": "", "feedback": "</script><b>out</b>", "status": "", "proposed": ""}])
+        self.assertEqual(data["items"], [{"n": "1", "agree": "", "feedback": "</script><b>out</b>", "status": "",
+                                          "lean": "", "opinions": []}])
         self.assertEqual(data["key"], clarify.key("05"))
 
     def test_a_sent_wave_takes_no_typing(self):
@@ -261,15 +301,51 @@ const settled = async (p, items) => {
     const sent = /^sent: yes$/m.test(await file()), line = await (await fetch(base + '/trial/said')).text();
     await a.waitForFunction(() => [...document.querySelectorAll('.fbx textarea')].every(t => t.disabled), null, {timeout: 4000});
     await state('p');
-    await a.waitForSelector('[data-take="1"]:not([disabled])', {timeout: 6000});
-    await a.click('[data-take="1"]');
+    await a.waitForSelector('[data-take="1"][data-by="10"]:not([disabled])', {timeout: 6000});
+    await a.click('[data-take="1"][data-by="10"]');
     for (let i = 0; i < 40 && !(await file()).includes('feedback: Take these words.'); i++) await wait(100);
     const took = (await file()).includes('feedback: Take these words.');
-    await a.waitForFunction(() => document.querySelector('[data-take="1"]').textContent === '✓ Taken', null, {timeout: 4000});
+    await a.waitForFunction(() => document.querySelector('[data-take="1"][data-by="10"]').textContent === '✓ Taken', null, {timeout: 4000});
+    const folded = await a.evaluate(() => !document.querySelector('[data-take="1"][data-by="10"]').closest('details').open);
+    await a.click('details.prop .pv');
+    const opened = await a.evaluate(() => document.querySelector('details.prop').open
+                                          && getComputedStyle(document.querySelector('details.prop .pq')).display !== 'none');
     said('answers', saved && typed.active === 'fb-1' && typed.words === 'Use 1104.' && typed.red === 'var(--red)' && /^Saved/.test(typed.line)
-         && moved === 'fb-2' && agreed && sent && line === '/clarify-items' && took && a.loads === 1,
+         && moved === 'fb-2' && agreed && sent && line === '/clarify-items' && took && folded && opened && a.loads === 1,
          `typed words saved: ${saved}, my cursor stayed in ${typed.active}; Return moved it to ${moved}; Agree agreed: ${agreed}; `
-         + `Send typed "${line}" and marked the wave sent: ${sent}; Take it took the proposal: ${took}; ${a.loads} load`);
+         + `Send typed "${line}" and marked the wave sent: ${sent}; Take it took the folded proposal: ${took}, `
+         + `still folded: ${folded}; its line opened it: ${opened}; ${a.loads} load`);
+
+    // Another's save lands in a box my cursor sits in: once my window is
+    // left, and once I emptied the box. A reload then keeps their words.
+    await state('a');
+    const o = await open();
+    await o.goto(url);
+    await settled(o, 2);
+    await o.click('#fb-1');
+    await o.keyboard.type('Mine.');
+    for (let i = 0; i < 40 && !(await file()).includes('feedback: Mine.'); i++) await wait(100);
+    await wait(600);
+    await o.evaluate(() => { document.hasFocus = () => false; });
+    await state('b');
+    const away = await o.waitForFunction(() => document.getElementById('fb-1').value === 'Use 1104.', null, {timeout: 6000}).then(() => true, () => false);
+    await o.evaluate(() => { delete document.hasFocus; });
+    await o.click('#fb-1');
+    await o.keyboard.press('ControlOrMeta+A');
+    await o.keyboard.press('Backspace');
+    for (let i = 0; i < 40 && /## 1 [^#]*feedback: /.test(await file()); i++) await wait(100);
+    await wait(600);
+    await state('b');
+    await wait(1500);
+    await o.reload();
+    await settled(o, 2);
+    await wait(1200);
+    const theirs = (await file()).includes('feedback: Use 1104.');
+    const box = await o.evaluate(() => document.getElementById('fb-1').value);
+    said('others', away && theirs && box === 'Use 1104.',
+         `their save showed in the box my cursor sat in, my window left: ${away}; after I emptied the box and reloaded, `
+         + `the file kept their words: ${theirs}, and the box reads "${box}"`);
+    await o.close();
 
     // With the charts' library in reach: a chart draws beside its source,
     // and draws again once its source changes. The library is asked first,
@@ -300,7 +376,7 @@ const settled = async (p, items) => {
 """
 
 NAMES = {"fresh": "A changed page, put in place, equals the page drawn fresh",
-         "answers": "My answers", "charts": "The charts"}
+         "answers": "My answers", "others": "Another's save, in a box my cursor sits in", "charts": "The charts"}
 
 
 def serving(tmp: str) -> None:
@@ -365,6 +441,9 @@ class Browser(unittest.TestCase):
 
     def test_my_answers_save_move_on_agree_send_and_take(self):
         self.held("answers")
+
+    def test_anothers_save_lands_in_a_box_my_cursor_sits_in(self):
+        self.held("others")
 
     def test_a_chart_draws_beside_its_source_and_again_once_it_changes(self):
         self.held("charts")

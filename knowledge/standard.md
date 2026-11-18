@@ -4,9 +4,9 @@ Up: [[MOC|Vault Root]]
 
 The only documentation standard in this vault. Every document obeys it.
 
-## Three areas, and a document's scope decides its home
+## Two areas, and a document's scope decides its home
 
-The playbook holds what every session follows, on both sides, with the laws and policies binding the company. The infrastructure holds what is true of it, and how its sessions work on it. The web app holds the same of itself.
+The playbook holds what every session follows, on both sides, with the laws and policies binding the company. The infrastructure holds what is true of it, and how its sessions work on it.
 
 A document lives in the narrowest folder serving every session it binds. Both sides: the playbook. One side: its area. One layer: that layer's folder.
 
@@ -27,7 +27,7 @@ A MOC is written and maintained. It is never an automatic inventory.
 
 ## Numbers mark places, names mark things
 
-An area folder takes `0010`, `0020` or `0030`. A subject folder inside takes `N1` to `N9`, once.
+An area folder takes `0010` or `0020`. A subject folder inside takes `N1` to `N9`, once.
 
 `0010-playbook` holds `0011` to `0019`.
 

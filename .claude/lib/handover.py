@@ -146,8 +146,11 @@ def carried(nn: str, words: dict | None = None) -> dict:
     """What seat NN's successor launches on, before the order and System: my
     words, then resume.json, then what its seat was named. A setting left
     out takes the order's next account, or the model and effort set on
-    System, as any launch does. SYSTEM leaves one out."""
+    System, as any launch does. SYSTEM leaves one out, and so does an
+    account the list no longer holds."""
     got = {**named(nn), **saved(nn), **(words or {})}
+    if got.get("account") not in ACCOUNTS:
+        got.pop("account", None)
     return {k: got[k] for k in ("account", "model", "effort") if got.get(k) and got[k] != SYSTEM}
 
 
@@ -271,11 +274,12 @@ def press(nn: str, mine: dict, pane: str, pick: dict, since: int, by: str = "") 
     if not hear.until(lambda: status(sid) in SAFE, files=registry.watched(()), seconds=SAVING):
         return failed(failure(copy, f"Then session {nn} stayed busy, so nothing more was typed."))
     # The account picked, else the one saved for this handover, else the
-    # order's next. NEXT picks the order's next over a saved one. take()
-    # moves the order on, so it runs only when needed.
+    # order's next. NEXT picks the order's next over a saved one. A saved
+    # one the list no longer holds is passed over. take() moves the order
+    # on, so it runs only when needed.
     acct = pick["account"] if pick["account"] in ACCOUNTS else ""
     if not acct and pick["account"] != NEXT:
-        acct = saved(nn).get("account", "")
+        acct = carried(nn).get("account", "")
     acct = acct or accounts.take()
     # A model or an effort goes in the line only when picked. One left out
     # is handover-resume's: carried(), then System's.

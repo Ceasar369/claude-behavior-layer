@@ -8,7 +8,7 @@ the language Claude's connectors speak. It reads my sessions, their clarify wave
 agenda, System, my skills, my library, the files git tracks and each
 session's own folder. It shows a page on 1100, drafts a reply in a
 session's box, unsent, answers a wave item, unsent, and marks a library
-item reviewed. It writes and
+item reviewed. It types a message into the sessions I click yes for. It writes and
 launches rows on a launch page, ends sessions, and sets System, nothing
 else. A session the app chat wants waits as a row on
 my own launch page, and it launches only the rows it wrote there. Each press
@@ -36,6 +36,7 @@ import contextlib
 import hashlib
 import http.client
 import importlib.util
+import itertools
 import json
 import mimetypes
 import os
@@ -433,6 +434,30 @@ def drafted(nn: str, text: str) -> tuple:
         else (409, said)
 
 
+def sent(sessions: str, text: str) -> tuple:
+    """My message typed into each session named and sent, as 1100's Send
+    types it. My click on the app's prompt, which shows the sessions and
+    the words, is my yes: no name and no seat guards it. Every session is
+    checked before any is typed into, so a refusal sends to none."""
+    if not text.strip():
+        return 409, "Nothing to send."
+    nns = list(dict.fromkeys(f"{int(n):02d}" for n in re.findall(r"\d+", sessions)))
+    if not nns:
+        return 409, "Name each session by its two digits. Nothing was sent."
+    found = []
+    for nn in nns:
+        why, _, pane = page.typable(nn, ("idle", "shell", "busy"))
+        if why:
+            return 409, why.replace("typed", "sent") + (" No session got it." if len(nns) > 1 else "")
+        found.append((nn, pane))
+    lost = [nn for nn, pane in found if not panes.say(pane, text)]
+    got = [nn for nn, _ in found if nn not in lost]
+    named = lambda ns: ("session " + ns[0] if len(ns) == 1 else "sessions " + ", ".join(ns[:-1]) + " and " + ns[-1])
+    if lost:
+        return 409, " ".join(page.gone(nn) for nn in lost) + (f" Sent to {named(got)}." if got else "")
+    return 200, f"Sent to {named(got)}."
+
+
 def answered_item(nn: str, item: str, answer: str, text: str) -> tuple:
     """Agree, or my feedback, on one item of session NN's wave waiting on me,
     pressed as its button on the Clarify tab presses it. Send stays mine."""
@@ -488,7 +513,7 @@ SAID = {"from": "From my words", "after": "After", "question": "Question", "deci
 def wave(nn: str, number: str, item: str) -> tuple:
     """Session NN's newest wave, or the one numbered, sent or not, as plain
     text: its state, then each item's number, title, question, decision, my
-    answer and any proposal. An item: every field it holds, from the wave
+    answer, any proposal, and each helper still silent on it. An item: every field it holds, from the wave
     numbered, or with no wave, from whichever wave holds it."""
     c = page.tool("clarify-page")
     found = c.waves(nn)
@@ -511,14 +536,38 @@ def wave(nn: str, number: str, item: str) -> tuple:
                        else f"feedback: {it['feedback']}" if it.get("feedback")
                        else "agreed, locked" if it.get("status") == "agreed"
                        else "agreed" if c.answered(it) else "none yet")
-    offered = lambda it: (lambda v, w: f"Proposed: {v}" + (f", {w}" if w else "") + ".")(*c.suggested(it))
+    offered = lambda it: " ".join(f"Session {o['by']} proposed: {o['v']}"
+                                  + (f", {' '.join(o['words'].split())}" if o["words"] else "") + "."
+                                  for o in c.opinions(it))
+    # A helper is a session with an opinion on this wave, or on the one
+    # before. On a wave still open, each one silent on an item is named
+    # under it, with whether it still works: its opinion may yet come.
+    before = [p for w, p in found if w == n - 1]
+    earlier = []
+    if before and not head.get("sent"):
+        with open(before[0]) as f:
+            earlier = c.parse(f.read())[1]
+    helpers = [] if head.get("sent") else sorted({o["by"] for x in items + earlier for o in c.opinions(x)})
+    states = page.colours() if helpers else {}
+
+    def silent(it: dict) -> list:
+        gave = {o["by"] for o in c.opinions(it)}
+        lines = []
+        for by in helpers:
+            colour = states.get(by, ("",))[0]
+            if by not in gave and colour in ("green", "red"):
+                lines.append(f"No opinion yet from session {by}, "
+                             + ("still working." if colour == "green" else "which waits on you."))
+        return lines
+
     if item:
         it = next((x for x in items if x["n"] == item.strip()), None)
         if not it:
             return 409, f"Wave {n} has no item {item}."
         out = [f"Wave {n}, item {it['n']}, {it['title']}."]
         out += [f"{word}: {it[k]}" for k, word in SAID.items() if it.get(k)]
-        return 200, "\n".join(out + [f"My answer: {mine(it)}."] + ([offered(it)] if it.get("proposed") else []))
+        return 200, "\n".join(out + [f"My answer: {mine(it)}."] + ([offered(it)] if it.get("proposed") else [])
+                              + silent(it))
     left = sum(not c.answered(x) and not c.proposes(x) for x in items)
     state = ("sent" if head.get("sent") else "closed in chat" if head.get("closed") else
              "ready to send" if not left else f"waiting on you, {left} left")
@@ -527,7 +576,7 @@ def wave(nn: str, number: str, item: str) -> tuple:
     for it in items:
         out += ["", f"Item {it['n']}, {it['title']}.", f"Question: {it.get('question') or it['title']}",
                 f"Decision: {it.get('decision', '')}", f"My answer: {mine(it)}."] + (
-            [offered(it)] if it.get("proposed") else [])
+            [offered(it)] if it.get("proposed") else []) + silent(it)
     return 200, "\n".join(out)
 
 
@@ -1177,6 +1226,8 @@ RULES = os.path.join(HERE, "app-rules.md")
 # chats apart, so one chat's read counts for both.
 READ = os.path.join(door.STATE, "read.json")
 KEEPING = threading.Lock()
+# The message a restarting door hands its successor: stdio().
+PENDING = "APP_DOOR_PENDING"
 
 
 def fingerprint(data: bytes) -> str:
@@ -1232,7 +1283,8 @@ DEFINED = [
                                     "turn": {"type": "string", "description": "A turn's number, as its page "
                                              "numbers it, or last."}, **PAGING}},
      "annotations": {"title": "Read a session", "readOnlyHint": True, "openWorldHint": False}},
-    # No tool is marked destructive: my app's own setting, Needs approval,
+    # No tool is marked destructive: the mark changes nothing in my app, tried
+    # on send_message. My app's own setting, Needs approval,
     # asks my click instead, as app-rules.md says.
     {"name": "stop_session",
      "description": "Ends one running session for good: its process, its pane and its folder go. "
@@ -1382,9 +1434,17 @@ DEFINED += [
          "I press Send myself. Never sends, never presses Return.",
          {"session": SESSION, "text": TEXT("The whole message, written as me: I, never my name.")},
          ["session", "text"], reads=False),
+    tool("send_message", "Send a message to sessions",
+         "Types your words into each named session's pane and sends them. Only on my word to send, with the "
+         "message and its sessions shown in the same reply. My click on the app's prompt is my yes. "
+         "Send at once, never saying it back first.",
+         {"sessions": TEXT("Each session's two digits, like 02 05 08."),
+          "text": TEXT("The whole message, written as me: I, never my name.")},
+         ["sessions", "text"], reads=False),
     tool("answer_item", "Answer a wave item",
          "Agree, or my feedback, on one item of a session's wave waiting on me, as its button on 1100's "
-         "Clarify tab saves it. Only on my ruling: agree, my own words, or the copy you showed when I take it. "
+         "Clarify tab saves it. Only on my ruling: agree, my own words, the copy you showed when I take it, "
+         "or a proposal I take, its proposed words exactly. "
          "I press Send myself.",
          {"session": SESSION, "item": TEXT("The item's number, like 12."),
           "answer": {"type": "string", "enum": ["agree", "feedback"]},
@@ -1400,7 +1460,7 @@ ORDER = ["read_rules", "list_sessions", "read_session", "read_session_files", "r
          "read_wave", "read_agenda", "read_system", "read_skills", "read_launch", "read_explanation",
          "read_library", "search_library", "read_word", "read_graph", "show_page", "draft_reply",
          "mark_library_review",
-         "write_launch", "launch_rows", "stop_session", "set_system", "answer_item"]
+         "write_launch", "launch_rows", "stop_session", "set_system", "answer_item", "send_message"]
 READ_ONLY = 19
 
 
@@ -1429,6 +1489,7 @@ PLAIN = {
     "read_graph": lambda get: graphed(get("slug")),
     "mark_library_review": lambda get: library_marked(get("at"), get("to")),
     "read_skills": lambda get: skilled(get("query"), get("family"), get("start"), get("count")),
+    "send_message": lambda get: sent(get("sessions"), get("text")),
     "write_launch": lambda get: written(get("row"), get("name"), get("message"), get("number"), get("account"),
                                         get("model"), get("effort"), get("self_drive"), get("remove"), get("near"), get("side"),
                                         get("clone")),
@@ -1582,11 +1643,21 @@ def answer(msg) -> dict:
 def stdio() -> None:
     """The desktop extension's door: one JSON-RPC message per line in, its
     answer per line out. Only the app holds the pipe, so no key. A stray
-    print goes to stderr, never into the pipe."""
+    print goes to stderr, never into the pipe.
+
+    A message arriving after my account list changed restarts the door
+    first, in the same process on the same pipe, handing it that message:
+    the app holds the door for days. The pipe is read unbuffered, so the
+    restart loses nothing behind it. Each message is answered alone."""
     out, sys.stdout = sys.stdout, sys.stderr
-    for line in sys.stdin:
+    held = os.environ.pop(PENDING, "")
+    for raw in itertools.chain([held.encode()] if held else [], iter(sys.stdin.buffer.raw.readline, b"")):
+        line = raw.decode("utf-8", "replace")
         if not line.strip():
             continue
+        if accounts.changed():
+            os.execve(sys.executable, [sys.executable, os.path.abspath(__file__), "stdio"],
+                      {**os.environ, PENDING: line})
         try:
             msg = json.loads(line)
         except ValueError:

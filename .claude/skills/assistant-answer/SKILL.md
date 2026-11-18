@@ -50,6 +50,8 @@ No such wave → its questions and its move, in the turns Step 2 printed.
 
 Read every file behind it. Run what can be run.
 
+My words name Haiku → run `/haiku` on the wave file first. Its verified findings are what you weigh.
+
 Judge it against my rulings and its mission. Never against its phrasing.
 
 Right and complete → agree. Anything else → the exact feedback.

@@ -18,7 +18,7 @@ No lockfile. No Biome config. Those live at the root.
 backend/
   package.json
   tsconfig.json
-  migrations/          001-*.sql
+  migrations/          001-*.sql, or .ts where SQL cannot do the work
   src/
     server.ts          the entry
     routes/            the HTTP edge, shaped like the URL

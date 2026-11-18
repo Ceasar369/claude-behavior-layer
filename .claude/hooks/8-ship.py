@@ -23,7 +23,8 @@ A push aimed at the layer's public repository is refused: a project
 started from the layer can still track it.
 
 A push then waits, WAIT seconds at most, for GitHub's checks on the commit
-it pushed, and names each step that failed, with its first error line.
+it pushed, and names each step that failed, with its first error line,
+then the rule that says what follows a failure.
 Unread, a failed check went unseen for weeks. A project with no
 .github/workflows/ waits for nothing.
 """
@@ -46,6 +47,9 @@ TRIGGER = "/8-ship"
 BRANCH = project.BRANCH
 TRAILER = project.TRAILER
 WAIT, EVERY = 600, 10  # seconds: the longest wait for the checks, and each look
+# The last line of a failure report: the rule that says what follows it.
+WEIGH = ('Each is weighed before it is fixed: .claude/rules/thinking.md, '
+         'under "Finish what was asked".')
 # A line naming why a step failed: a thrown error, a leak, an audit's count.
 CAUSE = re.compile(r"^\s*Error\b|leaks found|vulnerabilities found|error TS\d+|ERR_")
 TIMESTAMP = re.compile(r"^\S+Z ")
@@ -110,7 +114,7 @@ def checks(sha: str) -> str:
     lines = causes(gh("run", "view", str(run["databaseId"]), "--log-failed").stdout)
     named = [f"- {step}: {lines[i]}" if i < len(lines) else f"- {step}"
              for i, step in enumerate(failed)]
-    return "\n".join([f"GitHub's checks failed: {run['url']}", *named])
+    return "\n".join([f"GitHub's checks failed: {run['url']}", *named, WEIGH])
 
 
 def message(lines: list) -> str:

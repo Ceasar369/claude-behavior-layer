@@ -36,6 +36,9 @@ dot and its words. A status never reads as coloured words alone.
 A part that holds back the reader's act wears a status badge, Blocked: the
 tag's shape, solid red, its dot and its word in white.
 
+A row that opens its record opens whole. It carries no chevron, link or
+press of its own to say so.
+
 A list splits into views, as tabs above it.
 
 Each view shows one page, then Show more.

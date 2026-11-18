@@ -16,7 +16,7 @@
    A box holding my cursor is never redrawn, nor one holding words 1100
    has not drawn yet: a field, or an element whose words I edit in place.
    Untouched under my cursor, it takes 1100's words once the cursor
-   leaves. My unsent words wait on this device from the first
+   leaves, or once I leave the window. My unsent words wait on this device from the first
    keystroke, under their session's id, and come back after a reload, a
    restart of 1100 or a crash. A box that saves its own words tells
    live.sent() once they landed.
@@ -65,10 +65,12 @@
   let quiet = 0;
   const screen = x => quiet ? undefined : shown.get(x);
 
-  // Whether a node on screen holds my cursor, in a box I type in.
+  // Whether a node on screen holds my cursor, in a box I type in. A window
+  // I left holds none: its box still reads as the active one, and I type
+  // nothing in it.
   function holds(s) {
     const f = document.activeElement;
-    return !!f && f !== document.body && s.nodeType === 1 && s.contains(f) && f.matches(FIELD);
+    return !!f && f !== document.body && document.hasFocus() && s.nodeType === 1 && s.contains(f) && f.matches(FIELD);
   }
 
   // ---- a box, as the picture gives it and as it stands -----------------------
@@ -110,9 +112,10 @@
     if (drafted(box)) keep(box);
   }
   // What left the picture while it held my cursor goes once the cursor
-  // does, and each box 1100 changed under it is brought in line: `later`.
+  // does, or once I leave the window, and each box 1100 changed under it
+  // is brought in line: `later`.
   const owed = new Set(), later = new Map();
-  document.addEventListener('focusout', () => setTimeout(() => {
+  const left = () => setTimeout(() => {
     for (const s of owed) if (!holds(s)) { s.remove(); owed.delete(s); }
     for (const [box, was] of later) {
       if (holds(box)) continue;
@@ -121,7 +124,9 @@
       refit(box, was);
       for (const fn of drawers) { try { fn([box]); } catch (e) { console.error(e); } }
     }
-  }));
+  });
+  document.addEventListener('focusout', left);
+  addEventListener('blur', left);
 
   // ---- putting a new picture in place ----------------------------------------
 
@@ -286,8 +291,12 @@
     if (!mine) {
       // Out of my cursor, a field holding nothing 1100 had not drawn takes
       // 1100's words. Words in place just did, as any part does.
-      if (!words(box) && stood === before) { settle(box); out.add(box); }
+      // refit, since a picture that moved on under my cursor left the
+      // screen's own copy behind.
+      if (!words(box) && stood === before) { later.delete(box); refit(box, before); out.add(box); }
     } else if (words(box) && current(box) === given(l)) pair(l, box);
+    // My own words, landed and drawn: the box is in line, and nothing of it waits.
+    else if (cursor && current(box) === given(l)) { later.delete(box); refit(box, null); }
     else if (cursor && !later.has(box)) later.set(box, stood === before ? before : null);
     // Words 1100 now draws wait no more.
     if (drafted(box)) keep(box);

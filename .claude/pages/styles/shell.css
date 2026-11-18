@@ -347,19 +347,35 @@
   #items .lg .ar.dash { border-top-style:dashed; }
   #items .lg .sw.dash { border-style:dashed; }
 
-  /* An assistant's proposal, under the decision and above its why, across
-     the whole width. Blue, because a session wrote it. Take it turns green
-     once taken. */
+  /* A session's opinion: its verdict, then Take it, its why and words
+     under them, folding as the case does. Blue, because a session wrote
+     it. Take it turns green once taken. */
   #items .prop { margin:4px 0 14px; padding:10px 14px; background:var(--panel);
     border:1px solid var(--line); border-left:3px solid var(--blue); border-radius:5px; }
-  #items .prop .ph { font-size:11px; letter-spacing:.09em; text-transform:uppercase;
-    color:var(--blue); font-weight:700; margin-bottom:6px; }
+  #items .prop .ph { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+  #items .prop .pv { font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--blue); font-weight:700; }
+  #items .prop button.take { margin-left:auto; }
+  #items details.prop > summary { list-style:none; cursor:pointer; }
+  #items details.prop > summary::-webkit-details-marker { display:none; }
+  #items details.prop > summary .pv::before { content:"▸ "; }
+  #items details.prop[open] > summary .pv::before { content:"▾ "; }
+  #items details.prop[open] > summary { margin-bottom:8px; }
   header.top.clarify ~ main #items .item .prop p.pw { color:var(--dim); font-size:13px; margin:0 0 6px; }
   #items .prop blockquote.pq { margin:0 0 8px; padding:6px 10px; background:var(--bg);
     border-left:2px solid var(--dim); white-space:pre-wrap; font-size:14px; line-height:1.5; }
   #items .prop button.take { font:inherit; font-size:13px; font-weight:700; padding:4px 14px;
     border-radius:4px; cursor:pointer; background:#fff; color:#000; border:0; }
   #items .prop button.take:disabled { background:var(--green); color:var(--bg); cursor:default; }
+  /* Each session's opinion on an item, side by side, as the jury page's
+     jurors sit, under how many agree and how many places are taken. */
+  #items .opinions { margin:4px 0 14px; }
+  #items .opinions .oh { display:flex; font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--blue); font-weight:700; margin-bottom:6px; }
+  #items .opinions .oh .oc { margin-left:auto; color:var(--dim); }
+  #items .opinions .og { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:8px;
+    align-items:start; }
+  #items .opinions .prop { margin:0; min-width:0; }
 
   /* The assistant page. Its rail and main are clarify's: mission ids,
      each stage's letter above its own, a thin line between stages, and

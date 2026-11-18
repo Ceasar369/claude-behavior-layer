@@ -23,7 +23,7 @@ Nothing listed → say "Nothing changed". Go to step 6.
 
 Read each listed file as it stands now.
 
-One `Explore` helper does the search. Its brief names each listed file, and each name a listed file added, renamed or removed. It searches:
+One `Explore` helper, with `model: sonnet`, does the search. Its brief names each listed file, and each name a listed file added, renamed or removed. It searches:
 
 - each vault document naming what a listed file does, which its layer's MOC finds.
 - each document in `knowledge/0010-playbook/0015-coding/the-stack/` naming what a listed file does, when that folder exists.

@@ -58,7 +58,7 @@ How each is held is [[the-formats|The Formats]]'s.
 
 ### Migrations
 
-Plain SQL files. Applied in name order, once, forward only.
+A migration is plain SQL, or code where SQL cannot do the work, like one that reaches the key service. Applied in name order, once, forward only.
 
 A file that has applied never changes.
 

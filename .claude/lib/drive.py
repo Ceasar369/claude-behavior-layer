@@ -69,7 +69,7 @@ RESUME = "Resume the drive."
 DRIVE = "/1-assistant drive"
 
 # What a skill acts on is a tool's exit code, never the words it prints.
-# tools/drive.py and tools/night-drive.py exit PAUSED on reaching a pause
+# tools/drive.py and tools/autonomous-drive.py exit PAUSED on reaching a pause
 # point. tools/schedule.py's fire exits LAUNCHED once every row launched.
 PAUSED = 3
 LAUNCHED = 0

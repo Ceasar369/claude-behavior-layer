@@ -39,7 +39,7 @@ A choice none of them covers is a gap.
 
 ## Step 4 — See each claim
 
-One agent sees every claim about a width, at that width, with Playwright. Its brief lists each claim, its route, `/<subject>/g<N>/v<M>`, on the port `prototype.py status NN` prints, and its width. It answers in text: what it saw, claim by claim.
+One `general-purpose` agent, with `model: sonnet`, sees every claim about a width, at that width, with Playwright. Its brief lists each claim, its route, `/<subject>/g<N>/v<M>`, on the port `prototype.py status NN` prints, and its width. It answers in text: what it saw, claim by claim.
 
 Never take a screenshot yourself.
 

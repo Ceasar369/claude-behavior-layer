@@ -147,10 +147,12 @@ A page is any screen 1100 draws for me. It adds to chat, and never replaces it.
 - ✅ "Wait: this session's 3 agents finish near 15:40, in 12 minutes."
 - ✅ "Wait: stage A's sessions 21 to 24 stop. I then launch stage B."
 
-A Wait whose end starts your own next step arms its wake first: `follow`, unless a wait already runs.
+No Ruling while your own agents run. The move is a Wait.
 
-- ❌ "Wait: session 05 reports. I then export the layer." Nothing armed.
-- ✅ `/follow 05` ran. "Wait: session 05 reports. I then export the layer."
+Once they finish, the Ruling comes, their findings folded in.
+
+- ❌ "Ruling: keep the plan." Its agent still reads the plan's files.
+- ✅ "Wait: my agent finishes near 15:40, in 6 minutes. Then the Ruling."
 
 Every move names my next act. A move of nothing does not exist.
 
@@ -278,7 +280,7 @@ An abstract example cannot be checked. A concrete one can.
 An example lives inside the part it serves, never in a section of its own.
 
 - ❌ "A port is derived from the layer, the role and the session."
-- ✅ "Session 05 on the web app takes 7205."
+- ✅ "Session 05 on the admin page takes 6205."
 
 ### A time reads on my clock
 
@@ -348,6 +350,9 @@ A draft I never sent never happened. A change of mind between you and me never r
 
 - ❌ "Change of plan: you don't lead the build." Session 10 never saw the first plan.
 - ✅ "Fold in session 18's work, then launch team 80."
+
+- ❌ "Take session 08's opinion." Session 01 never read session 08's opinion.
+- ✅ "Build the text code now, as a stand-in, in the full path."
 
 Work handed to a reader ends with its finish: `Done when:`, each end state and its proof.
 

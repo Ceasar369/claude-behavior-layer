@@ -117,7 +117,7 @@ It proposed or planned new work → judge it against my goal. It fits → it joi
 
 Then the stage goes out:
 
-A mission written for a night drive stays as written, and its row takes the account, model and effort its entry names.
+A mission written for an autonomous drive stays as written, and its row takes the account, model and effort its entry names.
 
 1. `assistant-mission` for each of its missions.
 2. `assistant-mission` for each later mission with no file yet. It starts as notes.

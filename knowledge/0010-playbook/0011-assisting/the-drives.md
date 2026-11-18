@@ -8,8 +8,8 @@ The four skills that drive, what each drives, and which button types each.
 
 - `self-drive` — a session drives itself, to its end. On a team's assistant, it drives its whole plan once I agree it.
 - `session-control` — one session drives another, fully or on one topic.
-- `assistant-drive` — an assistant drives its plan, a stage, or missions.
-- `night-drive` — a drive prepared whole, so nothing waits on my press: [[night-driving-protocols-MOC|Night Driving Protocols]].
+- `assistant-drive` — an assistant drives its plan, a stage, or missions. A regular drive: each ruling of mine reaches me at once.
+- `autonomous-drive` — a drive prepared whole, so nothing waits on my press or my ruling: [[autonomous-driving-protocols-MOC|Autonomous Driving Protocols]]. Every team my advisor launches drives this way, unless I ask for a regular drive.
 
 Every drive door is a button typing one of them.
 
@@ -23,4 +23,4 @@ Every drive door is a button typing one of them.
 | advisor page, Drive on a session | `session-control`, partial |
 | `session-control`, typed | `session-control` |
 | agenda triage, a fix session | `session-control`, partial |
-| `night-drive`, typed | `night-drive` |
+| `autonomous-drive`, typed | `autonomous-drive` |

@@ -31,7 +31,7 @@ Run `python3 .claude/tools/transcript.py copy NN --into NN`. Read `.claude/state
 
 Read every file the subject touches: missions, waves, briefs, reports, code.
 
-A read across many files goes to `Explore` helpers, six at most. Each returns its facts with the file and line each rests on.
+A read across many files goes to `Explore` helpers, six at most, each with `model: sonnet`. Each returns its facts with the file and line each rests on.
 
 Never state a fact from memory. A claim no file proves is written unproven.
 
@@ -132,7 +132,7 @@ Three runs still failing → stop, and say each line it printed.
 
 ## Step 10 — Read it cold
 
-Launch one `general-purpose` agent, with no context but this brief: read the file whole, then list every word a non-technical reader would stop at, every claim with no source, and every sentence over fifteen words.
+Launch one `general-purpose` agent, with `model: sonnet` and no context but this brief: read the file whole, then list every word a non-technical reader would stop at, every claim with no source, and every sentence over fifteen words.
 
 Fix each one it lists that holds. Run Step 9 again.
 

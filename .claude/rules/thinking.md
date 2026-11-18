@@ -101,7 +101,7 @@ Research already done sits in the references. `knowledge/0010-playbook/0019-targ
 
 ### A lookup across files goes to a helper
 
-A lookup across several files goes to an Explore subagent.
+A lookup across several files goes to an Explore subagent, with `model: sonnet`.
 
 It brings back only the finding, and the files to open.
 
@@ -289,6 +289,14 @@ A plan just written down is not one of them.
 
 A neighbour's red build holds only the gate.
 
+A failing check is weighed before it is fixed. None is left red.
+
+A simple fix is made at once. A complex one is ruled first: by the session when it holds enough, otherwise by me, that turn.
+
+A check failing on a neighbour's work holds the gate, and runs again. Still red, it comes to me that turn, its session named. Once that session has stopped, I name who fixes it, that turn.
+
+A failure parks only on a named dependency, with its next step.
+
 One approval covers its whole scope. Never ask twice inside it.
 
 A plan asking for one yes carries nothing that cannot be undone.
@@ -305,6 +313,14 @@ Six agents run at once, at most. Claude Code refuses a seventh.
 Past six, the rest wait. As one finishes, the next goes.
 
 Never ask me to raise the cap.
+
+### Every agent names its model
+
+An agent with no model named takes its session's model.
+
+Every launch names its model, in its line or in its agent file.
+
+The model fits the job: the cheapest that does it well.
 
 ## Memory
 

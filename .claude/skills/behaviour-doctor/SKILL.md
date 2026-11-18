@@ -31,6 +31,8 @@ Ten window files or fewer → one `general-purpose` agent runs every slice.
 
 More → one `general-purpose` agent per slice, in the background, six at most at once. As one finishes, the next goes.
 
+Every checker goes with `model: sonnet`.
+
 - Rulings and Unheeded, over at most three transcript copies each.
 - Repeats.
 - Protocol.
@@ -46,7 +48,7 @@ Write every finding returned into `.claude/state/sessions/NN/doctor/candidates.m
 
 None → go to step 5.
 
-Send one `general-purpose` agent. Its prompt says: you are the refuter, read `.claude/state/sessions/NN/doctor/brief.md` and follow its refuter section.
+Send one `general-purpose` agent, with `model: opus`. Its prompt says: you are the refuter, read `.claude/state/sessions/NN/doctor/brief.md` and follow its refuter section.
 
 Drop every finding it disproves.
 

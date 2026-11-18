@@ -9,7 +9,7 @@ this tool its items, and asks it for my answers.
   clarify-page.py answers NN [--since K]                 my answers, and nothing else
   clarify-page.py close   NN [--chat]                    the round, closed
   clarify-page.py propose NN --item N --agree|--feedback --by MM [--why "…"]
-                                                         an assistant's answer, under its item
+                                                         a session's opinion, under its item
   clarify-page.py rule    NN --item N --agree|--feedback   my answer, given for me
   clarify-page.py send    NN                             Send, pressed for me
   clarify-page.py fix     NN --item N                    one unanswered item, replaced, on stdin
@@ -57,12 +57,17 @@ is text. A text line
 marked in a column of its own, + new, ~ changes or - goes, stays bright,
 and the lines around it dim.
 
-An assistant that answers for me puts each verdict under its item, with
-propose. A feedback's words come on stdin. The page shows it with one
-button, Take it: an agree presses Agree, a feedback writes its words as my
-feedback, still mine to edit. Either moves on to the next open item, as
-Agree does. It goes through 1100 while 1100 is up, so it lands between my
-keystrokes, never over them.
+A session that gives me its opinion puts each verdict under its item,
+with propose. A feedback's words come on stdin. An item holds one opinion
+per session, eight at most: a session proposing again replaces its own,
+and a ninth session is refused. The page shows them side by side, under a
+count, 2 of 3 agree, each with one button, Take it. One opinion alone
+stands open; two or more fold to one line each, their verdict and Take
+it, pressable folded or open. An agree presses Agree, a feedback writes
+its words as my feedback, still mine to edit.
+Either moves on to the next open item, as Agree does. Send answers takes
+an item's opinions only when they all say the same. It goes through 1100
+while 1100 is up, so it lands between my keystrokes, never over them.
 
 rule and send are session-control's, for each session it drives.
 clarify-items uses rule too, to mark on the page what I answered in chat. They go through 1100, as my
@@ -239,7 +244,8 @@ def close(nn: str, chat: bool = False) -> None:
 
 
 def propose(nn: str, item: str, verdict: str, by: str, why: str) -> None:
-    """An assistant's verdict on one item, under it on the page."""
+    """A session's verdict on one item, under it on the page, beside the
+    other sessions'. Its own earlier verdict there is replaced."""
     words = sys.stdin.read().strip() if verdict == "feedback" else ""
     if verdict == "feedback" and not words:
         fail("A feedback proposal takes its words on stdin.")
@@ -250,9 +256,11 @@ def propose(nn: str, item: str, verdict: str, by: str, why: str) -> None:
         fail(f"Wave {wave} has no item {item}.")
     text = "\n".join([verdict, f"by: {by}"] + ([f"why: {' '.join(why.split())}"] if why.strip() else [])
                      + ([f"> {w.rstrip()}" for w in words.split("\n")] if words else []))
-    through(nn, {"act": "propose", "n": item, "text": text}, 10)
+    refused = through(nn, {"act": "propose", "n": item, "text": text}, 10)
+    if refused:
+        fail(refused)
     _, _, _, items = newest(nn)
-    if next(it for it in items if it["n"] == item).get("proposed") != text:
+    if not any(o["text"] == text for o in opinions(next(it for it in items if it["n"] == item))):
         fail(f"Item {item}'s proposal did not land.")
     print(f"Item {item}: {verdict} proposed.")
 
@@ -394,7 +402,18 @@ def take(nn: str, form: dict) -> str:
         text = one(form, "text").replace("\r\n", "\n").strip("\n")
         it["feedback"] = "\n".join(line.rstrip() for line in text.split("\n"))
     else:
-        it["proposed"] = one(form, "text").replace("\r\n", "\n").strip()
+        new = opinions({"proposed": one(form, "text").replace("\r\n", "\n").strip()})
+        if len(new) != 1:
+            return "A proposal takes one verdict. Nothing was saved."
+        held = opinions(it)
+        others = [o for o in held if o["by"] != new[0]["by"]]
+        if len(others) >= CAP:
+            return (f"Item {it['n']} holds {CAP} opinions already, from sessions "
+                    f"{', '.join(o['by'] for o in others)}. Nothing was saved.")
+        # Its own earlier opinion is replaced where it stood, so none moves.
+        mine = next((i for i, o in enumerate(held) if o["by"] == new[0]["by"]), len(held))
+        held[mine:mine + 1] = new
+        it["proposed"] = "\n".join(o["text"] for o in held)
     # Swapped in whole, so no reader ever meets half a wave.
     registry.rewrite(path, dump(wave, head, items))
     return ""
@@ -405,12 +424,38 @@ def take(nn: str, form: dict) -> str:
 # answers nothing.
 MOVED = "This one moves to chat. My answer comes there. Go on with everything else."
 
+# The most sessions whose opinions one item holds.
+CAP = 8
+
+# Where one opinion starts, in an item's proposed field: its verdict alone.
+VERDICT = re.compile(r"^(agree|feedback)\s*$", re.I)
+
+
+def opinions(it: dict) -> list:
+    """An item's opinions, one per session, in the order they came. Each
+    is its verdict, who gave it, why, its words as Take it writes them, and
+    its own lines in the wave. An opinion opens on its verdict alone; its
+    "by:", "why:" and "> " lines follow."""
+    blocks = []
+    for line in str(it.get("proposed") or "").split("\n"):
+        if VERDICT.match(line) or not blocks:
+            blocks.append([])
+        blocks[-1].append(line)
+    out = []
+    for first, *rest in (b for b in blocks if "".join(b).strip()):
+        field = lambda k: " ".join(line[len(k) + 1:].strip() for line in rest if line.startswith(k + ":"))
+        out.append({"v": first.strip().lower(), "by": field("by"), "why": field("why"),
+                    "words": "\n".join(re.sub(r"^>\s?", "", line) for line in rest if line.startswith(">")),
+                    "text": "\n".join([first, *rest])})
+    return out
+
 
 def suggested(it: dict) -> tuple:
-    """An item's proposal as (verdict, words), as Take it reads it: the first
-    line is the verdict, and its "> " lines are the words, as one line."""
-    lines = str(it.get("proposed") or "").split("\n")
-    return lines[0], " ".join(line[2:] for line in lines[1:] if line.startswith("> ")).strip()
+    """What an item's opinions say together, as (verdict, words), as Send
+    answers takes it: the one answer they all give, its words as one line,
+    or ("", "") when they differ or there are none."""
+    said = {(o["v"], " ".join(o["words"].split())) for o in opinions(it)}
+    return said.pop() if len(said) == 1 else ("", "")
 
 
 def proposes(it: dict) -> bool:
@@ -489,20 +534,12 @@ def colour(it: dict) -> str:
     return "red" if it.get("feedback") else "green" if answered(it) else "grey"
 
 
-def verdict(it: dict) -> dict:
-    """An assistant's proposal, in its parts: its verdict, who gave it, why,
-    and a feedback's words."""
-    first, *rest = str(it.get("proposed") or "").split("\n")
-    field = lambda k: " ".join(line[len(k) + 1:].strip() for line in rest if line.startswith(k + ":"))
-    return {"v": first.strip().lower(), "by": field("by"), "why": field("why"),
-            "words": "\n".join(re.sub(r"^>\s?", "", line) for line in rest if line.startswith(">"))}
-
-
 def hint(it: dict) -> str:
-    """The outline a proposal gives a number still grey: green for agree, red for feedback."""
+    """The outline opinions give a number still grey: green when they all
+    agree, red otherwise."""
     if not it.get("proposed") or colour(it) != "grey":
         return ""
-    return "green" if verdict(it)["v"] == "agree" else "red"
+    return "green" if suggested(it)[0] == "agree" else "red"
 
 
 def drawn(nn: str) -> str:
@@ -571,20 +608,35 @@ def drawn(nn: str) -> str:
     listed = lambda s: "".join(block(k, t, title) if k else ul([link(x) for x in bullets(t)])
                                for k, t, title in fences(s))
 
-    def proposal(it: dict) -> str:
-        """An assistant's proposal, under the decision and above its why."""
-        if not it.get("proposed"):
-            return ""
-        p = verdict(it)
+    def proposal(it: dict, p: dict, alone: bool) -> str:
+        """One session's opinion, its box in the grid: its verdict and Take
+        it, its why and words under them. Alone on its item, it stands open;
+        beside others, it folds to its verdict and Take it."""
         agree = p["v"] == "agree"
         taken = it.get("agree") == "yes" if agree else (it.get("feedback") or "").strip() == p["words"].strip()
-        who = f'Session {esc(p["by"])}, your assistant,' if p["by"] else "Your assistant"
-        return (f'<div class="prop"><div class="ph">{who} proposes · {"Agree" if agree else "Feedback"}</div>'
-                + (f'<p class="pw">{link(p["why"])}</p>' if p["why"] else "")
-                + (f'<blockquote class="pq">{esc(p["words"])}</blockquote>' if p["words"] else "")
-                + f'<button class="take" data-take="{esc(it["n"])}"{" disabled" if taken or sent else ""}>'
+        who = f'Session {esc(p["by"])}' if p["by"] else "A session"
+        body = ((f'<p class="pw">{link(p["why"])}</p>' if p["why"] else "")
+                + (f'<blockquote class="pq">{esc(p["words"])}</blockquote>' if p["words"] else ""))
+        head = (f'<span class="pv">{who} proposes · {"Agree" if agree else "Feedback"}</span>'
+                f'<button class="take" data-take="{esc(it["n"])}" data-by="{esc(p["by"])}"'
+                f'{" disabled" if taken or sent else ""}>'
                 + ("✓ Taken" if taken else "Take it · Agree" if agree else "Take it · into the feedback box")
-                + "</button></div>")
+                + "</button>")
+        if not body:
+            return f'<div class="prop"><div class="ph">{head}</div></div>'
+        return f'<details class="prop"{" open" if alone else ""}><summary class="ph">{head}</summary>{body}</details>'
+
+    def proposals(it: dict) -> str:
+        """Every session's opinion, under the decision and above its why:
+        how many agree, how many of the item's places are taken, then each
+        opinion side by side."""
+        ops = opinions(it)
+        if not ops:
+            return ""
+        agree = sum(o["v"] == "agree" for o in ops)
+        return (f'<div class="opinions"><div class="oh"><span>{agree} of {len(ops)} agree</span>'
+                f'<span class="oc">{len(ops)} of {CAP} opinions</span></div>'
+                f'<div class="og">{"".join(proposal(it, o, len(ops) == 1) for o in ops)}</div></div>')
 
     def split(s) -> str:
         def one_line(x: str) -> str:
@@ -601,7 +653,7 @@ def drawn(nn: str) -> str:
         c, n = colour(it), esc(it["n"])
         s = (f'<h1 class="q"><span class="chip{" g" if c == "grey" else ""}">{n}</span>'
              f'{esc(it.get("question") or it.get("title", ""))}</h1>'
-             f'<p class="dec"><span class="arr">→</span>{link(it.get("decision"))}</p>' + proposal(it))
+             f'<p class="dec"><span class="arr">→</span>{link(it.get("decision"))}</p>' + proposals(it))
         if it.get("why"):
             s += f'<p class="why"><span class="k">Why</span>{link(it["why"])}</p>'
         s += para(it["show"]) if it.get("show") else ""
@@ -648,7 +700,9 @@ def drawn(nn: str) -> str:
     # Send names, so a page behind the file never sends. The same scripts
     # with no item at all, so a wave arriving reloads nothing.
     data = json.dumps({"wave": wave, "sent": head.get("sent", ""), "key": key(nn),
-                       "items": [{k: it.get(k, "") for k in ("n", "agree", "feedback", "status", "proposed")}
+                       "items": [{**{k: it.get(k, "") for k in ("n", "agree", "feedback", "status")},
+                                  "lean": "green" if suggested(it)[0] == "agree" else "red" if it.get("proposed") else "",
+                                  "opinions": [{k: o[k] for k in ("by", "v", "words")} for o in opinions(it)]}
                                  for it in items]}).replace("</", "<\\/")
     scripts = (page.TABS + page.ANYWHERE + page.ZOOM
                + f'<script src="{live.src("charts.js")}"></script>\n<script src="{live.src("clarify.js")}"></script>\n')
