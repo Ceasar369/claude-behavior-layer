@@ -100,7 +100,7 @@ The file exists → read it first. Keep every mission already queued or launched
 
 None → it is what is true once this team is done, one line each. A result I can check, never a step.
 
-- ❌ "The credit backend mission has stopped."
+- ❌ "The search backend mission has stopped."
 - ✅ "A member signs up on band 00, and the admin page shows it."
 
 Its last line is "Implemented and verified.", unless my words stop the team earlier.

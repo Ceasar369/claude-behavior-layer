@@ -15,7 +15,7 @@ for a moment. Whatever say leaves untyped, it prints nothing, exits 1,
 and its one sentence goes to stderr, so no caller takes it for sent.
 
   panes.py open  [--where down] [--from 07] [--cwd DIR]
-  panes.py boot  [--where down] [--from 07] [--words "payments api"]
+  panes.py boot  [--where down] [--from 07] [--words "search api"]
                  [--acct 1] [--model sonnet] [--effort medium] [--number 04]
   panes.py say   --to 07 --line "/model opus"
   panes.py close --to 07

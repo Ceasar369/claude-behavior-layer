@@ -119,7 +119,7 @@ The Mine line opens with `Mine:`, then one sentence naming the ruling or the act
 
 ```
 Mine: which side moves, the vault or the code.
-Mine: putting Jobber's regenerated client secret in my password manager.
+Mine: renewing the domain before it lapses.
 ```
 
 A note stating a fact names its file, page or reference, in one Sources line. An item holding no fact beyond its own words needs none.

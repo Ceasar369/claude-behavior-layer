@@ -22,7 +22,7 @@ Each thing the document makes clear, one line each. My own words, wherever I sai
 
 Each line names what the document answers, never the answer.
 
-The checkout page's list: the definitions; the full payment flow; the full refund flow; what is agreed; what is still open.
+The settings page's list: the definitions; the full sign-up flow; the full password-reset flow; what is agreed; what is still open.
 
 ## Its shape
 

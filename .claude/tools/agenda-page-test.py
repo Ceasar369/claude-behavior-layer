@@ -54,13 +54,13 @@ WHAT = "What: Do, small: an item the test draws."
 SIGN_IN = ("Sign in", [], [TOPIC[0]], PHASE[0], WHAT)
 SIGN_UP = ("Sign up", [], [TOPIC[0]], PHASE[0], WHAT)
 INVITES = ("Team invites", ["sign-up"], [TOPIC[0]], PHASE[0], WHAT)
-LEDGER = ("Shared ledger", [], [TOPIC[-1], TOPIC[0]], PHASE[-1], WHAT + "\nMine: read the ledger.")
+CALENDAR = ("Shared calendar", [], [TOPIC[-1], TOPIC[0]], PHASE[-1], WHAT + "\nMine: read the calendar.")
 # Each state the browser asks for by name: its items, by file name.
 STATES = {
     "a": {"sign-in": SIGN_IN, "sign-up": SIGN_UP},
     "b": {"sign-in": SIGN_IN, "sign-up": SIGN_UP, "team-invites": INVITES},
-    "c": {"sign-in": SIGN_IN, "sign-up": SIGN_UP, "team-invites": INVITES, "shared-ledger": LEDGER},
-    "d": {"sign-in": (*SIGN_IN[:4], WHAT + "\nWhy: the ledger needs it."), "shared-ledger": LEDGER},
+    "c": {"sign-in": SIGN_IN, "sign-up": SIGN_UP, "team-invites": INVITES, "shared-calendar": CALENDAR},
+    "d": {"sign-in": (*SIGN_IN[:4], WHAT + "\nWhy: the calendar needs it."), "shared-calendar": CALENDAR},
 }
 
 
@@ -121,9 +121,9 @@ class Drawn(Made):
                      '<input id="q" data-draft="no"'):
             self.assertIn(part, got, part)
         self.assertEqual(sorted(it["id"] for it in self.data(got)["items"]),
-                         ["shared-ledger", "sign-in", "sign-up", "team-invites"])
-        self.assertEqual(next(it for it in self.data(got)["items"] if it["id"] == "shared-ledger")["mine"],
-                         "read the ledger.")
+                         ["shared-calendar", "sign-in", "sign-up", "team-invites"])
+        self.assertEqual(next(it for it in self.data(got)["items"] if it["id"] == "shared-calendar")["mine"],
+                         "read the calendar.")
 
     def test_what_a_note_holds_is_escaped(self):
         registry.rewrite(os.path.join(self.folder, "sign-in.md"), agenda.text_of(
@@ -220,7 +220,7 @@ const settled = async (p, n) => {
     await a.goto(url);
     await settled(a, 4);
     await a.click('#q');
-    await a.keyboard.type('ledger need');
+    await a.keyboard.type('calendar need');
     const before = await a.evaluate(() => document.querySelectorAll('#note .rows button').length);
     await state('d');
     await settled(a, 2);
@@ -233,7 +233,7 @@ const settled = async (p, n) => {
     await a.click('#start');
     let started = '';
     for (let i = 0; i < 40 && !started; i++) { started = await (await fetch(base + '/trial/started')).text(); if (!started) await wait(100); }
-    said('typing', typed.active === 'q' && typed.words === 'ledger needs' && before === 0 && typed.hits === 'sign-in'
+    said('typing', typed.active === 'q' && typed.words === 'calendar needs' && before === 0 && typed.hits === 'sign-in'
          && started === 'sign-in' && a.loads === 1,
          `my cursor stayed in ${typed.active}, my words read "${typed.words}"; hits before the write: ${before}, after: ${typed.hits}; `
          + `Start sent ${started || 'nothing'}; ${a.loads} load`);

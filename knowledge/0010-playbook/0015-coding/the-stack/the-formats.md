@@ -82,7 +82,7 @@ It travels as ISO 8601, ending in `Z`.
 
 ### A calendar date is not an instant
 
-A payment due on 1 March is a calendar date.
+A birthday on 1 March is a calendar date.
 
 Held as a timestamp, it reads as 28 February west of UTC.
 

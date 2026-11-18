@@ -264,8 +264,8 @@ Three moves, in order. Definition, near-miss, example.
 > **What it is not.** It is not a request id. A request id labels a call
 > for the logs. A key changes what the server does.
 >
-> **One real case.** An app calls Pay with the key `pay-4021`. Our
-> answer is lost on the way back. It calls again with `pay-4021`. We
+> **One real case.** An app calls Book with the key `book-4021`. Our
+> answer is lost on the way back. It calls again with `book-4021`. We
 > send the first answer again. The money moves once.
 
 When the term is concrete, one line does it.

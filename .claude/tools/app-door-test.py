@@ -777,12 +777,12 @@ class Tools(unittest.TestCase):
 
     def test_launch_rows_reads_and_presses_the_pages_launch(self):
         lp = type("L", (), {})()
-        rows = [{"uid": "u1", "kind": "session", "n": "31", "name": "bank", "message": "Go.", "account": "2"}]
+        rows = [{"uid": "u1", "kind": "session", "n": "31", "name": "search", "message": "Go.", "account": "2"}]
         lp.load = lambda nn: rows
         lp.scheduled = lambda nn: ""
         self.stub(self.v.page, "tool", lambda name: {"launch-page": lp}[name])
         self.assertEqual(self.call("read_launch", session="20"), (
-            "Session 20's launch page, 1 row.\nRow 1: session 31, bank, account 2. First message: Go.", False))
+            "Session 20's launch page, 1 row.\nRow 1: session 31, search, account 2. First message: Go.", False))
         self.assertEqual(self.call("launch_rows", session="20"), ("Launching session 20's page: 1 row.", False))
         self.assertEqual(self.posts, [("/p/launch/20", {"act": "launch", "rows": json.dumps(rows),
                                                         "seen": json.dumps(["u1"])})])

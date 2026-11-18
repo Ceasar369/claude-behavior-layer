@@ -57,13 +57,13 @@ Example: session 10 recapping its waves 1 to 8 writes `.claude/state/sessions/10
 Its first line names session NN's title, the waves in scope, and the items shown.
 
 ```
-# Recap · 10-checkout-page · waves 1 to 8 · 30 items
+# Recap · 10-settings-page · waves 1 to 8 · 30 items
 ```
 
 Then each item shown, in number order, a blank line between.
 
 ```
-20 · A person's path starts with the bank
+20 · A person's path starts with their name
 Question: In what order does a person cross the page?
 Answer: …
 ```

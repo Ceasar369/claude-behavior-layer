@@ -81,7 +81,7 @@ from prototypes import APP, BASE, PORT, ROUTES, SUBJECT, TAKEN, generations, loo
 
 def at(route: str) -> str:
     """A variation's route as the browser asks for it: under BASE. A
-    generation's file names it from the app's root, /checkout-page/g3/v1."""
+    generation's file names it from the app's root, /settings-page/g3/v1."""
     return BASE.rstrip("/") + route
 
 

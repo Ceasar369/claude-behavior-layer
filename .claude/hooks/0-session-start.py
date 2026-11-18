@@ -5,8 +5,8 @@ Naming the tab is panes.say. Every pane is reached there.
 
     /0-session-start                 lowest free side number, Claude Code's words
     /0-session-start 07              that number, Claude Code's words
-    /0-session-start payments api    lowest free side number, those words
-    /0-session-start 07 payments     both mine
+    /0-session-start search api      lowest free side number, those words
+    /0-session-start 07 search       both mine
     /0-session-start 07 keep         take 07 over: end its session, keep its folder and name
 
 A session that already holds a number and claims another takes its folder

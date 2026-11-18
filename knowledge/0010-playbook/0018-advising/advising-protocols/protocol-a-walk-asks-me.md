@@ -14,6 +14,6 @@ When the lead or the walker of my walk asks me something, and I bring it to you.
 
 ## One case
 
-A walker asks for my hands at Checkout 2, a step marked Real.
+A walker asks for my hands at Photo 2, a step marked Real.
 
-> Session 31, the checks walker, at Checkout 2. The payment app's flow must finish on a real phone. On the staging server, scan the frame's code with your phone, finish the flow, then say in 31's pane what the page shows.
+> Session 31, the checks walker, at Photo 2. The camera app's flow must finish on a real phone. On the staging server, scan the frame's code with your phone, finish the flow, then say in 31's pane what the page shows.

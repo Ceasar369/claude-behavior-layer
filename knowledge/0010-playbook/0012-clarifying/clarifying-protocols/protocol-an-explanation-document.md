@@ -22,7 +22,7 @@ Its kind sets the answer's picture, and how the document ends.
 
 | Kind | Like | The answer's picture | It ends with |
 |---|---|---|---|
-| Our own subject | the checkout page; 1100's tabs | every part, and its state | what waits on me |
+| Our own subject | the settings page; 1100's tabs | every part, and its state | what waits on me |
 | A document someone sent | a partner's deck; a co-founder's draft | its flow, laid against ours | questions for its author |
 | An outside subject | SOC 2; licence checks per region | how it works, and where it meets us | what it asks of us |
 | A problem | records deleted by mistake | the cause, step by step | the fix, and its proof |

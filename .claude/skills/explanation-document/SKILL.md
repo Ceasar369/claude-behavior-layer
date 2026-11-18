@@ -39,7 +39,7 @@ Never state a fact from memory. A claim no file proves is written unproven.
 
 Read `knowledge/0010-playbook/0012-clarifying/clarifying-protocols/protocol-what-a-document-makes-clear.md`. Follow it.
 
-Write its list as the document's first version: `.claude/state/sessions/NN/explanations/<name>.md`, its name two or three words in kebab case, `checkout-page.md`. It holds its `# ` title, the line `For you. Waiting on your yes before it is written.`, then `## What it makes clear` and the list.
+Write its list as the document's first version: `.claude/state/sessions/NN/explanations/<name>.md`, its name two or three words in kebab case, `settings-page.md`. It holds its `# ` title, the line `For you. Waiting on your yes before it is written.`, then `## What it makes clear` and the list.
 
 Show the same list in chat. Its move is one Ruling: write the document from this list. The turn ends there.
 
@@ -114,7 +114,7 @@ A doubt never sits in a box. It is an Open line under the chart. So is a step th
 
 No arrow crosses another, or runs through a box. The check names each one. Fix it by moving boxes and reordering lines, never by copying a box. A chart still crossing may add the line `%% elk` under its first line. Three tries in all, then report each crossing left.
 
-Every label is quoted: `bank["Connect your bank"]`. Every branch's arrow carries its condition: `-- "no" -->`.
+Every label is quoted: `photo["Add your photo"]`. Every branch's arrow carries its condition: `-- "no" -->`.
 
 An id is one short lowercase word. Never `end`. Never one starting with `o` or `x`.
 
