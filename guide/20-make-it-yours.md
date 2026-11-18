@@ -34,7 +34,7 @@ A line opening `> **Stand-in.**` waits for your project's facts. Find them:
 git grep -n "Stand-in"
 ```
 
-The twenty-three lines opening `> **Stand-in.**` are yours. The others belong to my code and skills, or to this guide: leave them. On a fresh download, they are these:
+The twenty-six lines opening `> **Stand-in.**` are yours. The others belong to my code and skills, or to this guide: leave them. On a fresh download, they are these:
 
 | File | What goes there |
 |---|---|
@@ -49,9 +49,12 @@ The twenty-three lines opening `> **Stand-in.**` are yours. The others belong to
 | `knowledge/0010-playbook/0015-coding/the-stack/the-screen/the-screen-MOC.md:16` | Your own kinds of screen, one document each |
 | `knowledge/0010-playbook/0015-coding/the-stack/the-stack-MOC.md:12` | `the-look.md`, once you write it: what every frontend looks like, and its token file |
 | `knowledge/0010-playbook/0015-coding/the-stack/the-tools.md:90` | The languages every frontend carries |
-| `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:9` | The folder your archives and references sit in, by its full path |
-| `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:15` | Your archives, each folder and the trial it was |
-| `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:21` | Your references folder, by its full path |
+| `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:5` | What sits beside your project, and the one folder holding it |
+| `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:9` | That folder, by its full path |
+| `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:13` | The folders it holds |
+| `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:17` | Your archives, each folder and the trial it was |
+| `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:23` | Your references folder, by its full path |
+| `knowledge/0010-playbook/0019-targeted/the-map/outside-the-project.md:33` | Your references folder's section folders, when it has any |
 | `knowledge/0010-playbook/0019-targeted/the-map/running-locally.md:34` | Your port digits: each one, its folder, and what it is |
 | `knowledge/0010-playbook/0019-targeted/the-map/running-locally.md:49` | Any folder taking site digits in place of roles |
 | `knowledge/0010-playbook/0019-targeted/the-map/running-locally.md:69` | A session's port, from your project's digits |
